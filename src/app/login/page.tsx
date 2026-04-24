@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -21,13 +21,21 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Após login, podemos redirecionar para a Home ou Admin dependendo do papel.
-      // Por agora, assumimos que quem faz login com sucesso tem acesso.
       router.push("/admin");
     } catch (err: any) {
       setError("Credenciais inválidas. Tente novamente.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      router.push("/admin");
+    } catch (err: any) {
+      setError("Erro ao entrar com Google.");
     }
   };
 
@@ -58,16 +66,31 @@ export default function LoginPage() {
             <input 
               type="password" 
               value={password} 
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)} 
               className="input-field" 
               placeholder="••••••••" 
               required 
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading} style={{ width: "100%", marginTop: "16px" }}>
-            {loading ? "A entrar..." : "Entrar"}
+            {loading ? "A entrar..." : "Entrar com Email"}
           </button>
         </form>
+
+        <div style={{ display: "flex", alignItems: "center", margin: "20px 0", color: "var(--text-secondary)" }}>
+          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }}></div>
+          <span style={{ padding: "0 10px", fontSize: "0.8rem" }}>OU</span>
+          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }}></div>
+        </div>
+
+        <button 
+          onClick={handleGoogleLogin} 
+          className="btn-secondary" 
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
+        >
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
+          Entrar com Google
+        </button>
 
         <div className="login-footer">
           <Link href="/">Voltar à Loja</Link>

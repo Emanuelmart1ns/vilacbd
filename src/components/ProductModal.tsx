@@ -13,8 +13,17 @@ interface ProductModalProps {
 
 export default function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const { addToCart } = useCart();
+  const [activeImg, setActiveImg] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (product) {
+      setActiveImg(product.image || null);
+    }
+  }, [product]);
 
   if (!isOpen || !product) return null;
+
+  const allImages = [product.image, ...(product.images || [])].filter(Boolean) as string[];
 
   return (
     <div className="modal-overlay">
@@ -23,19 +32,32 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
         <button className="modal-close" onClick={onClose}>&times;</button>
         
         <div className="modal-grid">
-          {/* Galeria de Imagens Simples */}
+          {/* Galeria de Imagens */}
           <div className="modal-gallery">
             <div 
               className="modal-main-img"
               style={{
                 background: product.color || "#333",
-                backgroundImage: product.image ? `url(${product.image})` : "none",
+                backgroundImage: activeImg ? `url(${activeImg})` : "none",
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
             >
-              {!product.image && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila CBD</span>}
+              {!activeImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila CBD</span>}
             </div>
+            
+            {allImages.length > 1 && (
+              <div className="modal-thumbnails">
+                {allImages.map((img, i) => (
+                  <div 
+                    key={i} 
+                    className={`thumb ${activeImg === img ? 'active' : ''}`}
+                    onClick={() => setActiveImg(img)}
+                    style={{ backgroundImage: `url(${img})`, backgroundSize: "cover" }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Detalhes do Produto */}

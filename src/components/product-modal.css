@@ -70,15 +70,42 @@
 .modal-gallery {
   background: #000;
   display: flex;
+  flex-direction: column;
 }
 
 .modal-main-img {
   width: 100%;
-  height: 100%;
+  flex: 1;
   min-height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.modal-thumbnails {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  background: rgba(0,0,0,0.3);
+  overflow-x: auto;
+}
+
+.thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.thumb.active {
+  border-color: var(--accent-gold);
+}
+
+.thumb:hover {
+  border-color: rgba(212, 175, 55, 0.5);
 }
 
 .modal-details {
