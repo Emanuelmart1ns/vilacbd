@@ -1,0 +1,104 @@
+/* Construction Banner & Top Bar Styles */
+
+.construction-top-bar {
+  background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light));
+  color: #fff;
+  text-align: center;
+  padding: 8px 0;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  z-index: 2000;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.construction-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 14, 10, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeInOverlay 0.5s ease-out forwards;
+}
+
+.construction-modal {
+  max-width: 500px;
+  width: 90%;
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.construction-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.construction-icon {
+  font-size: 4rem;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 10px var(--accent-gold));
+}
+
+.construction-modal h2 {
+  font-size: 2rem;
+  background: linear-gradient(to right, #fff, var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.construction-modal p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.construction-timer-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.timer-progress {
+  height: 100%;
+  background: var(--accent-gold);
+  width: 100%;
+  animation: timerShrink 5s linear forwards;
+  transform-origin: left;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes timerShrink {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Close animation for the overlay */
+.construction-overlay.fade-out {
+  animation: fadeOutOverlay 0.5s ease-out forwards;
+}
+
+@keyframes fadeOutOverlay {
+  from { opacity: 1; }
+  to { opacity: 0; pointer-events: none; }
+}

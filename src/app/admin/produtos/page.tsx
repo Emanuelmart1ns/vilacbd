@@ -123,11 +123,26 @@ export default function ProdutosAdminPage() {
 
       {/* Modal de Edição/Criação */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-backdrop" onClick={closeModal}></div>
-          <div className="modal-content" style={{ padding: "32px" }}>
-            <h3>{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }}>
+        <div 
+          className="modal-overlay" 
+          style={{ 
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", 
+            background: "rgba(0,0,0,0.85)", backdropFilter: "blur(5px)",
+            display: "flex", alignItems: "center", justifyContent: "center", 
+            zIndex: 9999, padding: "20px"
+          }}
+        >
+          <div className="modal-backdrop" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} onClick={closeModal}></div>
+          <div 
+            className="modal-content" 
+            style={{ 
+              position: "relative", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto",
+              background: "#121812", border: "1px solid var(--glass-border)", borderRadius: "16px",
+              padding: "32px", zIndex: 10000, boxShadow: "0 20px 50px rgba(0,0,0,0.8)"
+            }}
+          >
+            <h3 style={{ marginBottom: "20px", color: "var(--accent-gold)" }}>{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
+            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div className="form-group">
                 <label>Nome</label>
                 <input name="name" className="input-field" defaultValue={editingProduct?.name} required />

@@ -3,6 +3,8 @@ import { getProducts } from "@/lib/firebase";
 import { products as staticProducts, Product } from "@/data/products";
 import LojaClient from "@/components/LojaClient";
 
+export const revalidate = 60;
+
 export default async function LojaPage() {
   let products: Product[] = [];
   

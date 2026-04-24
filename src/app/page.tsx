@@ -4,6 +4,8 @@ import { products as staticProducts, Product } from "@/data/products";
 import HomeClient from "@/components/HomeClient";
 
 // Esta página agora é um Server Component por padrão (sem "use client")
+export const revalidate = 60; // Revalida a cada 60 segundos
+
 export default async function Home() {
   let products: Product[] = [];
   
