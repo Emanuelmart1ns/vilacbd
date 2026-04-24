@@ -86,6 +86,42 @@ export default function ConfiguracoesPage() {
           <button className="btn-primary">Guardar Pagamentos</button>
         </div>
 
+        {/* Gestão de Utilizadores */}
+        <div className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+          <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Gestão de Utilizadores</h3>
+          <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>Crie e gira as contas de acesso ao painel administrativo.</p>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <div className="user-list">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Cargo</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{auth.currentUser?.email || "admin@vilacbd.com"}</td>
+                    <td>Administrador</td>
+                    <td>-</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="add-user-form" style={{ borderLeft: "1px solid var(--glass-border)", paddingLeft: "24px" }}>
+              <h4>Novo Utilizador</h4>
+              <div className="form-group" style={{ marginTop: "16px" }}>
+                <label>Email do novo utilizador</label>
+                <input type="email" className="input-field" placeholder="ex: colega@vilacbd.com" />
+              </div>
+              <button className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
+            </div>
+          </div>
+        </div>
+
         {/* Conta de Admin */}
         <div className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
           <h3 style={{ color: "#ff6b6b", marginBottom: "16px" }}>Sessão e Segurança</h3>
