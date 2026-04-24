@@ -1,11 +1,15 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { products } from "@/data/products";
+import { useCart } from "@/context/CartContext";
 
 export default function Home() {
   // Obter 4 best sellers
   const bestSellers = products.filter(p => p.isPopular).slice(0, 4);
+  const { addToCart } = useCart();
 
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
@@ -80,7 +84,20 @@ export default function Home() {
                   <h3 className="product-title">{product.name}</h3>
                   <div className="product-footer" style={{ marginTop: "auto" }}>
                     <span className="product-price">€ {product.price.toFixed(2)}</span>
-                    <button className="btn-primary" style={{ padding: "8px 20px" }}>Comprar</button>
+                    <button 
+                      className="btn-primary" 
+                      style={{ padding: "8px 20px" }}
+                      onClick={() => addToCart({
+                        id: product.id,
+                        name: product.name,
+                        price: product.price,
+                        quantity: 1,
+                        image: product.image,
+                        color: product.color
+                      })}
+                    >
+                      Comprar
+                    </button>
                   </div>
                 </div>
               </div>

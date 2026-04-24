@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { products } from "@/data/products";
+import { useCart } from "@/context/CartContext";
 
 export default function LojaPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { addToCart } = useCart();
 
-  // Filtrar produtos
   const filteredProducts = selectedCategory 
     ? products.filter(p => p.category === selectedCategory)
     : products;
@@ -23,7 +24,6 @@ export default function LojaPage() {
         <p style={{ color: "var(--text-secondary)", marginBottom: "40px" }}>A nossa seleção rigorosa de produtos para o seu bem-estar diário.</p>
 
         <div className="shop-layout">
-          {/* Sidebar de Filtros */}
           <aside className="shop-sidebar">
             <div className="filter-group">
               <h4>Categorias</h4>
@@ -56,7 +56,6 @@ export default function LojaPage() {
             </div>
           </aside>
 
-          {/* Grelha de Produtos */}
           <div className="shop-main">
             <div className="product-grid" style={{ paddingTop: 0 }}>
               {filteredProducts.map((product, index) => (
@@ -79,7 +78,20 @@ export default function LojaPage() {
                     <p className="product-desc" style={{ fontSize: "0.85rem", marginBottom: "16px" }}>{product.description}</p>
                     <div className="product-footer" style={{ marginTop: "auto" }}>
                       <span className="product-price">€ {product.price.toFixed(2)}</span>
-                      <button className="btn-primary" style={{ padding: "8px 20px" }}>Adicionar</button>
+                      <button 
+                        className="btn-primary" 
+                        style={{ padding: "8px 20px" }}
+                        onClick={() => addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          quantity: 1,
+                          image: product.image,
+                          color: product.color
+                        })}
+                      >
+                        Adicionar
+                      </button>
                     </div>
                   </div>
                 </div>

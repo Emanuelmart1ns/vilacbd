@@ -1,20 +1,23 @@
 import type { Metadata } from "next";
-import { Outfit, Inter } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-});
+import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
+import CartSidebar from "@/components/CartSidebar";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Vila CBD | A melhor seleção CBD em Santa Maria da Feira",
-  description: "E-commerce premium da Vila CBD. Descubra óleos, gomas e tópicos com garantia de qualidade.",
+  description: "Descubra a melhor seleção de produtos CBD premium em Santa Maria da Feira. Óleos, flores, gomas e cosmética com qualidade certificada em laboratório.",
 };
 
 export default function RootLayout({
@@ -23,8 +26,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-PT" className={`${outfit.variable} ${inter.variable}`}>
-      <body>{children}</body>
+    <html lang="pt">
+      <body className={`${inter.variable} ${outfit.variable}`}>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <CartSidebar />
+          </CartProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
