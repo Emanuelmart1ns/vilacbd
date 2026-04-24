@@ -26,12 +26,12 @@ let productsCache: any[] | null = null;
 export { app, db, auth };
 
 // Firestore Helpers
-export const getProducts = async (forceRefresh = false) => {
+export const getProducts = async (forceRefresh = false): Promise<any[]> => {
   if (productsCache && !forceRefresh) return productsCache;
 
   try {
     // Timeout de 6 segundos para não travar o site se a BD estiver lenta
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise<any[]>((_, reject) => 
       setTimeout(() => reject(new Error("Timeout")), 6000)
     );
 
@@ -68,9 +68,9 @@ export const deleteProduct = async (id: string) => {
 };
 
 // --- REVIEWS ---
-export const getReviews = async () => {
+export const getReviews = async (): Promise<any[]> => {
   try {
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+    const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
     const fetchPromise = (async () => {
       const q = query(collection(db, "reviews"), orderBy("date", "desc"));
       const snapshot = await getDocs(q);
