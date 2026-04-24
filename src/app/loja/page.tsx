@@ -2,11 +2,14 @@
 
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { products } from "@/data/products";
+import { Product, products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import ProductModal from "@/components/ProductModal";
 
 export default function LojaPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { addToCart } = useCart();
 
   const filteredProducts = selectedCategory 
@@ -14,6 +17,11 @@ export default function LojaPage() {
     : products;
 
   const categories = Array.from(new Set(products.map(p => p.category)));
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
 
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
@@ -62,7 +70,8 @@ export default function LojaPage() {
                 <div 
                   key={product.id} 
                   className="product-card fade-in" 
-                  style={{ animationDelay: `${(index % 8) * 0.05}s` }}
+                  style={{ animationDelay: `${(index % 8) * 0.05}s`, cursor: "pointer" }}
+                  onClick={() => handleProductClick(product)}
                 >
                   {product.isPopular && <div className="badge-popular">Mais Vendido</div>}
                   {product.image ? (
@@ -81,14 +90,17 @@ export default function LojaPage() {
                       <button 
                         className="btn-primary" 
                         style={{ padding: "8px 20px" }}
-                        onClick={() => addToCart({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          quantity: 1,
-                          image: product.image,
-                          color: product.color
-                        })}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            quantity: 1,
+                            image: product.image,
+                            color: product.color
+                          });
+                        }}
                       >
                         Adicionar
                       </button>
@@ -104,6 +116,12 @@ export default function LojaPage() {
           </div>
         </div>
       </div>
+      
+      <ProductModal 
+        product={selectedProduct} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </main>
   );
 }
