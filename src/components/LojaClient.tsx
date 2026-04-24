@@ -1,0 +1,120 @@
+"use client";
+
+import React, { useState } from "react";
+import Navbar from "@/components/Navbar";
+import { Product } from "@/data/products";
+import { useCart } from "@/context/CartContext";
+import ProductModal from "@/components/ProductModal";
+
+interface LojaClientProps {
+  initialProducts: Product[];
+}
+
+export default function LojaClient({ initialProducts }: LojaClientProps) {
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addToCart } = useCart();
+
+  const categories = ["Todos", ...Array.from(new Set(initialProducts.map(p => p.category)))];
+
+  const filteredProducts = selectedCategory === "Todos" 
+    ? initialProducts 
+    : initialProducts.filter(p => p.category === selectedCategory);
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  return (
+    <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)", paddingTop: "100px" }}>
+      <Navbar />
+      
+      <div className="container">
+        <div className="shop-layout" style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "40px", marginTop: "40px" }}>
+          {/* Sidebar Filtros */}
+          <aside className="shop-sidebar">
+            <h3 style={{ marginBottom: "20px", color: "var(--accent-gold)" }}>Categorias</h3>
+            <div className="category-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {categories.map(cat => (
+                <button 
+                  key={cat}
+                  className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    textAlign: "left",
+                    padding: "10px",
+                    background: selectedCategory === cat ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                    border: "none",
+                    color: selectedCategory === cat ? "var(--accent-gold)" : "var(--text-secondary)",
+                    cursor: "pointer",
+                    borderRadius: "8px",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </aside>
+
+          {/* Grid de Produtos */}
+          <div className="shop-main">
+            <div className="section-header" style={{ marginBottom: "32px" }}>
+              <h1 style={{ fontSize: "2.5rem", marginBottom: "8px" }}>Catálogo Completo</h1>
+              <p style={{ color: "var(--text-secondary)" }}>A nossa seleção rigorosa para o seu bem-estar.</p>
+            </div>
+
+            <div className="product-grid">
+              {filteredProducts.map((product) => (
+                <div 
+                  key={product.id} 
+                  className="product-card"
+                  onClick={() => handleProductClick(product)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div 
+                    className="product-image" 
+                    style={{ 
+                      background: product.color || "#121812", 
+                      backgroundImage: product.image ? `url(${product.image})` : 'none',
+                      backgroundSize: 'cover'
+                    }}
+                  >
+                  </div>
+                  <div className="product-info">
+                    <span className="product-category">{product.category}</span>
+                    <h3 className="product-title">{product.name}</h3>
+                    <div className="product-footer">
+                      <span className="product-price">€ {product.price.toFixed(2)}</span>
+                      <button 
+                        className="btn-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({ ...product, quantity: 1 });
+                        }}
+                      >
+                        Comprar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {filteredProducts.length === 0 && (
+              <p style={{ color: "var(--text-secondary)", marginTop: "40px" }}>Nenhum produto encontrado nesta categoria.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <ProductModal 
+        product={selectedProduct} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+    </main>
+  );
+}
