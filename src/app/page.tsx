@@ -14,15 +14,6 @@ export default function Home() {
       {/* Hero Section Cinematográfica */}
       <section className="hero-cinematic">
         <div className="hero-overlay"></div>
-        {/* Usando um vídeo MP4 royalty-free de folhas tropicais/natureza escura para dar um toque premium orgânico */}
-        <video 
-          autoPlay 
-          loop 
-          muted 
-          playsInline 
-          className="hero-video"
-          src="https://cdn.pixabay.com/video/2020/05/25/40141-424846430_large.mp4"
-        ></video>
         
         <div className="hero-content">
           <h1 className="hero-title fade-in">A Essência Pura <br/>da Natureza</h1>

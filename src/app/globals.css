@@ -109,20 +109,10 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   text-align: center;
   overflow: hidden;
-}
-
-.hero-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  transform: translateX(-50%) translateY(-50%);
-  z-index: 0;
-  object-fit: cover;
-  filter: brightness(0.6) contrast(1.2);
+  background-image: url('/hero_bg_premium.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .hero-overlay {
