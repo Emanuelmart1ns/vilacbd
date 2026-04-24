@@ -63,6 +63,11 @@ export default function ProdutosAdminPage() {
     setIsModalOpen(true);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza que deseja eliminar este produto?")) return;
     try {
