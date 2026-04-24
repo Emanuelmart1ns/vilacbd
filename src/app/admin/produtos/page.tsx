@@ -124,8 +124,8 @@ export default function ProdutosAdminPage() {
       {/* Modal de Edição/Criação */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}></div>
-          <div className="modal-content" style={{ maxWidth: "600px", padding: "32px", background: "#0a0e0a" }}>
+          <div className="modal-backdrop" onClick={closeModal}></div>
+          <div className="modal-content" style={{ padding: "32px" }}>
             <h3>{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
             <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }}>
               <div className="form-group">
@@ -153,15 +153,15 @@ export default function ProdutosAdminPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label>URL da Imagem</label>
-                <input name="image" className="input-field" defaultValue={editingProduct?.image} />
+                <label>URL da Imagem Principal</label>
+                <input name="image" className="input-field" defaultValue={editingProduct?.image} placeholder="https://..." />
               </div>
               <div className="form-group">
                 <label>Descrição</label>
                 <textarea name="description" className="input-field" style={{ minHeight: "100px" }} defaultValue={editingProduct?.description} />
               </div>
               <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
-                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeModal}>Cancelar</button>
                 <button type="submit" className="btn-primary" style={{ flex: 1 }}>Guardar Produto</button>
               </div>
             </form>

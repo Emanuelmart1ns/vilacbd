@@ -38,3 +38,22 @@ export const deleteProduct = async (id: string) => {
   const productRef = doc(db, "products", id);
   return await deleteDoc(productRef);
 };
+
+// --- REVIEWS ---
+export const getReviews = async () => {
+  const q = query(collection(db, "reviews"), orderBy("date", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addReview = async (review: any) => {
+  return await addDoc(collection(db, "reviews"), {
+    ...review,
+    date: new Date().toISOString(),
+  });
+};
+
+export const deleteReview = async (id: string) => {
+  const docRef = doc(db, "reviews", id);
+  return await deleteDoc(docRef);
+};

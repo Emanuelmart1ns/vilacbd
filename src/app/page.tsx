@@ -78,10 +78,17 @@ export default function Home() {
               <p>Certificado de análise em todos os lotes.</p>
             </div>
             <div className="feature-item">
+              <div className="feature-item">
               <div className="feature-icon" style={{ color: "var(--accent-gold)" }}>⚡</div>
               <h3>Efeito Rápido</h3>
               <p>Extração Full Spectrum de alta absorção.</p>
             </div>
+          </div>
+
+          <div className="location-info" style={{ marginTop: "60px", textAlign: "center", borderTop: "1px solid var(--glass-border)", paddingTop: "40px" }}>
+            <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Visite-nos em Santa Maria da Feira</h3>
+            <p style={{ color: "var(--text-secondary)", marginBottom: "8px" }}>📍 Rua Principal, Nº 123, 4520-123 Santa Maria da Feira</p>
+            <p style={{ color: "var(--text-secondary)" }}>⏰ Segunda a Sábado: 10:00 - 19:00</p>
           </div>
         </div>
       </section>
