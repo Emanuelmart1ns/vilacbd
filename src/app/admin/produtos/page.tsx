@@ -1,4 +1,5 @@
 import React from "react";
+import { products } from "@/data/products";
 
 export default function ProdutosAdminPage() {
   return (
@@ -22,39 +23,32 @@ export default function ProdutosAdminPage() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#2a6344", borderRadius: 8 }}></div></td>
-              <td>Óleo Premium 10% CBD (Full Spectrum)</td>
-              <td>€ 12.00</td>
-              <td>€ 35.00</td>
-              <td style={{ color: "var(--accent-green-light)" }}>+ € 23.00</td>
-              <td><span className="badge pago">50 un.</span></td>
-              <td>
-                <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
-              </td>
-            </tr>
-            <tr>
-              <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#cfaa6b", borderRadius: 8 }}></div></td>
-              <td>Gomas Relaxantes CBD (Sabor Morango)</td>
-              <td>€ 8.50</td>
-              <td>€ 24.50</td>
-              <td style={{ color: "var(--accent-green-light)" }}>+ € 16.00</td>
-              <td><span className="badge pendente">3 un.</span></td>
-              <td>
-                <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
-              </td>
-            </tr>
-            <tr>
-              <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#121812", borderRadius: 8 }}></div></td>
-              <td>Flor de CBD Premium (Amnesia) - 5g</td>
-              <td>€ 15.00</td>
-              <td>€ 35.00</td>
-              <td style={{ color: "var(--accent-green-light)" }}>+ € 20.00</td>
-              <td><span className="badge pago">120 un.</span></td>
-              <td>
-                <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
-              </td>
-            </tr>
+            {products.map((product) => {
+              const lucro = product.price - product.cost;
+              return (
+                <tr key={product.id}>
+                  <td>
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8, background: "#121812" }} 
+                    />
+                  </td>
+                  <td>{product.name}</td>
+                  <td>€ {product.cost.toFixed(2)}</td>
+                  <td>€ {product.price.toFixed(2)}</td>
+                  <td style={{ color: "var(--accent-green-light)" }}>+ € {lucro.toFixed(2)}</td>
+                  <td>
+                    <span className={`badge ${product.stock > 10 ? 'pago' : 'pendente'}`}>
+                      {product.stock} un.
+                    </span>
+                  </td>
+                  <td>
+                    <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
