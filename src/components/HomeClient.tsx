@@ -35,7 +35,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         <div className="hero-content">
           <h1 className="hero-title fade-in">A Essência Pura <br/>da Natureza</h1>
           <p className="hero-subtitle fade-in" style={{ animationDelay: "0.2s" }}>
-            Produtos CBD Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
+            Produtos Cãnhamo Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
           </p>
           <div className="hero-buttons fade-in" style={{ animationDelay: "0.4s" }}>
             <Link href="/loja" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
@@ -73,7 +73,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             <div className="location-text" style={{ textAlign: "left" }}>
               <h3 style={{ color: "var(--accent-gold)", marginBottom: "24px", fontSize: "2rem" }}>Onde Estamos</h3>
               <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "16px" }}>
-                📍 <strong>Vila CBD Santa Maria da Feira</strong><br/>
+                📍 <strong>Vila Cãnhamo Santa Maria da Feira</strong><br/>
                 Rua Dr. Roberto Alves 56, <br/>
                 4520-213 Santa Maria da Feira
               </p>
@@ -124,7 +124,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                   <img src={product.image} alt={product.name} className="product-image" />
                 ) : (
                   <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila CBD</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
                   </div>
                 )}
                 <div className="product-info">

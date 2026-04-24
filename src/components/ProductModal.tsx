@@ -86,7 +86,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 backgroundPosition: "center"
               }}
             >
-              {!activeImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila CBD</span>}
+              {!activeImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila Cãnhamo</span>}
             </div>
             
             {allImages.length > 1 && (

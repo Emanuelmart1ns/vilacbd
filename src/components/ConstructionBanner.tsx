@@ -37,7 +37,7 @@ export default function ConstructionBanner() {
           <div className="construction-modal glass-panel">
             <div className="construction-content">
               <span className="construction-icon">✨</span>
-              <h2>Vila CBD</h2>
+              <h2>Vila Cãnhamo</h2>
               <p>Estamos a preparar a melhor seleção de produtos premium para si.</p>
               <div className="construction-timer-bar">
                 <div className="timer-progress"></div>

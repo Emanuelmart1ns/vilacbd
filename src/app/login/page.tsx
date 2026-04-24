@@ -43,7 +43,7 @@ export default function LoginPage() {
     <main className="login-page">
       <div className="login-container glass-panel fade-in">
         <div className="login-header">
-          <h2>Vila CBD</h2>
+          <h2>Vila Cãnhamo</h2>
           <p>Acesso Reservado</p>
         </div>
 
@@ -57,7 +57,7 @@ export default function LoginPage() {
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
               className="input-field" 
-              placeholder="admin@vilacbd.com" 
+              placeholder="admin@vilacanhamo.com" 
               required 
             />
           </div>

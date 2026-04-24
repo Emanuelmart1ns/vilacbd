@@ -58,7 +58,7 @@ export default function ConfiguracoesPage() {
           
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Nome da Loja</label>
-            <input type="text" className="input-field" defaultValue="Vila CBD" />
+            <input type="text" className="input-field" defaultValue="Vila Cãnhamo" />
           </div>
 
           <button className="btn-primary">Guardar Identidade</button>
@@ -103,7 +103,7 @@ export default function ConfiguracoesPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{auth.currentUser?.email || "admin@vilacbd.com"}</td>
+                    <td>{auth.currentUser?.email || "admin@vilacanhamo.com"}</td>
                     <td>Administrador</td>
                     <td>-</td>
                   </tr>
@@ -115,7 +115,7 @@ export default function ConfiguracoesPage() {
               <h4>Novo Utilizador</h4>
               <div className="form-group" style={{ marginTop: "16px" }}>
                 <label>Email do novo utilizador</label>
-                <input type="email" className="input-field" placeholder="ex: colega@vilacbd.com" />
+                <input type="email" className="input-field" placeholder="ex: colega@vilacanhamo.com" />
               </div>
               <button className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
             </div>

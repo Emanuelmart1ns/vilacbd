@@ -101,7 +101,7 @@ export default function CheckoutPage() {
               Confirmar e Pagar
             </button>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", marginTop: "16px" }}>
-              Pagamento seguro garantido pela Vila CBD.
+              Pagamento seguro garantido pela Vila Cãnhamo.
             </p>
           </div>
         </div>
