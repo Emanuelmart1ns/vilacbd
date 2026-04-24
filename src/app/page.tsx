@@ -1,53 +1,100 @@
 import React from "react";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
 import { products } from "@/data/products";
 
 export default function Home() {
-  return (
-    <main style={{ minHeight: "100vh" }}>
-      {/* Hero Section */}
-      <section className="hero-section fade-in">
-        <h1>Vila CBD</h1>
-        <p>A experiência premium de bem-estar botânico em Santa Maria da Feira. Qualidade rigorosa, resultados reais.</p>
-        <button className="btn-primary" style={{ fontSize: "1.1rem", padding: "16px 32px" }}>Ver Coleção Completa</button>
-      </section>
+  // Obter 4 best sellers
+  const bestSellers = products.filter(p => p.isPopular).slice(0, 4);
 
-      {/* Catalog Section */}
-      <section className="container" style={{ paddingTop: "60px", paddingBottom: "80px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "16px" }}>
-          <div>
-            <h2 style={{ fontSize: "2rem", color: "var(--accent-gold)", marginBottom: "8px" }}>O Nosso Catálogo</h2>
-            <p style={{ color: "var(--text-secondary)" }}>Mais de 30 produtos cuidadosamente selecionados para o seu bem-estar.</p>
-          </div>
-          
-          <div className="filters">
-            <button className="btn-secondary active">Todos</button>
-            <button className="btn-secondary">Óleos</button>
-            <button className="btn-secondary">Flores</button>
-            <button className="btn-secondary">Gomas</button>
+  return (
+    <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
+      <Navbar />
+
+      {/* Hero Section Cinematográfica */}
+      <section className="hero-cinematic">
+        <div className="hero-overlay"></div>
+        {/* Usando um vídeo MP4 royalty-free de folhas tropicais/natureza escura para dar um toque premium orgânico */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="hero-video"
+          src="https://cdn.pixabay.com/video/2020/05/25/40141-424846430_large.mp4"
+        ></video>
+        
+        <div className="hero-content">
+          <h1 className="hero-title fade-in">A Essência Pura <br/>da Natureza</h1>
+          <p className="hero-subtitle fade-in" style={{ animationDelay: "0.2s" }}>
+            Produtos CBD Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
+          </p>
+          <div className="hero-buttons fade-in" style={{ animationDelay: "0.4s" }}>
+            <Link href="/loja" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
+              Explorar a Loja
+            </Link>
+            <Link href="#sobre" className="btn-secondary" style={{ padding: "16px 40px", fontSize: "1.1rem", border: "1px solid rgba(255,255,255,0.3)" }}>
+              Saber Mais
+            </Link>
           </div>
         </div>
+      </section>
 
-        <div className="product-grid">
-          {products.map((product, index) => (
-            <div 
-              key={product.id} 
-              className="product-card fade-in" 
-              style={{ animationDelay: `${(index % 8) * 0.1}s` }}
-            >
-              {product.isPopular && <div className="badge-popular">Mais Vendido</div>}
-              {/* Usamos a tag nativa img temporariamente para garantir renderização local sem erro de domains do Next Image */}
-              <img src={product.image} alt={product.name} className="product-image" />
-              <div className="product-info">
-                <span className="product-category">{product.category}</span>
-                <h3 className="product-title">{product.name}</h3>
-                <p className="product-desc">{product.description}</p>
-                <div className="product-footer">
-                  <span className="product-price">€ {product.price.toFixed(2)}</span>
-                  <button className="btn-primary" style={{ padding: "8px 20px" }}>Comprar</button>
+      {/* Secção Confiança / Features */}
+      <section className="features-section">
+        <div className="container">
+          <div className="features-grid">
+            <div className="feature-item">
+              <div className="feature-icon">🌿</div>
+              <h3>100% Orgânico</h3>
+              <p>Cultivado sem pesticidas ou químicos.</p>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">🔬</div>
+              <h3>Testado em Laboratório</h3>
+              <p>Certificado de análise em todos os lotes.</p>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">⚡</div>
+              <h3>Efeito Rápido</h3>
+              <p>Extração Full Spectrum de alta absorção.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Secção Best Sellers */}
+      <section className="bestsellers-section" style={{ padding: "80px 0" }}>
+        <div className="container">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
+            <div>
+              <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "8px" }}>Mais Vendidos</h2>
+              <p style={{ color: "var(--text-secondary)" }}>Os produtos favoritos dos nossos clientes.</p>
+            </div>
+            <Link href="/loja" className="btn-secondary">Ver Tudo</Link>
+          </div>
+
+          <div className="product-grid">
+            {bestSellers.map((product) => (
+              <div key={product.id} className="product-card">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className="product-image" />
+                ) : (
+                  <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila CBD</span>
+                  </div>
+                )}
+                <div className="product-info">
+                  <span className="product-category">{product.category}</span>
+                  <h3 className="product-title">{product.name}</h3>
+                  <div className="product-footer" style={{ marginTop: "auto" }}>
+                    <span className="product-price">€ {product.price.toFixed(2)}</span>
+                    <button className="btn-primary" style={{ padding: "8px 20px" }}>Comprar</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
     </main>
