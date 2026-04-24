@@ -28,36 +28,8 @@ export default function LogisticaPage() {
           </thead>
           <tbody>
             <tr>
-              <td>#10045</td>
-              <td>24 Abr 2026</td>
-              <td>João M. (Porto)</td>
-              <td>€ 85.00</td>
-              <td><span className="badge pago">Confirmado (MBWay)</span></td>
-              <td><input type="text" placeholder="Ex: CTT12345" className="input-field" /></td>
-              <td>
-                <button className="btn-action">Marcar Envio</button>
-              </td>
-            </tr>
-            <tr>
-              <td>#10044</td>
-              <td>23 Abr 2026</td>
-              <td>Maria F. (Lisboa)</td>
-              <td>€ 120.50</td>
-              <td><span className="badge pendente">A aguardar</span></td>
-              <td>-</td>
-              <td>
-                <button className="btn-action outline">Aprovar Pagamento</button>
-              </td>
-            </tr>
-            <tr>
-              <td>#10043</td>
-              <td>22 Abr 2026</td>
-              <td>Carlos S. (Faro)</td>
-              <td>€ 45.00</td>
-              <td><span className="badge pago">Confirmado (Cartão)</span></td>
-              <td>CTT998877PT</td>
-              <td>
-                <button className="btn-action done">Concluir Entrega</button>
+              <td colSpan={7} style={{ textAlign: "center", padding: "32px", color: "var(--text-secondary)" }}>
+                Ainda não existem encomendas. A tua equipa de expedição está pronta para inaugurar!
               </td>
             </tr>
           </tbody>
