@@ -85,10 +85,34 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="location-info" style={{ marginTop: "60px", textAlign: "center", borderTop: "1px solid var(--glass-border)", paddingTop: "40px" }}>
-            <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Visite-nos em Santa Maria da Feira</h3>
-            <p style={{ color: "var(--text-secondary)", marginBottom: "8px" }}>📍 Rua Principal, Nº 123, 4520-123 Santa Maria da Feira</p>
-            <p style={{ color: "var(--text-secondary)" }}>⏰ Segunda a Sábado: 10:00 - 19:00</p>
+          <div className="location-container" style={{ marginTop: "60px", display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "40px", alignItems: "center", borderTop: "1px solid var(--glass-border)", paddingTop: "60px" }}>
+            <div className="location-text" style={{ textAlign: "left" }}>
+              <h3 style={{ color: "var(--accent-gold)", marginBottom: "24px", fontSize: "2rem" }}>Onde Estamos</h3>
+              <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "16px" }}>
+                📍 <strong>Vila CBD Santa Maria da Feira</strong><br/>
+                Rua Dr. Roberto Alves 56, <br/>
+                4520-213 Santa Maria da Feira
+              </p>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "20px", borderRadius: "12px", border: "1px solid var(--glass-border)" }}>
+                <h4 style={{ marginBottom: "12px", color: "var(--accent-green-light)" }}>Horário de Funcionamento</h4>
+                <ul style={{ listStyle: "none", padding: 0, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                  <li style={{ marginBottom: "8px" }}>📅 Segunda a Sexta: 10:00 - 13:00 | 14:30 - 19:00</li>
+                  <li>📅 Sábado: 10:00 - 13:00</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="location-map" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--glass-border)", height: "350px" }}>
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3014.5678!2d-8.5432!3d40.9254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2385...!2sSanta%20Maria%20da%20Feira!5e0!3m2!1spt-PT!2spt!4v171396...!" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen={true} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
           </div>
         </div>
       </section>
