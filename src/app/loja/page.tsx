@@ -17,17 +17,27 @@ export default function LojaPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      // Timeout de segurança para não ficar preso no loading
+      const timer = setTimeout(() => {
+        if (loading) {
+          console.warn("Firebase timeout - usando dados estáticos");
+          setProducts(staticProducts);
+          setLoading(false);
+        }
+      }, 5000);
+
       try {
         const data = await getProducts();
-        if (data.length === 0) {
-          setProducts(staticProducts);
-        } else {
+        if (data && data.length > 0) {
           setProducts(data as Product[]);
+        } else {
+          setProducts(staticProducts);
         }
       } catch (error) {
         console.error("Erro ao carregar produtos:", error);
         setProducts(staticProducts);
       } finally {
+        clearTimeout(timer);
         setLoading(false);
       }
     };

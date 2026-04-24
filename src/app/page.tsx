@@ -45,7 +45,7 @@ export default function Home() {
 
       {/* Hero Section Cinematográfica */}
       <section className="hero-cinematic">
-        <div className="hero-overlay"></div>
+        <div className="hero-overlay" style={{ background: "rgba(0, 0, 0, 0.7)" }}></div>
         
         <div className="hero-content">
           <h1 className="hero-title fade-in">A Essência Pura <br/>da Natureza</h1>
@@ -64,21 +64,21 @@ export default function Home() {
       </section>
 
       {/* Secção Confiança / Features */}
-      <section className="features-section">
+      <section id="sobre" className="features-section">
         <div className="container">
           <div className="features-grid">
             <div className="feature-item">
-              <div className="feature-icon">🌿</div>
+              <div className="feature-icon" style={{ color: "var(--accent-gold)" }}>🌿</div>
               <h3>100% Orgânico</h3>
               <p>Cultivado sem pesticidas ou químicos.</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon">🔬</div>
+              <div className="feature-icon" style={{ color: "var(--accent-gold)" }}>🔬</div>
               <h3>Testado em Laboratório</h3>
               <p>Certificado de análise em todos os lotes.</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon">⚡</div>
+              <div className="feature-icon" style={{ color: "var(--accent-gold)" }}>⚡</div>
               <h3>Efeito Rápido</h3>
               <p>Extração Full Spectrum de alta absorção.</p>
             </div>
@@ -89,8 +89,8 @@ export default function Home() {
       {/* Secção Best Sellers */}
       <section className="bestsellers-section" style={{ padding: "80px 0" }}>
         <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
-            <div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "40px" }}>
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "8px" }}>Mais Vendidos</h2>
               <p style={{ color: "var(--text-secondary)" }}>Os produtos favoritos dos nossos clientes.</p>
             </div>
