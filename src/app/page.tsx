@@ -1,15 +1,41 @@
-"use client";
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
-import { products } from "@/data/products";
+import { Product, products as staticProducts } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import { getProducts } from "@/lib/firebase";
+import ProductModal from "@/components/ProductModal";
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        if (data.length === 0) {
+          setProducts(staticProducts);
+        } else {
+          setProducts(data as Product[]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+        setProducts(staticProducts);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   // Obter 4 best sellers
   const bestSellers = products.filter(p => p.isPopular).slice(0, 4);
-  const { addToCart } = useCart();
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
 
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
@@ -71,7 +97,12 @@ export default function Home() {
 
           <div className="product-grid">
             {bestSellers.map((product) => (
-              <div key={product.id} className="product-card">
+              <div 
+                key={product.id} 
+                className="product-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => handleProductClick(product)}
+              >
                 {product.image ? (
                   <img src={product.image} alt={product.name} className="product-image" />
                 ) : (
@@ -87,14 +118,17 @@ export default function Home() {
                     <button 
                       className="btn-primary" 
                       style={{ padding: "8px 20px" }}
-                      onClick={() => addToCart({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        quantity: 1,
-                        image: product.image,
-                        color: product.color
-                      })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart({
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          quantity: 1,
+                          image: product.image,
+                          color: product.color
+                        });
+                      }}
                     >
                       Comprar
                     </button>
@@ -105,6 +139,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <ProductModal 
+        product={selectedProduct} 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </main>
   );
 }

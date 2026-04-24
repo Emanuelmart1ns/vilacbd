@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useCart } from "@/context/CartContext";
+import Link from "next/link";
 import "./cart.css";
 
 export default function CartSidebar() {
@@ -24,7 +25,14 @@ export default function CartSidebar() {
           ) : (
             items.map((item) => (
               <div key={item.id} className="cart-item">
-                <div className="cart-item-img" style={{ background: item.color || "#333", backgroundImage: item.image ? `url(${item.image})` : 'none', backgroundSize: 'cover' }}>
+                <div 
+                  className="cart-item-img" 
+                  style={{ 
+                    background: item.color || "#333", 
+                    backgroundImage: item.image ? `url(${item.image})` : 'none', 
+                    backgroundSize: 'cover' 
+                  }}
+                >
                 </div>
                 <div className="cart-item-details">
                   <h4>{item.name}</h4>
@@ -48,9 +56,11 @@ export default function CartSidebar() {
             <span>Total:</span>
             <span className="cart-total-price">€ {cartTotal.toFixed(2)}</span>
           </div>
-          <button className="btn-primary btn-checkout" disabled={items.length === 0}>
-            Finalizar Compra
-          </button>
+          <Link href="/checkout" style={{ width: "100%", display: "block" }} onClick={() => setIsCartOpen(false)}>
+            <button className="btn-primary btn-checkout" style={{ width: "100%" }} disabled={items.length === 0}>
+              Finalizar Compra
+            </button>
+          </Link>
         </div>
       </div>
     </div>

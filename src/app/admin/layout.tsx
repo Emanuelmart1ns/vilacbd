@@ -1,12 +1,42 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 import Link from "next/link";
-import "./admin.css"; // Custom admin styles we'll create
+import "./admin.css";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  };
+
+  if (loading) {
+    return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>A verificar acesso...</div>;
+  }
+
+  if (!user) return null;
+
   return (
     <div className="admin-container">
       {/* Sidebar */}
@@ -21,7 +51,7 @@ export default function AdminLayout({
           <Link href="/admin/configuracoes" className="admin-nav-link">Configurações</Link>
         </nav>
         <div className="admin-sidebar-footer">
-          <button className="btn-logout">Sair</button>
+          <button className="btn-logout" onClick={handleLogout}>Sair</button>
         </div>
       </aside>
 
@@ -30,7 +60,7 @@ export default function AdminLayout({
         <header className="admin-header">
           <h1>Painel de Controlo</h1>
           <div className="admin-user-info">
-            <span>Admin</span>
+            <span>{user.email}</span>
           </div>
         </header>
         <div className="admin-content">

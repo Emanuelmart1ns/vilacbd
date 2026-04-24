@@ -1,16 +1,36 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-import { Product, products } from "@/data/products";
+import { Product, products as staticProducts } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import ProductModal from "@/components/ProductModal";
+import { getProducts } from "@/lib/firebase";
 
 export default function LojaPage() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        if (data.length === 0) {
+          setProducts(staticProducts);
+        } else {
+          setProducts(data as Product[]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar produtos:", error);
+        setProducts(staticProducts);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const filteredProducts = selectedCategory 
     ? products.filter(p => p.category === selectedCategory)
@@ -65,8 +85,11 @@ export default function LojaPage() {
           </aside>
 
           <div className="shop-main">
-            <div className="product-grid" style={{ paddingTop: 0 }}>
-              {filteredProducts.map((product, index) => (
+            {loading ? (
+              <div style={{ color: "var(--text-secondary)", textAlign: "center", padding: "40px" }}>A carregar catálogo...</div>
+            ) : (
+              <div className="product-grid" style={{ paddingTop: 0 }}>
+                {filteredProducts.map((product, index) => (
                 <div 
                   key={product.id} 
                   className="product-card fade-in" 
@@ -108,9 +131,10 @@ export default function LojaPage() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
             
-            {filteredProducts.length === 0 && (
+            {!loading && filteredProducts.length === 0 && (
               <p style={{ color: "var(--text-secondary)", marginTop: "40px" }}>Nenhum produto encontrado nesta categoria.</p>
             )}
           </div>

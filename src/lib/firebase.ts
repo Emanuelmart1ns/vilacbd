@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -17,3 +17,24 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 export { app, db, auth };
+
+// Firestore Helpers
+export const getProducts = async () => {
+  const q = query(collection(db, "products"));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addProduct = async (product: any) => {
+  return await addDoc(collection(db, "products"), product);
+};
+
+export const updateProduct = async (id: string, product: any) => {
+  const productRef = doc(db, "products", id);
+  return await updateDoc(productRef, product);
+};
+
+export const deleteProduct = async (id: string) => {
+  const productRef = doc(db, "products", id);
+  return await deleteDoc(productRef);
+};
