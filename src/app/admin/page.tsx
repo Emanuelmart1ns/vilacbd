@@ -6,18 +6,18 @@ export default function AdminDashboard() {
       <div className="stats-grid">
         <div className="stat-card glass-panel">
           <h3>Vendas Mensais</h3>
-          <p className="stat-value">€ 4.250</p>
-          <span className="stat-trend positive">+12% vs mês passado</span>
+          <p className="stat-value">€ 0.00</p>
+          <span className="stat-trend">À espera da inauguração</span>
         </div>
         <div className="stat-card glass-panel">
           <h3>Encomendas Pendentes</h3>
-          <p className="stat-value">14</p>
-          <span className="stat-trend warning">Requerem atenção</span>
+          <p className="stat-value">0</p>
+          <span className="stat-trend">Tudo em dia</span>
         </div>
         <div className="stat-card glass-panel">
-          <h3>Produtos Ativos</h3>
-          <p className="stat-value">28</p>
-          <span className="stat-trend">Em stock</span>
+          <h3>Lucro Estimado Atual</h3>
+          <p className="stat-value">€ 0.00</p>
+          <span className="stat-trend">(Preço de Venda - Custo)</span>
         </div>
       </div>
       
@@ -35,25 +35,9 @@ export default function AdminDashboard() {
           </thead>
           <tbody>
             <tr>
-              <td>#10045</td>
-              <td>24 Abr 2026</td>
-              <td>João M.</td>
-              <td>€ 85.00</td>
-              <td><span className="badge pago">Pago</span></td>
-            </tr>
-            <tr>
-              <td>#10044</td>
-              <td>23 Abr 2026</td>
-              <td>Maria F.</td>
-              <td>€ 120.50</td>
-              <td><span className="badge pendente">A aguardar MBWay</span></td>
-            </tr>
-            <tr>
-              <td>#10043</td>
-              <td>22 Abr 2026</td>
-              <td>Carlos S.</td>
-              <td>€ 45.00</td>
-              <td><span className="badge enviado">Enviado</span></td>
+              <td colSpan={5} style={{ textAlign: "center", padding: "32px", color: "var(--text-secondary)" }}>
+                Ainda não existem transações. A tua loja está a ser preparada!
+              </td>
             </tr>
           </tbody>
         </table>

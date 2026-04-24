@@ -14,8 +14,9 @@ export default function ProdutosAdminPage() {
             <tr>
               <th>Imagem</th>
               <th>Nome do Produto</th>
-              <th>Categoria</th>
-              <th>Preço</th>
+              <th>Custo (Compra)</th>
+              <th>PVP (Venda)</th>
+              <th>Lucro Bruto</th>
               <th>Stock</th>
               <th>Ações</th>
             </tr>
@@ -24,8 +25,9 @@ export default function ProdutosAdminPage() {
             <tr>
               <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#2a6344", borderRadius: 8 }}></div></td>
               <td>Óleo Premium 10% CBD (Full Spectrum)</td>
-              <td>Óleos e Tinturas</td>
+              <td>€ 12.00</td>
               <td>€ 35.00</td>
+              <td style={{ color: "var(--accent-green-light)" }}>+ € 23.00</td>
               <td><span className="badge pago">50 un.</span></td>
               <td>
                 <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
@@ -34,8 +36,9 @@ export default function ProdutosAdminPage() {
             <tr>
               <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#cfaa6b", borderRadius: 8 }}></div></td>
               <td>Gomas Relaxantes CBD (Sabor Morango)</td>
-              <td>Gomas e Edibles</td>
+              <td>€ 8.50</td>
               <td>€ 24.50</td>
+              <td style={{ color: "var(--accent-green-light)" }}>+ € 16.00</td>
               <td><span className="badge pendente">3 un.</span></td>
               <td>
                 <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
@@ -43,9 +46,10 @@ export default function ProdutosAdminPage() {
             </tr>
             <tr>
               <td><div className="img-placeholder" style={{ width: 40, height: 40, background: "#121812", borderRadius: 8 }}></div></td>
-              <td>Bálsamo Muscular Recuperação</td>
-              <td>Tópicos</td>
-              <td>€ 42.00</td>
+              <td>Flor de CBD Premium (Amnesia) - 5g</td>
+              <td>€ 15.00</td>
+              <td>€ 35.00</td>
+              <td style={{ color: "var(--accent-green-light)" }}>+ € 20.00</td>
               <td><span className="badge pago">120 un.</span></td>
               <td>
                 <button className="btn-text">Editar</button> | <button className="btn-text text-danger">Remover</button>
