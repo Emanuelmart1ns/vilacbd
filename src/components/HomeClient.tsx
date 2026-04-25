@@ -70,27 +70,33 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               )}
             </div>
 
-            {user ? (
-              <div className="product-grid">
-                {bestSellers.map((product) => (
-                  <div 
-                    key={product.id} 
-                    className="product-card"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => handleProductClick(product)}
-                  >
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="product-image" />
-                    ) : (
-                      <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
-                      </div>
-                    )}
-                    <div className="product-info">
-                      <span className="product-category">{product.category}</span>
-                      <h3 className="product-title">{product.name}</h3>
-                      <div className="product-footer" style={{ marginTop: "auto" }}>
-                        <span className="product-price">€ {product.price.toFixed(2)}</span>
+            <div className="product-grid">
+              {bestSellers.map((product) => (
+                <div 
+                  key={product.id} 
+                  className="product-card"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    if (!user) {
+                      window.location.href = "/login";
+                      return;
+                    }
+                    handleProductClick(product);
+                  }}
+                >
+                  {product.image ? (
+                    <img src={product.image} alt={product.name} className="product-image" />
+                  ) : (
+                    <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
+                    </div>
+                  )}
+                  <div className="product-info">
+                    <span className="product-category">{product.category}</span>
+                    <h3 className="product-title">{product.name}</h3>
+                    <div className="product-footer" style={{ marginTop: "auto" }}>
+                      <span className="product-price">€ {product.price.toFixed(2)}</span>
+                      {user ? (
                         <button 
                           className="btn-primary" 
                           style={{ padding: "8px 20px" }}
@@ -108,27 +114,23 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                         >
                           Comprar
                         </button>
-                      </div>
+                      ) : (
+                        <button 
+                          className="btn-primary" 
+                          style={{ padding: "8px 20px" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = "/login";
+                          }}
+                        >
+                          Entrar
+                        </button>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="product-grid" style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>
-                {bestSellers.map((product) => (
-                  <div key={product.id} className="product-card">
-                    <div className="product-image" style={{ background: product.color, minHeight: "200px" }}></div>
-                    <div className="product-info">
-                      <span className="product-category">{product.category}</span>
-                      <h3 className="product-title">{product.name}</h3>
-                      <div className="product-footer" style={{ marginTop: "auto" }}>
-                        <span className="product-price">€ ••.••</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
