@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -10,6 +10,7 @@ export interface UserProfile {
   displayName: string;
   photoURL?: string;
   role: "admin" | "customer";
+  provider: string;
   createdAt: string;
 }
 
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (firebaseUser: User) => {
+  const fetchProfile = useCallback(async (firebaseUser: User) => {
     try {
       const idToken = await firebaseUser.getIdToken();
       const res = await fetch("/api/auth", {
@@ -45,25 +46,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           displayName: data.displayName || firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "",
           photoURL: firebaseUser.photoURL || undefined,
           role: data.role || "customer",
+          provider: data.provider || "unknown",
           createdAt: data.createdAt || new Date().toISOString(),
         });
       }
     } catch {
+      const providerData = firebaseUser.providerData;
+      const provider = providerData.length > 0 ? providerData[0].providerId : "unknown";
       setProfile({
         uid: firebaseUser.uid,
         email: firebaseUser.email || "",
         displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "",
         role: "customer",
+        provider,
         createdAt: new Date().toISOString(),
       });
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -76,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [fetchProfile]);
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>

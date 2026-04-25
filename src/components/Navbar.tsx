@@ -48,7 +48,7 @@ export default function Navbar() {
                   )}
                 </div>
                 <div className="nav-user-dropdown">
-                  {profile?.role === "admin" && (
+                  {profile?.role === "admin" && profile?.provider !== "google.com" && (
                     <Link href="/admin" className="nav-dropdown-item">Painel Admin</Link>
                   )}
                   <button onClick={handleLogout} className="nav-dropdown-item nav-logout">Sair</button>

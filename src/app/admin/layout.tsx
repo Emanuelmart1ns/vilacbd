@@ -17,21 +17,19 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/admin/login");
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (!loading && user && profile && profile.role !== "admin") {
-      router.push("/");
+    if (!loading) {
+      if (!user) {
+        router.push("/admin-login");
+      } else if (profile && (profile.role !== "admin" || profile.provider === "google.com")) {
+        router.push("/");
+      }
     }
   }, [user, profile, loading, router]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.push("/admin/login");
+      router.push("/admin-login");
     } catch (error) {
       console.error("Erro ao sair:", error);
     }
@@ -41,7 +39,7 @@ export default function AdminLayout({
     return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>A verificar acesso...</div>;
   }
 
-  if (!user || profile?.role !== "admin") return null;
+  if (!user || profile?.role !== "admin" || profile?.provider === "google.com") return null;
 
   return (
     <div className="admin-container">

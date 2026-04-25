@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     const email = decodedToken.email || "";
     const name = displayName || decodedToken.name || email.split("@")[0];
     const photoURL = decodedToken.picture || "";
+    const firebaseProvider = decodedToken.firebase?.sign_in_provider || provider || "unknown";
 
     const db = getAdminDb();
     const userRef = db.collection("users").doc(uid);
@@ -34,17 +35,18 @@ export async function POST(request: NextRequest) {
         email,
         displayName: name,
         photoURL,
-        provider: provider || "unknown",
+        provider: firebaseProvider,
         role: "customer",
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
         loginCount: 1,
       });
-      return NextResponse.json({ isNew: true, role: "customer" }, { status: 201 });
+      return NextResponse.json({ isNew: true, role: "customer", provider: firebaseProvider }, { status: 201 });
     } else {
       const updateData: Record<string, string | number> = {
         lastLogin: new Date().toISOString(),
         loginCount: (userDoc.data()?.loginCount || 0) + 1,
+        provider: firebaseProvider,
       };
       if (name && name !== email.split("@")[0]) {
         updateData.displayName = name;
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       }
       await userRef.update(updateData);
       const role = userDoc.data()?.role || "customer";
-      return NextResponse.json({ isNew: false, role }, { status: 200 });
+      return NextResponse.json({ isNew: false, role, provider: firebaseProvider, createdAt: userDoc.data()?.createdAt }, { status: 200 });
     }
   } catch (error) {
     console.error("Erro no sync de utilizador:", error);
