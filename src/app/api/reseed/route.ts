@@ -4,6 +4,15 @@ import { products as staticProducts } from "@/data/products";
 
 export async function GET() {
   try {
+    // Verificar se as variáveis de ambiente estão configuradas
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY && 
+        !process.env.FIREBASE_ADMIN_PROJECT_ID) {
+      return NextResponse.json({ 
+        error: "Firebase Admin não configurado. Configure as variáveis de ambiente no Vercel.",
+        hint: "Vá para Vercel Dashboard > Project Settings > Environment Variables"
+      }, { status: 500 });
+    }
+
     const db = getAdminDb();
 
     // Recriar todos os produtos com os dados estáticos (incluindo imagens)
@@ -32,6 +41,8 @@ export async function GET() {
     console.error("Erro ao sincronizar produtos:", error);
     return NextResponse.json({ 
       error: "Erro ao sincronizar produtos: " + (error as Error).message,
+      errorName: (error as Error).name,
+      hint: "Verifique se o Firebase Admin está configurado corretamente no Vercel",
       stack: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined
     }, { status: 500 });
   }
