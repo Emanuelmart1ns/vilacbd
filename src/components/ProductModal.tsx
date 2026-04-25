@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -22,23 +22,21 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   
-  // Reset activeImg when product changes, derive current display image
-  const allImages = product ? [product.image, ...(product.images || [])].filter((img, index, self) => img && self.indexOf(img) === index) as string[] : [];
-  const currentActiveImg = allImages.length > 0 && allImages.includes(activeImg || "") ? activeImg : (product?.image || null);
+  const allImages = product
+    ? [product.image, ...(product.images || [])].filter(
+        (img, index, self): img is string => !!img && self.indexOf(img) === index
+      )
+    : [];
 
-  // Reset activeImg when product changes
-  useEffect(() => {
+  const prevProductId = React.useRef<string | undefined>(undefined);
+  if (product?.id !== prevProductId.current) {
+    prevProductId.current = product?.id;
     if (product) {
-      setActiveImg(null);
-      console.log("Product images:", { 
-        mainImage: product.image, 
-        secondaryImages: product.images, 
-        allImages: allImages 
-      });
+      setActiveIndex(0);
     }
-  }, [product?.id]);
+  }
 
   useEffect(() => {
     if (!product) return;
@@ -57,6 +55,37 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     return () => { cancelled = true; };
   }, [product]);
 
+  const goToImage = useCallback((index: number) => {
+    setActiveIndex((prev) => {
+      if (allImages.length === 0) return prev;
+      const next = ((index % allImages.length) + allImages.length) % allImages.length;
+      return next;
+    });
+  }, [allImages.length]);
+
+  const goNext = useCallback(() => {
+    goToImage(activeIndex + 1);
+  }, [activeIndex, goToImage]);
+
+  const goPrev = useCallback(() => {
+    goToImage(activeIndex - 1);
+  }, [activeIndex, goToImage]);
+
+  useEffect(() => {
+    if (!isOpen || allImages.length <= 1) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, allImages.length, goNext, goPrev]);
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !product) return;
@@ -71,7 +100,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
         rating: rating
       });
       setNewComment("");
-      // Refresh reviews inline
       const all = await getReviews();
       const productReviews = all.filter((r) => r.productId === product.id);
       setReviews(productReviews);
@@ -85,7 +113,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   if (!isOpen || !product) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    // Fechar apenas se clicar no backdrop, não no conteúdo
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -95,6 +122,8 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     e.stopPropagation();
     onClose();
   };
+
+  const currentImg = allImages.length > 0 ? allImages[activeIndex] : null;
 
   return (
     <div className="modal-overlay" onClick={handleBackdropClick}>
@@ -107,40 +136,71 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
         <div className="modal-grid">
           {/* Galeria de Imagens */}
           <div className="modal-gallery">
-            <div 
-              className="modal-main-img"
-              style={{
-                background: product.color || "#333",
-                backgroundImage: currentActiveImg ? `url(${currentActiveImg})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              }}
-            >
-              {!currentActiveImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila Cãnhamo</span>}
-            </div>
-            
-            {allImages.length > 1 && (
-              <div className="modal-thumbnails">
-                <div style={{ padding: "8px 15px", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                  {allImages.length} imagens
+            {allImages.length > 0 ? (
+              <div className="gallery-layout">
+                {allImages.length > 1 && (
+                  <div className="gallery-thumbs-vertical">
+                    {allImages.map((img, i) => (
+                      <button
+                        key={i}
+                        className={`thumb-vertical ${activeIndex === i ? 'active' : ''}`}
+                        onClick={() => setActiveIndex(i)}
+                        type="button"
+                        aria-label={`Imagem ${i + 1} de ${allImages.length}`}
+                      >
+                        <div
+                          className="thumb-vertical-img"
+                          style={{
+                            background: product.color || "#333",
+                            backgroundImage: `url(${img})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center"
+                          }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="gallery-main">
+                  <div className="modal-main-img-wrapper">
+                    <div
+                      className="modal-main-img"
+                      style={{
+                        background: product.color || "#333",
+                        backgroundImage: currentImg ? `url(${currentImg})` : "none",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center"
+                      }}
+                    />
+
+                    {allImages.length > 1 && (
+                      <>
+                        <button
+                          className="gallery-arrow gallery-arrow-left"
+                          onClick={(e) => { e.stopPropagation(); goPrev(); }}
+                          aria-label="Imagem anterior"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          className="gallery-arrow gallery-arrow-right"
+                          onClick={(e) => { e.stopPropagation(); goNext(); }}
+                          aria-label="Próxima imagem"
+                        >
+                          ›
+                        </button>
+                        <div className="gallery-indicator">
+                          {activeIndex + 1} / {allImages.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-                {allImages.map((img, i) => (
-                  <div 
-                    key={i} 
-                    className={`thumb ${currentActiveImg === img ? 'active' : ''}`}
-                    onClick={() => {
-                      console.log("Thumbnail clicked:", img);
-                      setActiveImg(img);
-                    }}
-                    style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }}
-                    title={`Imagem ${i + 1}`}
-                  />
-                ))}
               </div>
-            )}
-            {allImages.length <= 1 && (
-              <div style={{ padding: "15px", background: "rgba(0,0,0,0.3)", color: "var(--text-secondary)", fontSize: "0.85rem", textAlign: "center" }}>
-                Apenas 1 imagem disponível
+            ) : (
+              <div className="gallery-no-images">
+                <span className="gallery-no-images-icon">🖼</span>
+                <span className="gallery-no-images-text">Sem imagens disponíveis</span>
               </div>
             )}
           </div>

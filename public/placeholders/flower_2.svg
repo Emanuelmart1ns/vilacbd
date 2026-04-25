@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2e1a"/>
+      <stop offset="100%" style="stop-color:#0d1a0d"/>
+    </linearGradient>
+    <radialGradient id="bud" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#588157"/>
+      <stop offset="40%" style="stop-color:#3a5a40"/>
+      <stop offset="100%" style="stop-color:#2b4a30"/>
+    </radialGradient>
+    <radialGradient id="trichome" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#fff;stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#fff;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <ellipse cx="180" cy="190" rx="90" ry="75" fill="url(#bud)" transform="rotate(-10,180,190)"/>
+    <ellipse cx="220" cy="210" rx="70" ry="55" fill="#4a7c59" opacity="0.7" transform="rotate(15,220,210)"/>
+    <ellipse cx="160" cy="220" rx="55" ry="40" fill="#3d6b4a" opacity="0.5" transform="rotate(-25,160,220)"/>
+    <path d="M150 170 Q170 150 190 175 Q165 190 150 170Z" fill="#5a9a6a" opacity="0.4"/>
+    <path d="M210 180 Q230 160 245 185 Q225 200 210 180Z" fill="#6aaa7a" opacity="0.3"/>
+    <path d="M175 230 Q195 215 205 235 Q190 250 175 230Z" fill="#4a8a5a" opacity="0.35"/>
+    <path d="M230 220 Q245 205 255 225 Q240 240 230 220Z" fill="#5a9a6a" opacity="0.3"/>
+  </g>
+  <g opacity="0.6">
+    <circle cx="155" cy="165" r="2" fill="url(#trichome)"/>
+    <circle cx="185" cy="155" r="1.5" fill="url(#trichome)"/>
+    <circle cx="215" cy="170" r="2" fill="url(#trichome)"/>
+    <circle cx="200" cy="200" r="1.5" fill="url(#trichome)"/>
+    <circle cx="170" cy="215" r="2" fill="url(#trichome)"/>
+    <circle cx="240" cy="205" r="1.5" fill="url(#trichome)"/>
+    <circle cx="145" cy="195" r="1.5" fill="url(#trichome)"/>
+    <circle cx="190" cy="240" r="1.5" fill="url(#trichome)"/>
+    <circle cx="225" cy="235" r="1" fill="url(#trichome)"/>
+    <circle cx="160" cy="245" r="1" fill="url(#trichome)"/>
+    <circle cx="250" cy="190" r="1" fill="url(#trichome)"/>
+    <circle cx="135" cy="215" r="1" fill="url(#trichome)"/>
+  </g>
+  <text x="200" y="370" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(88,129,87,0.4)" letter-spacing="3">VILA CÃNHAMO</text>
+</svg>
