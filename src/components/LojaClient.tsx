@@ -71,8 +71,8 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
                 <div 
                   key={product.id} 
                   className="product-card"
-                  onClick={() => handleProductClick(product)}
                   style={{ cursor: "pointer" }}
+                  onClick={() => handleProductClick(product)}
                 >
                   <div 
                     className="product-image" 

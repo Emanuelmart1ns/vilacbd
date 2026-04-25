@@ -1,34 +1,35 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getReviews, deleteReview } from "@/lib/firebase";
+import { getReviews, deleteReview, FirestoreReview } from "@/lib/firebase";
 
 export default function ComentariosAdminPage() {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<FirestoreReview[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchReviews();
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await getReviews();
+        if (!cancelled) setReviews(data);
+      } catch {
+        console.error("Erro ao carregar comentários");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
-
-  const fetchReviews = async () => {
-    setLoading(true);
-    try {
-      const data = await getReviews();
-      setReviews(data);
-    } catch (error) {
-      console.error("Erro ao carregar comentários:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza que deseja eliminar este comentário?")) return;
     try {
       await deleteReview(id);
-      fetchReviews();
-    } catch (error) {
+      const data = await getReviews();
+      setReviews(data);
+    } catch {
       alert("Erro ao eliminar comentário.");
     }
   };
@@ -67,7 +68,7 @@ export default function ComentariosAdminPage() {
                     </div>
                   </td>
                   <td style={{ maxWidth: "400px" }}>
-                    <p style={{ fontSize: "0.9rem", fontStyle: "italic" }}>"{review.comment}"</p>
+                    <p style={{ fontSize: "0.9rem", fontStyle: "italic" }}>&ldquo;{review.comment}&rdquo;</p>
                   </td>
                   <td>
                     <span style={{ color: "var(--accent-gold)" }}>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span>

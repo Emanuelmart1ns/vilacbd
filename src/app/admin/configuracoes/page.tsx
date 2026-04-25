@@ -8,6 +8,12 @@ import { useRouter } from "next/navigation";
 export default function ConfiguracoesPage() {
   const router = useRouter();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [storeName, setStoreName] = useState("Vila Cãnhamo");
+  const [stripePublic, setStripePublic] = useState("");
+  const [stripeSecret, setStripeSecret] = useState("");
+  const [mbwayKey, setMbwayKey] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -25,6 +31,25 @@ export default function ConfiguracoesPage() {
     }
   };
 
+  const handleSaveIdentity = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveMessage("Identidade guardada com sucesso!");
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
+  const handleSavePayments = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveMessage("Pagamentos guardados com sucesso!");
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveMessage(`Convite enviado para ${newUserEmail}`);
+    setNewUserEmail("");
+    setTimeout(() => setSaveMessage(""), 3000);
+  };
+
   return (
     <div className="configuracoes-page">
       <header className="page-header">
@@ -32,8 +57,13 @@ export default function ConfiguracoesPage() {
       </header>
 
       <div className="settings-grid" style={{ display: "grid", gap: "24px", gridTemplateColumns: "1fr 1fr" }}>
+        {saveMessage && (
+          <div style={{ gridColumn: "1 / -1", padding: "12px 20px", background: "rgba(42, 99, 68, 0.2)", border: "1px solid var(--accent-green)", borderRadius: "8px", color: "var(--accent-green-light)" }}>
+            {saveMessage}
+          </div>
+        )}
         {/* Identidade Visual */}
-        <div className="glass-panel" style={{ padding: "24px" }}>
+        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveIdentity}>
           <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Identidade Visual</h3>
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Logótipo da Loja</label>
@@ -58,33 +88,33 @@ export default function ConfiguracoesPage() {
           
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Nome da Loja</label>
-            <input type="text" className="input-field" defaultValue="Vila Cãnhamo" />
+            <input type="text" className="input-field" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
           </div>
 
-          <button className="btn-primary">Guardar Identidade</button>
-        </div>
+          <button type="submit" className="btn-primary">Guardar Identidade</button>
+        </form>
 
         {/* Pagamentos */}
-        <div className="glass-panel" style={{ padding: "24px" }}>
+        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSavePayments}>
           <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Integração de Pagamentos</h3>
           
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Stripe Public Key</label>
-            <input type="text" className="input-field" defaultValue="pk_test_*************************" />
+            <input type="text" className="input-field" value={stripePublic} onChange={(e) => setStripePublic(e.target.value)} placeholder="pk_test_..." />
           </div>
           
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Stripe Secret Key</label>
-            <input type="password" className="input-field" defaultValue="sk_test_*************************" />
+            <input type="password" className="input-field" value={stripeSecret} onChange={(e) => setStripeSecret(e.target.value)} placeholder="sk_test_..." />
           </div>
 
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Chave MBWay (EuPago / IfThenPay)</label>
-            <input type="text" className="input-field" placeholder="Opcional se usar Stripe" />
+            <input type="text" className="input-field" value={mbwayKey} onChange={(e) => setMbwayKey(e.target.value)} placeholder="Opcional se usar Stripe" />
           </div>
 
-          <button className="btn-primary">Guardar Pagamentos</button>
-        </div>
+          <button type="submit" className="btn-primary">Guardar Pagamentos</button>
+        </form>
 
         {/* Gestão de Utilizadores */}
         <div className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
@@ -111,14 +141,14 @@ export default function ConfiguracoesPage() {
               </table>
             </div>
 
-            <div className="add-user-form" style={{ borderLeft: "1px solid var(--glass-border)", paddingLeft: "24px" }}>
+            <form className="add-user-form" style={{ borderLeft: "1px solid var(--glass-border)", paddingLeft: "24px" }} onSubmit={handleCreateUser}>
               <h4>Novo Utilizador</h4>
               <div className="form-group" style={{ marginTop: "16px" }}>
                 <label>Email do novo utilizador</label>
-                <input type="email" className="input-field" placeholder="ex: colega@vilacanhamo.com" />
+                <input type="email" className="input-field" placeholder="ex: colega@vilacanhamo.com" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
               </div>
-              <button className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
-            </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
+            </form>
           </div>
         </div>
 

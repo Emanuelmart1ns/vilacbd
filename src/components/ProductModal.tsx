@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { getReviews, addReview } from "@/lib/firebase";
+import { getReviews, addReview, FirestoreReview } from "@/lib/firebase";
 import Link from "next/link";
 import "./product-modal.css";
 
@@ -18,29 +18,32 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const { addToCart } = useCart();
   const { user } = useAuth();
   
-  const [activeImg, setActiveImg] = useState<string | null>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<FirestoreReview[]>([]);
   const [newComment, setNewComment] = useState("");
   const [rating, setRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeImg, setActiveImg] = useState<string | null>(null);
+
+  // Reset activeImg when product changes, derive current display image
+  const allImages = product ? [product.image, ...(product.images || [])].filter(Boolean) as string[] : [];
+  const currentActiveImg = allImages.length > 0 && allImages.includes(activeImg || "") ? activeImg : (product?.image || null);
 
   useEffect(() => {
-    if (product) {
-      setActiveImg(product.image || null);
-      fetchReviews();
-    }
-  }, [product]);
-
-  const fetchReviews = async () => {
     if (!product) return;
-    try {
-      const all = await getReviews();
-      const productReviews = all.filter((r: any) => r.productId === product.id);
-      setReviews(productReviews);
-    } catch (err) {
-      console.error("Erro ao carregar reviews:", err);
-    }
-  };
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await getReviews();
+        if (!cancelled) {
+          const productReviews = all.filter((r) => r.productId === product.id);
+          setReviews(productReviews);
+        }
+      } catch {
+        console.error("Erro ao carregar reviews");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [product]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +53,17 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       await addReview({
         productId: product.id,
         userId: user.uid,
-        userName: user.displayName || user.email?.split('@')[0],
-        userEmail: user.email,
+        userName: user.displayName || user.email?.split('@')[0] || 'Anónimo',
+        userEmail: user.email ?? undefined,
         comment: newComment,
         rating: rating
       });
       setNewComment("");
-      fetchReviews();
-    } catch (err) {
+      // Refresh reviews inline
+      const all = await getReviews();
+      const productReviews = all.filter((r) => r.productId === product.id);
+      setReviews(productReviews);
+    } catch {
       alert("Erro ao enviar comentário.");
     } finally {
       setIsSubmitting(false);
@@ -65,8 +71,6 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   };
 
   if (!isOpen || !product) return null;
-
-  const allImages = [product.image, ...(product.images || [])].filter(Boolean) as string[];
 
   return (
     <div className="modal-overlay">
@@ -81,12 +85,12 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
               className="modal-main-img"
               style={{
                 background: product.color || "#333",
-                backgroundImage: activeImg ? `url(${activeImg})` : "none",
+                backgroundImage: currentActiveImg ? `url(${currentActiveImg})` : "none",
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
             >
-              {!activeImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila Cãnhamo</span>}
+              {!currentActiveImg && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila Cãnhamo</span>}
             </div>
             
             {allImages.length > 1 && (
@@ -94,7 +98,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 {allImages.map((img, i) => (
                   <div 
                     key={i} 
-                    className={`thumb ${activeImg === img ? 'active' : ''}`}
+                    className={`thumb ${currentActiveImg === img ? 'active' : ''}`}
                     onClick={() => setActiveImg(img)}
                     style={{ backgroundImage: `url(${img})`, backgroundSize: "cover" }}
                   />

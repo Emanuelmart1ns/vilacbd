@@ -22,7 +22,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/admin");
-    } catch (err: any) {
+    } catch {
       setError("Credenciais inválidas. Tente novamente.");
     } finally {
       setLoading(false);
@@ -34,7 +34,7 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       router.push("/admin");
-    } catch (err: any) {
+    } catch {
       setError("Erro ao entrar com Google.");
     }
   };

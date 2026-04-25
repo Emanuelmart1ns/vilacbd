@@ -1,31 +1,31 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, limit } from "firebase/firestore";
+import { getAdminDb } from "@/lib/firebase-admin";
 import { products as initialProducts } from "@/data/products";
 
 export async function GET() {
   try {
+    const db = getAdminDb();
+
     // Verificar se já existem produtos para evitar duplicação acidental
-    const q = query(collection(db, "products"), limit(1));
-    const querySnapshot = await getDocs(q);
+    const snapshot = await db.collection("products").limit(1).get();
     
-    if (!querySnapshot.empty) {
+    if (!snapshot.empty) {
       return NextResponse.json({ message: "Base de dados já contém produtos." }, { status: 200 });
     }
 
     // Adicionar todos os produtos do ficheiro estático ao Firestore
-    const promises = initialProducts.map((product) => {
-      // Removemos o ID estático para o Firebase gerar o seu próprio, 
-      // ou mantemos se quisermos IDs específicos. Vamos deixar o Firebase gerar.
-      const { id, ...productData } = product;
-      return addDoc(collection(db, "products"), productData);
+    const batch = db.batch();
+    initialProducts.forEach((product) => {
+      const { id: _id, ...productData } = product;
+      const docRef = db.collection("products").doc();
+      batch.set(docRef, productData);
     });
 
-    await Promise.all(promises);
+    await batch.commit();
 
-    return NextResponse.json({ message: "32 Produtos migrados com sucesso para o Firestore!" }, { status: 200 });
-  } catch (error: any) {
+    return NextResponse.json({ message: `${initialProducts.length} Produtos migrados com sucesso para o Firestore!` }, { status: 200 });
+  } catch (error) {
     console.error("Erro ao migrar produtos:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao migrar produtos" }, { status: 500 });
   }
 }

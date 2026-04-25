@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,51 +11,71 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized
-import { initializeFirestore } from "firebase/firestore";
-
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
+const db = getFirestore(app);
 const auth = getAuth(app);
 
+// Firestore Helpers
+export interface FirestoreProduct {
+  id: string;
+  name: string;
+  price: number;
+  cost: number;
+  stock: number;
+  category: string;
+  description: string;
+  image?: string;
+  images?: string[];
+  color: string;
+  isPopular?: boolean;
+}
+
+export interface FirestoreReview {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userEmail?: string;
+  comment: string;
+  rating: number;
+  date: string;
+}
+
 // Cache local para evitar re-fetch constante no mesmo componente
-let productsCache: any[] | null = null;
+let productsCache: FirestoreProduct[] | null = null;
 
 export { app, db, auth };
 
-// Firestore Helpers
-export const getProducts = async (forceRefresh = false): Promise<any[]> => {
+export const getProducts = async (forceRefresh = false): Promise<FirestoreProduct[]> => {
   if (productsCache && !forceRefresh) return productsCache;
 
   try {
     // Timeout de 6 segundos para não travar o site se a BD estiver lenta
-    const timeoutPromise = new Promise<any[]>((_, reject) => 
+    const timeoutPromise = new Promise<FirestoreProduct[]>((_, reject) =>
       setTimeout(() => reject(new Error("Timeout")), 6000)
     );
 
     const fetchPromise = (async () => {
       const q = query(collection(db, "products"));
       const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as FirestoreProduct[];
       productsCache = data;
       return data;
     })();
 
     return await Promise.race([fetchPromise, timeoutPromise]);
-  } catch (error) {
+  } catch {
     console.warn("Lentidão detetada na BD, a usar cache/estáticos.");
     return productsCache || [];
   }
 };
 
-export const addProduct = async (product: any) => {
+export const addProduct = async (product: Omit<FirestoreProduct, "id">) => {
   productsCache = null;
   return await addDoc(collection(db, "products"), product);
 };
 
-export const updateProduct = async (id: string, product: any) => {
+export const updateProduct = async (id: string, product: Partial<FirestoreProduct>) => {
   productsCache = null;
   const productRef = doc(db, "products", id);
   return await updateDoc(productRef, product);
@@ -68,21 +88,21 @@ export const deleteProduct = async (id: string) => {
 };
 
 // --- REVIEWS ---
-export const getReviews = async (): Promise<any[]> => {
+export const getReviews = async (): Promise<FirestoreReview[]> => {
   try {
-    const timeoutPromise = new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
+    const timeoutPromise = new Promise<FirestoreReview[]>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
     const fetchPromise = (async () => {
       const q = query(collection(db, "reviews"), orderBy("date", "desc"));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as FirestoreReview[];
     })();
     return await Promise.race([fetchPromise, timeoutPromise]);
-  } catch (err) {
+  } catch {
     return [];
   }
 };
 
-export const addReview = async (review: any) => {
+export const addReview = async (review: Omit<FirestoreReview, "id" | "date">) => {
   return await addDoc(collection(db, "reviews"), {
     ...review,
     date: new Date().toISOString(),

@@ -1,34 +1,63 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getProducts, addProduct, updateProduct, deleteProduct } from "@/lib/firebase";
-import { products as staticProducts, Product } from "@/data/products";
+import { getProducts, addProduct, updateProduct, deleteProduct, FirestoreProduct } from "@/lib/firebase";
+import { products as staticProducts } from "@/data/products";
 
 export default function ProdutosAdminPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<FirestoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<FirestoreProduct | null>(null);
+  const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   useEffect(() => {
-    fetchProducts();
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await getProducts();
+        if (!cancelled) {
+          if (data.length === 0) {
+            setProducts(staticProducts as unknown as FirestoreProduct[]);
+          } else {
+            setProducts(data);
+          }
+        }
+      } catch {
+        console.error("Erro ao carregar produtos");
+        if (!cancelled) setProducts(staticProducts as unknown as FirestoreProduct[]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const data = await getProducts();
-      if (data.length === 0) {
-        setProducts(staticProducts);
-      } else {
-        setProducts(data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-      setProducts(staticProducts);
-    } finally {
-      setLoading(false);
+  const openModal = (product: FirestoreProduct | null = null) => {
+    setEditingProduct(product);
+    setSecondaryImages(product?.images || []);
+    setNewImageUrl("");
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+    setSecondaryImages([]);
+    setNewImageUrl("");
+  };
+
+  const addSecondaryImage = () => {
+    if (newImageUrl.trim()) {
+      setSecondaryImages(prev => [...prev, newImageUrl.trim()]);
+      setNewImageUrl("");
     }
+  };
+
+  const removeSecondaryImage = (index: number) => {
+    setSecondaryImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,38 +71,35 @@ export default function ProdutosAdminPage() {
       category: formData.get("category") as string,
       description: formData.get("description") as string,
       image: formData.get("image") as string,
+      images: secondaryImages,
       color: "linear-gradient(135deg, #1e3c27, #2a6344)", // Default
     };
 
     try {
       if (editingProduct?.id) {
-        await updateProduct(editingProduct.id, productData);
+        await updateProduct(editingProduct.id as string, productData);
       } else {
         await addProduct(productData);
       }
       setIsModalOpen(false);
-      fetchProducts();
-    } catch (error) {
+      setEditingProduct(null);
+      setSecondaryImages([]);
+      setNewImageUrl("");
+      // Recarrega produtos
+      const data = await getProducts();
+      setProducts(data.length === 0 ? staticProducts as unknown as FirestoreProduct[] : data);
+    } catch {
       alert("Erro ao guardar produto.");
     }
-  };
-
-  const openModal = (product: any = null) => {
-    setEditingProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingProduct(null);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza que deseja eliminar este produto?")) return;
     try {
       await deleteProduct(id);
-      fetchProducts();
-    } catch (error) {
+      const data = await getProducts();
+      setProducts(data.length === 0 ? staticProducts as unknown as FirestoreProduct[] : data);
+    } catch {
       alert("Erro ao eliminar produto.");
     }
   };
@@ -176,6 +202,48 @@ export default function ProdutosAdminPage() {
                 <label>URL da Imagem Principal</label>
                 <input name="image" className="input-field" defaultValue={editingProduct?.image} placeholder="https://..." />
               </div>
+
+              {/* Imagens Secundárias */}
+              <div className="form-group">
+                <label>Imagens Secundárias ({secondaryImages.length})</label>
+                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="URL da imagem adicional"
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSecondaryImage(); } }}
+                    style={{ flex: 1 }}
+                  />
+                  <button type="button" className="btn-primary" onClick={addSecondaryImage} style={{ padding: "10px 16px", whiteSpace: "nowrap" }}>
+                    + Adicionar
+                  </button>
+                </div>
+                {secondaryImages.length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "8px" }}>
+                    {secondaryImages.map((img, index) => (
+                      <div key={index} style={{ position: "relative", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
+                        <img src={img} alt={`Imagem ${index + 1}`} style={{ width: "100%", height: "80px", objectFit: "cover", display: "block" }} />
+                        <button
+                          type="button"
+                          onClick={() => removeSecondaryImage(index)}
+                          style={{
+                            position: "absolute", top: "2px", right: "2px",
+                            background: "rgba(255,0,0,0.8)", color: "#fff", border: "none",
+                            borderRadius: "50%", width: "20px", height: "20px",
+                            cursor: "pointer", fontSize: "12px", lineHeight: "1",
+                            display: "flex", alignItems: "center", justifyContent: "center"
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="form-group">
                 <label>Descrição</label>
                 <textarea name="description" className="input-field" style={{ minHeight: "100px" }} defaultValue={editingProduct?.description} />

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import CartSidebar from "@/components/CartSidebar";
 import ConstructionBanner from "@/components/ConstructionBanner";
+import Footer from "@/components/Footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,6 +35,7 @@ export default function RootLayout({
             <ConstructionBanner />
             {children}
             <CartSidebar />
+            <Footer />
           </CartProvider>
         </AuthProvider>
       </body>
