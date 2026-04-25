@@ -1,13 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Prevent Frontend-Backend Mismatches
-  // Automatically sync client and server versions to avoid deployment conflicts
-  experimental: {
-    // Enable strict mode for better error detection
-    strictNextHead: true,
-  },
-  
   // Production optimizations
   poweredByHeader: false, // Remove X-Powered-By header for security
   compress: true, // Enable gzip compression
