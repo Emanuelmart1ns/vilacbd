@@ -17,15 +17,21 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "admin")) {
-      router.push("/login");
+    if (!loading && !user) {
+      router.push("/admin/login");
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!loading && user && profile && profile.role !== "admin") {
+      router.push("/");
     }
   }, [user, profile, loading, router]);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      router.push("/login");
+      router.push("/admin/login");
     } catch (error) {
       console.error("Erro ao sair:", error);
     }
