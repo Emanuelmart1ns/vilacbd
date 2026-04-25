@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { getReviews, addReview, FirestoreReview } from "@/lib/firebase";
+import { getReviews, FirestoreReview } from "@/lib/firebase";
 import Link from "next/link";
 import "./product-modal.css";
 
@@ -88,17 +88,28 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !product) return;
+    if (!user || authLoading || !product) return;
+
     setIsSubmitting(true);
     try {
-      await addReview({
-        productId: product.id,
-        userId: user.uid,
-        userName: user.displayName || user.email?.split('@')[0] || 'Anónimo',
-        userEmail: user.email ?? undefined,
-        comment: newComment,
-        rating: rating
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          comment: newComment.trim(),
+          rating,
+          idToken,
+        }),
       });
+
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Erro ao enviar comentário.");
+        return;
+      }
+
       setNewComment("");
       const all = await getReviews();
       const productReviews = all.filter((r) => r.productId === product.id);
