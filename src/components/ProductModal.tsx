@@ -16,7 +16,7 @@ interface ProductModalProps {
 
 export default function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const { addToCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const [reviews, setReviews] = useState<FirestoreReview[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -251,7 +251,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                 )}
               </div>
 
-              {user ? (
+              {user && !authLoading ? (
                 <form onSubmit={handleSubmitReview} className="add-review-form">
                   <h4>Deixe a sua avaliação</h4>
                   <div style={{ margin: "12px 0" }}>
