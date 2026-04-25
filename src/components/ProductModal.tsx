@@ -35,16 +35,24 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
       setCountdown(5);
       return;
     }
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          onClose();
-          return 5;
-        }
-        return prev - 1;
-      });
+    
+    // Reset countdown to 5 when modal opens
+    setCountdown(5);
+    
+    // Start countdown
+    const countdown = setInterval(() => {
+      setCountdown(prev => prev - 1);
     }, 1000);
-    return () => clearInterval(timer);
+    
+    // Close modal after 5 seconds
+    const timeout = setTimeout(() => {
+      onClose();
+    }, 5000);
+    
+    return () => {
+      clearInterval(countdown);
+      clearTimeout(timeout);
+    };
   }, [isOpen, onClose]);
 
   useEffect(() => {
