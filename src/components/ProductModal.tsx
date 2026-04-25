@@ -121,14 +121,26 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
             
             {allImages.length > 1 && (
               <div className="modal-thumbnails">
+                <div style={{ padding: "8px 15px", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                  {allImages.length} imagens
+                </div>
                 {allImages.map((img, i) => (
                   <div 
                     key={i} 
                     className={`thumb ${currentActiveImg === img ? 'active' : ''}`}
-                    onClick={() => setActiveImg(img)}
-                    style={{ backgroundImage: `url(${img})`, backgroundSize: "cover" }}
+                    onClick={() => {
+                      console.log("Thumbnail clicked:", img);
+                      setActiveImg(img);
+                    }}
+                    style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                    title={`Imagem ${i + 1}`}
                   />
                 ))}
+              </div>
+            )}
+            {allImages.length <= 1 && (
+              <div style={{ padding: "15px", background: "rgba(0,0,0,0.3)", color: "var(--text-secondary)", fontSize: "0.85rem", textAlign: "center" }}>
+                Apenas 1 imagem disponível
               </div>
             )}
           </div>

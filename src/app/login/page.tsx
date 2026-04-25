@@ -31,19 +31,27 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
     setError("");
     setLoading(true);
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      console.log("Login bem-sucedido:", result.user.email);
       router.push("/");
     } catch (err: any) {
-      console.error("Erro Google Login:", err);
+      console.error("Erro Google Login completo:", err);
       if (err.code === 'auth/popup-closed-by-user') {
         setError("Login cancelado. Tente novamente.");
       } else if (err.code === 'auth/popup-blocked') {
         setError("Popup bloqueado. Permita popups no seu navegador.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError("Domínio não autorizado. Configure o domínio no Firebase Console.");
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError("Login com Google não está ativado. Ative no Firebase Console.");
       } else {
-        setError("Erro ao entrar com Google. Verifique sua conexão.");
+        setError(`Erro: ${err.message || "Erro ao entrar com Google"}`);
       }
     } finally {
       setLoading(false);
