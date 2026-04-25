@@ -54,8 +54,13 @@ export async function POST(request: NextRequest) {
       if (photoURL) {
         updateData.photoURL = photoURL;
       }
+      const isGoogle = firebaseProvider === "google.com";
+      if (isGoogle) {
+        updateData.role = "customer";
+      }
       await userRef.update(updateData);
-      const role = userDoc.data()?.role || "customer";
+      const storedRole = userDoc.data()?.role || "customer";
+      const role = isGoogle ? "customer" : storedRole;
       return NextResponse.json({ isNew: false, role, provider: firebaseProvider, createdAt: userDoc.data()?.createdAt }, { status: 200 });
     }
   } catch (error) {
