@@ -25,8 +25,20 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [activeImg, setActiveImg] = useState<string | null>(null);
   
   // Reset activeImg when product changes, derive current display image
-  const allImages = product ? [product.image, ...(product.images || [])].filter(Boolean) as string[] : [];
+  const allImages = product ? [product.image, ...(product.images || [])].filter((img, index, self) => img && self.indexOf(img) === index) as string[] : [];
   const currentActiveImg = allImages.length > 0 && allImages.includes(activeImg || "") ? activeImg : (product?.image || null);
+
+  // Reset activeImg when product changes
+  useEffect(() => {
+    if (product) {
+      setActiveImg(null);
+      console.log("Product images:", { 
+        mainImage: product.image, 
+        secondaryImages: product.images, 
+        allImages: allImages 
+      });
+    }
+  }, [product?.id]);
 
   useEffect(() => {
     if (!product) return;
