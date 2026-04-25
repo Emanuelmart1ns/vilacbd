@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getProducts, addProduct, updateProduct, deleteProduct, FirestoreProduct } from "@/lib/firebase";
+import { getProducts, addProduct, updateProduct, deleteProduct, FirestoreProduct, uploadProductImage } from "@/lib/firebase";
 import { products as staticProducts } from "@/data/products";
 
 export default function ProdutosAdminPage() {
@@ -10,7 +10,9 @@ export default function ProdutosAdminPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FirestoreProduct | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>("");
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,7 +40,8 @@ export default function ProdutosAdminPage() {
   const openModal = (product: FirestoreProduct | null = null) => {
     setEditingProduct(product);
     setSecondaryImages(product?.images || []);
-    setNewImageUrl("");
+    setMainImageFile(null);
+    setMainImagePreview(product?.image || "");
     setIsModalOpen(true);
   };
 
@@ -46,13 +49,36 @@ export default function ProdutosAdminPage() {
     setIsModalOpen(false);
     setEditingProduct(null);
     setSecondaryImages([]);
-    setNewImageUrl("");
+    setMainImageFile(null);
+    setMainImagePreview("");
   };
 
-  const addSecondaryImage = () => {
-    if (newImageUrl.trim()) {
-      setSecondaryImages(prev => [...prev, newImageUrl.trim()]);
-      setNewImageUrl("");
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setMainImageFile(file);
+      // Criar preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMainImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSecondaryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+    try {
+      const uploadPromises = Array.from(files).map(file => uploadProductImage(file, editingProduct?.id));
+      const urls = await Promise.all(uploadPromises);
+      setSecondaryImages(prev => [...prev, ...urls]);
+    } catch (error) {
+      alert("Erro ao fazer upload das imagens");
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -63,33 +89,48 @@ export default function ProdutosAdminPage() {
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const productData = {
-      name: formData.get("name") as string,
-      price: parseFloat(formData.get("price") as string),
-      cost: parseFloat(formData.get("cost") as string),
-      stock: parseInt(formData.get("stock") as string),
-      category: formData.get("category") as string,
-      description: formData.get("description") as string,
-      image: formData.get("image") as string,
-      images: secondaryImages,
-      color: "linear-gradient(135deg, #1e3c27, #2a6344)", // Default
-    };
-
+    
     try {
+      setUploadingImages(true);
+      
+      // Upload da imagem principal se houver
+      let mainImageUrl = editingProduct?.image || "";
+      if (mainImageFile) {
+        mainImageUrl = await uploadProductImage(mainImageFile, editingProduct?.id);
+      }
+
+      const productData = {
+        name: formData.get("name") as string,
+        price: parseFloat(formData.get("price") as string),
+        cost: parseFloat(formData.get("cost") as string),
+        stock: parseInt(formData.get("stock") as string),
+        category: formData.get("category") as string,
+        description: formData.get("description") as string,
+        image: mainImageUrl,
+        images: secondaryImages,
+        color: "linear-gradient(135deg, #1e3c27, #2a6344)", // Default
+      };
+
       if (editingProduct?.id) {
         await updateProduct(editingProduct.id as string, productData);
       } else {
         await addProduct(productData);
       }
+      
       setIsModalOpen(false);
       setEditingProduct(null);
       setSecondaryImages([]);
-      setNewImageUrl("");
+      setMainImageFile(null);
+      setMainImagePreview("");
+      
       // Recarrega produtos
-      const data = await getProducts();
+      const data = await getProducts(true);
       setProducts(data.length === 0 ? staticProducts as unknown as FirestoreProduct[] : data);
-    } catch {
+    } catch (error) {
       alert("Erro ao guardar produto.");
+      console.error(error);
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -199,27 +240,39 @@ export default function ProdutosAdminPage() {
                 </div>
               </div>
               <div className="form-group">
-                <label>URL da Imagem Principal</label>
-                <input name="image" className="input-field" defaultValue={editingProduct?.image} placeholder="https://..." />
+                <label>Imagem Principal</label>
+                {mainImagePreview && (
+                  <div style={{ marginBottom: "12px", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
+                    <img src={mainImagePreview} alt="Preview" style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleMainImageChange}
+                  className="input-field" 
+                  style={{ padding: "8px" }}
+                />
+                <small style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Formatos aceites: JPG, PNG, WEBP</small>
               </div>
 
               {/* Imagens Secundárias */}
               <div className="form-group">
                 <label>Imagens Secundárias ({secondaryImages.length})</label>
-                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="URL da imagem adicional"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSecondaryImage(); } }}
-                    style={{ flex: 1 }}
-                  />
-                  <button type="button" className="btn-primary" onClick={addSecondaryImage} style={{ padding: "10px 16px", whiteSpace: "nowrap" }}>
-                    + Adicionar
-                  </button>
-                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleSecondaryImageChange}
+                  className="input-field"
+                  style={{ padding: "8px", marginBottom: "12px" }}
+                  disabled={uploadingImages}
+                />
+                {uploadingImages && (
+                  <p style={{ color: "var(--accent-gold)", fontSize: "0.9rem", marginBottom: "12px" }}>
+                    A fazer upload das imagens...
+                  </p>
+                )}
                 {secondaryImages.length > 0 && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "8px" }}>
                     {secondaryImages.map((img, index) => (
@@ -249,8 +302,12 @@ export default function ProdutosAdminPage() {
                 <textarea name="description" className="input-field" style={{ minHeight: "100px" }} defaultValue={editingProduct?.description} />
               </div>
               <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
-                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeModal}>Cancelar</button>
-                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Guardar Produto</button>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeModal} disabled={uploadingImages}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-primary" style={{ flex: 1 }} disabled={uploadingImages}>
+                  {uploadingImages ? "A guardar..." : "Guardar Produto"}
+                </button>
               </div>
             </form>
           </div>
