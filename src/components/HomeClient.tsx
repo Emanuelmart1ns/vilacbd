@@ -51,6 +51,13 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
       {/* Secção Confiança / Features */}
       <section id="sobre" className="features-section">
         <div className="container">
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "16px" }}>Sobre Nós</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem", maxWidth: "700px", margin: "0 auto" }}>
+              Na Vila Cãnhamo, oferecemos produtos premium de cânhamo com qualidade certificada e testada em laboratório.
+            </p>
+          </div>
+
           <div className="features-grid">
             <div className="feature-item">
               <div className="feature-icon" style={{ color: "var(--accent-gold)" }}>🌿</div>
@@ -68,11 +75,22 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               <p>Extração Full Spectrum de alta absorção.</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="location-container" style={{ marginTop: "60px", display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "40px", alignItems: "center", borderTop: "1px solid var(--glass-border)", paddingTop: "60px" }}>
+      {/* Secção Localização */}
+      <section className="location-section" style={{ padding: "80px 0", background: "var(--bg-secondary)" }}>
+        <div className="container">
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "16px" }}>Onde Estamos</h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>
+              Visite-nos na nossa loja física em Santa Maria da Feira
+            </p>
+          </div>
+
+          <div className="location-container" style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "40px", alignItems: "center" }}>
             <div className="location-text" style={{ textAlign: "left" }}>
-              <h3 style={{ color: "var(--accent-gold)", marginBottom: "24px", fontSize: "2rem" }}>Onde Estamos</h3>
-              <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "16px" }}>
+              <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", marginBottom: "24px" }}>
                 📍 <strong>Vila Cãnhamo Santa Maria da Feira</strong><br/>
                 Rua Dr. Roberto Alves 56, <br/>
                 4520-213 Santa Maria da Feira
@@ -86,12 +104,12 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
               </div>
             </div>
             
-            <div className="location-map" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--glass-border)", height: "350px" }}>
+            <div className="location-map" style={{ borderRadius: "16px", overflow: "hidden", border: "2px solid var(--glass-border)", height: "400px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3014.5678!2d-8.5432!3d40.9254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2385...!2sSanta%20Maria%20da%20Feira!5e0!3m2!1spt-PT!2spt!4v171396...!" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3014.5678!2d-8.5432!3d40.9254!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2385...!2sSanta%20Maria%20da%20Feira!5e0!3m2!1spt-PT!2spt!4v171396...!&style=feature:all|element:geometry|color:0x242f3e&style=feature:all|element:labels.text.stroke|color:0x242f3e&style=feature:all|element:labels.text.fill|color:0x746855&style=feature:water|element:geometry|color:0x17263c" 
                 width="100%" 
                 height="100%" 
-                style={{ border: 0 }} 
+                style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(95%) contrast(85%)" }} 
                 allowFullScreen={true} 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"

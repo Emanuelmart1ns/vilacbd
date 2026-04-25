@@ -31,11 +31,22 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    setError("");
+    setLoading(true);
     try {
       await signInWithPopup(auth, provider);
-      router.push("/admin");
-    } catch {
-      setError("Erro ao entrar com Google.");
+      router.push("/");
+    } catch (err: any) {
+      console.error("Erro Google Login:", err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError("Login cancelado. Tente novamente.");
+      } else if (err.code === 'auth/popup-blocked') {
+        setError("Popup bloqueado. Permita popups no seu navegador.");
+      } else {
+        setError("Erro ao entrar com Google. Verifique sua conexão.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,10 +97,11 @@ export default function LoginPage() {
         <button 
           onClick={handleGoogleLogin} 
           className="btn-secondary" 
+          disabled={loading}
           style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}
         >
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" />
-          Entrar com Google
+          {loading ? "A entrar..." : "Entrar com Google"}
         </button>
 
         <div className="login-footer">
