@@ -13,6 +13,7 @@
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
+  cursor: pointer;
 }
 
 .modal-content {
@@ -51,14 +52,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 10002;
   line-height: 1;
   transition: background 0.2s;
+  padding: 0;
 }
 
 .modal-close:hover {
   background: var(--accent-gold);
   color: #000;
+}
+
+.modal-close:active {
+  transform: scale(0.95);
 }
 
 .modal-grid {

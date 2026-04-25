@@ -72,11 +72,23 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
 
   if (!isOpen || !product) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Fechar apenas se clicar no backdrop, não no conteúdo
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const handleCloseClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-backdrop" onClick={onClose}></div>
+    <div className="modal-overlay" onClick={handleBackdropClick}>
+      <div className="modal-backdrop"></div>
       <div className="modal-content fade-in-up">
-        <button className="modal-close" onClick={onClose}>&times;</button>
+        <button className="modal-close" onClick={handleCloseClick}>&times;</button>
         
         <div className="modal-grid">
           {/* Galeria de Imagens */}
