@@ -1,3 +1,5 @@
 {
-    "openrouter.apiKey": "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"
+    "openrouter.apiKey": "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",
+    "Codegeex.SidebarUI.LanguagePreference": "English",
+    "Codegeex.CommitMessage.LanguagePreference": "English"
 }

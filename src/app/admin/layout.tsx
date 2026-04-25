@@ -13,14 +13,14 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || profile?.role !== "admin")) {
       router.push("/login");
     }
-  }, [user, loading, router]);
+  }, [user, profile, loading, router]);
 
   const handleLogout = async () => {
     try {
@@ -35,11 +35,10 @@ export default function AdminLayout({
     return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>A verificar acesso...</div>;
   }
 
-  if (!user) return null;
+  if (!user || profile?.role !== "admin") return null;
 
   return (
     <div className="admin-container">
-      {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar-header">
           <h2>Vila Cãnhamo <span>Admin</span></h2>
@@ -56,12 +55,12 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="admin-main">
         <header className="admin-header">
           <h1>Painel de Controlo</h1>
           <div className="admin-user-info">
-            <span>{user.email}</span>
+            <span>{profile?.displayName || user.email}</span>
+            <span style={{ fontSize: "0.75rem", color: "var(--accent-gold)", marginLeft: "8px" }}>Admin</span>
           </div>
         </header>
         <div className="admin-content">

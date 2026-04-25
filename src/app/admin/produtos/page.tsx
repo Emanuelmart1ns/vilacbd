@@ -1,8 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { getProducts, addProduct, updateProduct, deleteProduct, FirestoreProduct, uploadProductImage } from "@/lib/firebase";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import {
+  getProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  FirestoreProduct,
+  uploadProductImage,
+  deleteProductImage,
+} from "@/lib/firebase";
 import { products as staticProducts } from "@/data/products";
+
+const CATEGORIES = [
+  "Óleos e Tinturas",
+  "Flores de Cânhamo",
+  "Gomas e Edibles",
+  "Tópicos e Cosméticos",
+  "Acessórios e Vapes",
+];
 
 export default function ProdutosAdminPage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
@@ -13,6 +29,17 @@ export default function ProdutosAdminPage() {
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [isPopular, setIsPopular] = useState(false);
+  const [colorValue, setColorValue] = useState("linear-gradient(135deg, #1e3c27, #2a6344)");
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+  const [mainDragOver, setMainDragOver] = useState(false);
+  const [secDragOver, setSecDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
+
+  const mainDropRef = useRef<HTMLDivElement>(null);
+  const secDropRef = useRef<HTMLDivElement>(null);
+  const mainFileInputRef = useRef<HTMLInputElement>(null);
+  const secFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,13 +55,14 @@ export default function ProdutosAdminPage() {
           }
         }
       } catch {
-        console.error("Erro ao carregar produtos");
         if (!cancelled) setProducts(staticProducts as unknown as FirestoreProduct[]);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const openModal = (product: FirestoreProduct | null = null) => {
@@ -42,6 +70,10 @@ export default function ProdutosAdminPage() {
     setSecondaryImages(product?.images || []);
     setMainImageFile(null);
     setMainImagePreview(product?.image || "");
+    setIsPopular(product?.isPopular || false);
+    setColorValue(product?.color || "linear-gradient(135deg, #1e3c27, #2a6344)");
+    setValidationErrors({});
+    setUploadProgress("");
     setIsModalOpen(true);
   };
 
@@ -51,49 +83,161 @@ export default function ProdutosAdminPage() {
     setSecondaryImages([]);
     setMainImageFile(null);
     setMainImagePreview("");
+    setIsPopular(false);
+    setColorValue("linear-gradient(135deg, #1e3c27, #2a6344)");
+    setValidationErrors({});
+    setUploadProgress("");
+  };
+
+  const handleMainImageFile = (file: File) => {
+    setMainImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMainImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setMainImageFile(file);
-      // Criar preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMainImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) handleMainImageFile(file);
   };
 
-  const handleSecondaryImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const removeMainImage = () => {
+    setMainImageFile(null);
+    setMainImagePreview("");
+    if (mainFileInputRef.current) mainFileInputRef.current.value = "";
+  };
+
+  const handleSecondaryFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
     setUploadingImages(true);
+    setUploadProgress(`A carregar 0/${files.length} imagens...`);
     try {
-      const uploadPromises = Array.from(files).map(file => uploadProductImage(file, editingProduct?.id));
-      const urls = await Promise.all(uploadPromises);
-      setSecondaryImages(prev => [...prev, ...urls]);
-    } catch (error) {
+      const urls: string[] = [];
+      const fileArr = Array.from(files);
+      for (let i = 0; i < fileArr.length; i++) {
+        setUploadProgress(`A carregar ${i + 1}/${fileArr.length} imagens...`);
+        const url = await uploadProductImage(fileArr[i], editingProduct?.id);
+        urls.push(url);
+      }
+      setSecondaryImages((prev) => [...prev, ...urls]);
+    } catch {
       alert("Erro ao fazer upload das imagens");
     } finally {
       setUploadingImages(false);
+      setUploadProgress("");
     }
   };
 
-  const removeSecondaryImage = (index: number) => {
-    setSecondaryImages(prev => prev.filter((_, i) => i !== index));
+  const handleSecondaryImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) handleSecondaryFiles(files);
+  };
+
+  const removeSecondaryImage = async (index: number) => {
+    const img = secondaryImages[index];
+    try {
+      await deleteProductImage(img);
+    } catch {
+      // Silently continue even if deletion fails
+    }
+    setSecondaryImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const moveSecondaryImage = (index: number, direction: "up" | "down") => {
+    setSecondaryImages((prev) => {
+      const newArr = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= newArr.length) return prev;
+      [newArr[index], newArr[targetIndex]] = [newArr[targetIndex], newArr[index]];
+      return newArr;
+    });
+  };
+
+  const handleMainDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleMainDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMainDragOver(true);
+  }, []);
+
+  const handleMainDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMainDragOver(false);
+  }, []);
+
+  const handleMainDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMainDragOver(false);
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith("image/")) {
+        handleMainImageFile(files[0]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editingProduct]
+  );
+
+  const handleSecDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleSecDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSecDragOver(true);
+  }, []);
+
+  const handleSecDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSecDragOver(false);
+  }, []);
+
+  const handleSecDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setSecDragOver(false);
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleSecondaryFiles(files);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editingProduct, uploadingImages]
+  );
+
+  const validateForm = (formData: FormData): boolean => {
+    const errors: Record<string, boolean> = {};
+    if (!formData.get("name")) errors.name = true;
+    if (!formData.get("price")) errors.price = true;
+    if (!formData.get("cost")) errors.cost = true;
+    if (!formData.get("stock")) errors.stock = true;
+    if (!formData.get("category")) errors.category = true;
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
+    if (!validateForm(formData)) return;
+
     try {
       setUploadingImages(true);
-      
-      // Upload da imagem principal se houver
+
       let mainImageUrl = editingProduct?.image || "";
       if (mainImageFile) {
         mainImageUrl = await uploadProductImage(mainImageFile, editingProduct?.id);
@@ -108,7 +252,8 @@ export default function ProdutosAdminPage() {
         description: formData.get("description") as string,
         image: mainImageUrl,
         images: secondaryImages,
-        color: "linear-gradient(135deg, #1e3c27, #2a6344)", // Default
+        color: colorValue,
+        isPopular: isPopular,
       };
 
       if (editingProduct?.id) {
@@ -116,16 +261,11 @@ export default function ProdutosAdminPage() {
       } else {
         await addProduct(productData);
       }
-      
-      setIsModalOpen(false);
-      setEditingProduct(null);
-      setSecondaryImages([]);
-      setMainImageFile(null);
-      setMainImagePreview("");
-      
-      // Recarrega produtos
+
+      closeModal();
+
       const data = await getProducts(true);
-      setProducts(data.length === 0 ? staticProducts as unknown as FirestoreProduct[] : data);
+      setProducts(data.length === 0 ? (staticProducts as unknown as FirestoreProduct[]) : data);
     } catch (error) {
       alert("Erro ao guardar produto.");
       console.error(error);
@@ -139,24 +279,44 @@ export default function ProdutosAdminPage() {
     try {
       await deleteProduct(id);
       const data = await getProducts();
-      setProducts(data.length === 0 ? staticProducts as unknown as FirestoreProduct[] : data);
+      setProducts(data.length === 0 ? (staticProducts as unknown as FirestoreProduct[]) : data);
     } catch {
       alert("Erro ao eliminar produto.");
     }
+  };
+
+  const imageCount = (product: FirestoreProduct) => {
+    let count = 0;
+    if (product.image) count++;
+    if (product.images) count += product.images.length;
+    return count;
+  };
+
+  const extractColorsFromGradient = (gradient: string): string => {
+    const hexMatch = gradient.match(/#[0-9a-fA-F]{6}/g);
+    if (hexMatch && hexMatch.length >= 2) {
+      return `linear-gradient(135deg, ${hexMatch[0]}, ${hexMatch[1]})`;
+    }
+    if (hexMatch && hexMatch.length === 1) {
+      return hexMatch[0];
+    }
+    return gradient;
   };
 
   return (
     <div className="produtos-admin-page">
       <header className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Gestão do Catálogo</h2>
-        <button className="btn-primary" onClick={() => openModal()}>+ Adicionar Novo Produto</button>
+        <button className="btn-primary" onClick={() => openModal()}>
+          + Adicionar Novo Produto
+        </button>
       </header>
 
       <div className="glass-panel" style={{ marginTop: "24px" }}>
         {loading ? (
           <div style={{ padding: "40px", textAlign: "center" }}>A carregar produtos...</div>
         ) : (
-          <table className="admin-table">
+          <table className="admin-table admin-table-products">
             <thead>
               <tr>
                 <th>Imagem</th>
@@ -171,19 +331,44 @@ export default function ProdutosAdminPage() {
             <tbody>
               {products.map((product) => {
                 const lucro = product.price - (product.cost || 0);
+                const imgCount = imageCount(product);
                 return (
                   <tr key={product.id}>
                     <td>
-                      <div style={{ width: 40, height: 40, borderRadius: 8, background: product.color || "#121812", backgroundImage: product.image ? `url(${product.image})` : 'none', backgroundSize: 'cover' }} />
+                      <div className="product-thumb-wrapper">
+                        {product.image ? (
+                          <div
+                            className="product-thumb"
+                            style={{ backgroundImage: `url(${product.image})` }}
+                          />
+                        ) : (
+                          <div className="product-thumb-placeholder">
+                            <span>Sem imagem</span>
+                          </div>
+                        )}
+                        {imgCount > 0 && (
+                          <span className="product-thumb-badge">{imgCount} foto{imgCount > 1 ? "s" : ""}</span>
+                        )}
+                      </div>
                     </td>
-                    <td>{product.name}</td>
+                    <td>
+                      <div className="product-name-cell">
+                        {product.isPopular && <span className="popular-star">⭐</span>}
+                        <span>{product.name}</span>
+                      </div>
+                    </td>
                     <td>€ {(product.cost || 0).toFixed(2)}</td>
                     <td>€ {product.price.toFixed(2)}</td>
                     <td style={{ color: "var(--accent-green-light)" }}>€ {lucro.toFixed(2)}</td>
                     <td>{product.stock || 0} un.</td>
                     <td>
-                      <button className="btn-text" onClick={() => openModal(product)}>Editar</button> | 
-                      <button className="btn-text text-danger" onClick={() => handleDelete(product.id)}>Remover</button>
+                      <button className="btn-text" onClick={() => openModal(product)}>
+                        Editar
+                      </button>{" "}
+                      |{" "}
+                      <button className="btn-text text-danger" onClick={() => handleDelete(product.id)}>
+                        Remover
+                      </button>
                     </td>
                   </tr>
                 );
@@ -193,101 +378,189 @@ export default function ProdutosAdminPage() {
         )}
       </div>
 
-      {/* Modal de Edição/Criação */}
       {isModalOpen && (
-        <div 
-          className="modal-overlay" 
-          style={{ 
-            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", 
-            background: "rgba(0,0,0,0.85)", backdropFilter: "blur(5px)",
-            display: "flex", alignItems: "center", justifyContent: "center", 
-            zIndex: 9999, padding: "20px"
-          }}
-        >
-          <div className="modal-backdrop" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} onClick={closeModal}></div>
-          <div 
-            className="modal-content" 
-            style={{ 
-              position: "relative", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto",
-              background: "#121812", border: "1px solid var(--glass-border)", borderRadius: "16px",
-              padding: "32px", zIndex: 10000, boxShadow: "0 20px 50px rgba(0,0,0,0.8)"
-            }}
-          >
-            <h3 style={{ marginBottom: "20px", color: "var(--accent-gold)" }}>{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
-            <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div className="form-group">
-                <label>Nome</label>
-                <input name="name" className="input-field" defaultValue={editingProduct?.name} required />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <div className="modal-overlay">
+          <div className="modal-backdrop" onClick={closeModal} />
+          <div className="modal-content modal-content-wide">
+            <h3 className="modal-title">{editingProduct ? "Editar Produto" : "Novo Produto"}</h3>
+            <form onSubmit={handleSave} className="product-form">
+              <div className="form-section">
+                <h4 className="form-section-title">Informações Gerais</h4>
                 <div className="form-group">
-                  <label>Preço de Venda (PVP)</label>
-                  <input name="price" type="number" step="0.01" className="input-field" defaultValue={editingProduct?.price} required />
+                  <label>Nome *</label>
+                  <input
+                    name="name"
+                    className={`input-field${validationErrors.name ? " input-error" : ""}`}
+                    defaultValue={editingProduct?.name}
+                    required
+                  />
                 </div>
-                <div className="form-group">
-                  <label>Custo de Compra</label>
-                  <input name="cost" type="number" step="0.01" className="input-field" defaultValue={editingProduct?.cost} required />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div className="form-group">
-                  <label>Stock</label>
-                  <input name="stock" type="number" className="input-field" defaultValue={editingProduct?.stock} required />
-                </div>
-                <div className="form-group">
-                  <label>Categoria</label>
-                  <input name="category" className="input-field" defaultValue={editingProduct?.category} required />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Imagem Principal</label>
-                {mainImagePreview && (
-                  <div style={{ marginBottom: "12px", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
-                    <img src={mainImagePreview} alt="Preview" style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Preço de Venda (PVP) *</label>
+                    <input
+                      name="price"
+                      type="number"
+                      step="0.01"
+                      className={`input-field${validationErrors.price ? " input-error" : ""}`}
+                      defaultValue={editingProduct?.price}
+                      required
+                    />
                   </div>
-                )}
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleMainImageChange}
-                  className="input-field" 
-                  style={{ padding: "8px" }}
-                />
-                <small style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Formatos aceites: JPG, PNG, WEBP</small>
+                  <div className="form-group">
+                    <label>Custo de Compra *</label>
+                    <input
+                      name="cost"
+                      type="number"
+                      step="0.01"
+                      className={`input-field${validationErrors.cost ? " input-error" : ""}`}
+                      defaultValue={editingProduct?.cost}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Stock *</label>
+                    <input
+                      name="stock"
+                      type="number"
+                      className={`input-field${validationErrors.stock ? " input-error" : ""}`}
+                      defaultValue={editingProduct?.stock}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Categoria *</label>
+                    <select
+                      name="category"
+                      className={`input-field${validationErrors.category ? " input-error" : ""}`}
+                      defaultValue={editingProduct?.category || ""}
+                      required
+                    >
+                      <option value="" disabled>
+                        Selecionar categoria...
+                      </option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Descrição</label>
+                  <textarea
+                    name="description"
+                    className="input-field"
+                    style={{ minHeight: "100px" }}
+                    defaultValue={editingProduct?.description}
+                  />
+                </div>
               </div>
 
-              {/* Imagens Secundárias */}
-              <div className="form-group">
-                <label>Imagens Secundárias ({secondaryImages.length})</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleSecondaryImageChange}
-                  className="input-field"
-                  style={{ padding: "8px", marginBottom: "12px" }}
-                  disabled={uploadingImages}
-                />
-                {uploadingImages && (
-                  <p style={{ color: "var(--accent-gold)", fontSize: "0.9rem", marginBottom: "12px" }}>
-                    A fazer upload das imagens...
-                  </p>
+              <div className="form-section">
+                <h4 className="form-section-title">Imagem Principal</h4>
+                {mainImagePreview && (
+                  <div className="main-image-preview">
+                    <img src={mainImagePreview} alt="Preview" />
+                    <button type="button" className="btn-remove-image" onClick={removeMainImage}>
+                      Remover imagem
+                    </button>
+                  </div>
+                )}
+                <div
+                  ref={mainDropRef}
+                  className={`drop-zone${mainDragOver ? " drop-zone-active" : ""}`}
+                  onDragOver={handleMainDrag}
+                  onDragEnter={handleMainDragEnter}
+                  onDragLeave={handleMainDragLeave}
+                  onDrop={handleMainDrop}
+                  onClick={() => mainFileInputRef.current?.click()}
+                >
+                  <div className="drop-zone-content">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <p>Arraste uma imagem ou clique para selecionar</p>
+                    <small>JPG, PNG ou WEBP</small>
+                  </div>
+                  <input
+                    ref={mainFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMainImageChange}
+                    style={{ display: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h4 className="form-section-title">Imagens Secundárias ({secondaryImages.length})</h4>
+                <div
+                  ref={secDropRef}
+                  className={`drop-zone drop-zone-small${secDragOver ? " drop-zone-active" : ""}`}
+                  onDragOver={handleSecDrag}
+                  onDragEnter={handleSecDragEnter}
+                  onDragLeave={handleSecDragLeave}
+                  onDrop={handleSecDrop}
+                  onClick={() => !uploadingImages && secFileInputRef.current?.click()}
+                  style={uploadingImages ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+                >
+                  <div className="drop-zone-content">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <p>Arraste imagens ou clique para selecionar</p>
+                    <small>Pode selecionar várias imagens</small>
+                  </div>
+                  <input
+                    ref={secFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleSecondaryImageChange}
+                    style={{ display: "none" }}
+                  />
+                </div>
+                {uploadingImages && uploadProgress && (
+                  <div className="upload-progress">{uploadProgress}</div>
                 )}
                 {secondaryImages.length > 0 && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "8px" }}>
+                  <div className="secondary-images-grid">
                     {secondaryImages.map((img, index) => (
-                      <div key={index} style={{ position: "relative", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--glass-border)" }}>
-                        <img src={img} alt={`Imagem ${index + 1}`} style={{ width: "100%", height: "80px", objectFit: "cover", display: "block" }} />
+                      <div key={index} className="secondary-image-item">
+                        <img src={img} alt={`Imagem ${index + 1}`} />
+                        <div className="secondary-image-controls">
+                          <button
+                            type="button"
+                            className="btn-reorder"
+                            disabled={index === 0}
+                            onClick={() => moveSecondaryImage(index, "up")}
+                            title="Mover para cima"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-reorder btn-reorder-down"
+                            disabled={index === secondaryImages.length - 1}
+                            onClick={() => moveSecondaryImage(index, "down")}
+                            title="Mover para baixo"
+                          >
+                            ▼
+                          </button>
+                        </div>
                         <button
                           type="button"
+                          className="btn-delete-image"
                           onClick={() => removeSecondaryImage(index)}
-                          style={{
-                            position: "absolute", top: "2px", right: "2px",
-                            background: "rgba(255,0,0,0.8)", color: "#fff", border: "none",
-                            borderRadius: "50%", width: "20px", height: "20px",
-                            cursor: "pointer", fontSize: "12px", lineHeight: "1",
-                            display: "flex", alignItems: "center", justifyContent: "center"
-                          }}
+                          title="Remover imagem"
                         >
                           ×
                         </button>
@@ -297,11 +570,42 @@ export default function ProdutosAdminPage() {
                 )}
               </div>
 
-              <div className="form-group">
-                <label>Descrição</label>
-                <textarea name="description" className="input-field" style={{ minHeight: "100px" }} defaultValue={editingProduct?.description} />
+              <div className="form-section">
+                <h4 className="form-section-title">Configurações</h4>
+                <div className="form-group">
+                  <label className="toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={isPopular}
+                      onChange={(e) => setIsPopular(e.target.checked)}
+                      className="toggle-checkbox"
+                    />
+                    <span className="toggle-switch" />
+                    <span className="toggle-text">Produto Popular (aparece nos Mais Vendidos)</span>
+                  </label>
+                </div>
+                <div className="form-group">
+                  <label>Cor / Gradiente</label>
+                  <div className="color-input-row">
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={colorValue}
+                      onChange={(e) => setColorValue(e.target.value)}
+                      placeholder="linear-gradient(135deg, #1e3c27, #2a6344)"
+                    />
+                    <div
+                      className="color-preview-swatch"
+                      style={{ background: extractColorsFromGradient(colorValue) }}
+                    />
+                  </div>
+                  <small style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "4px", display: "block" }}>
+                    Ex: linear-gradient(135deg, #1e3c27, #2a6344) ou #2a6344
+                  </small>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
+
+              <div className="form-actions">
                 <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeModal} disabled={uploadingImages}>
                   Cancelar
                 </button>

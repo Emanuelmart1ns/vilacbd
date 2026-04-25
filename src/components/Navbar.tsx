@@ -10,7 +10,7 @@ import { auth } from "@/lib/firebase";
 
 export default function Navbar() {
   const { items, setIsCartOpen } = useCart();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleLogout = async () => {
@@ -39,7 +39,7 @@ export default function Navbar() {
                 🛒 ({cartCount})
               </button>
               <div className="nav-user-menu">
-                <span className="nav-user-name">{user.displayName || user.email?.split('@')[0]}</span>
+                <span className="nav-user-name">{profile?.displayName || user.email?.split('@')[0]}</span>
                 <div className="nav-user-avatar">
                   {user.photoURL ? (
                     <img src={user.photoURL} alt="" />
@@ -48,7 +48,9 @@ export default function Navbar() {
                   )}
                 </div>
                 <div className="nav-user-dropdown">
-                  <Link href="/admin" className="nav-dropdown-item">Painel Admin</Link>
+                  {profile?.role === "admin" && (
+                    <Link href="/admin" className="nav-dropdown-item">Painel Admin</Link>
+                  )}
                   <button onClick={handleLogout} className="nav-dropdown-item nav-logout">Sair</button>
                 </div>
               </div>
