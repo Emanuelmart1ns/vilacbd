@@ -24,7 +24,6 @@
   border-radius: 24px;
   border: 1px solid var(--glass-border);
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-  overflow: hidden;
   z-index: 10001;
 }
 
@@ -40,13 +39,13 @@
 .modal-close {
   position: absolute;
   top: 16px;
-  right: 24px;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border: none;
-  font-size: 2rem;
-  width: 40px;
-  height: 40px;
+  right: 16px;
+  background: linear-gradient(135deg, var(--accent-gold), #cfaa6b);
+  color: #000;
+  border: 2px solid rgba(207, 170, 107, 0.3);
+  font-size: 28px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -54,13 +53,16 @@
   justify-content: center;
   z-index: 10002;
   line-height: 1;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
   padding: 0;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .modal-close:hover {
-  background: var(--accent-gold);
-  color: #000;
+  background: linear-gradient(135deg, #fff, var(--accent-gold));
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(207, 170, 107, 0.5);
 }
 
 .modal-close:active {

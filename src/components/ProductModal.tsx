@@ -23,10 +23,29 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
   const [rating, setRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeImg, setActiveImg] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(5);
 
   // Reset activeImg when product changes, derive current display image
   const allImages = product ? [product.image, ...(product.images || [])].filter(Boolean) as string[] : [];
   const currentActiveImg = allImages.length > 0 && allImages.includes(activeImg || "") ? activeImg : (product?.image || null);
+
+  // Auto-close modal after 5 seconds
+  useEffect(() => {
+    if (!isOpen) {
+      setCountdown(5);
+      return;
+    }
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          onClose();
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (!product) return;
@@ -88,7 +107,20 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
     <div className="modal-overlay" onClick={handleBackdropClick}>
       <div className="modal-backdrop"></div>
       <div className="modal-content fade-in-up">
-        <button className="modal-close" onClick={handleCloseClick}>&times;</button>
+        <button className="modal-close" onClick={handleCloseClick}>
+          <span style={{ position: 'relative' }}>
+            ×
+            <span style={{ 
+              position: 'absolute', 
+              bottom: '2px', 
+              right: '2px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              {countdown}
+            </span>
+          </span>
+        </button>
         
         <div className="modal-grid">
           {/* Galeria de Imagens */}
