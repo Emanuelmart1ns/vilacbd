@@ -4,7 +4,6 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import CartSidebar from "@/components/CartSidebar";
-import ConstructionBanner from "@/components/ConstructionBanner";
 import Footer from "@/components/Footer";
 
 const inter = Inter({
@@ -32,7 +31,6 @@ export default function RootLayout({
       <body className={`${inter.variable} ${outfit.variable}`}>
         <AuthProvider>
           <CartProvider>
-            <ConstructionBanner />
             {children}
             <CartSidebar />
             <Footer />
