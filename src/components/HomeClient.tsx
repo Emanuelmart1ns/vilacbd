@@ -5,6 +5,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import ProductModal from "@/components/ProductModal";
 
 interface HomeClientProps {
@@ -15,11 +16,12 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addToCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
 
-  // Obter 4 best sellers
   const bestSellers = initialProducts.filter(p => p.isPopular).slice(0, 4);
 
   const handleProductClick = (product: Product) => {
+    if (!user) return;
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
@@ -28,7 +30,6 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
       <Navbar />
 
-      {/* Hero Section Cinematográfica */}
       <section className="hero-cinematic">
         <div className="hero-overlay" style={{ background: "rgba(0, 0, 0, 0.7)" }}></div>
         
@@ -38,9 +39,15 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
             Produtos Cãnhamo Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
           </p>
           <div className="hero-buttons fade-in" style={{ animationDelay: "0.4s" }}>
-            <Link href="/loja" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
-              Explorar a Loja
-            </Link>
+            {user ? (
+              <Link href="/loja" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
+                Explorar a Loja
+              </Link>
+            ) : (
+              <Link href="/login" className="btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
+                Entrar na Loja
+              </Link>
+            )}
             <Link href="/sobre" className="btn-secondary" style={{ padding: "16px 40px", fontSize: "1.1rem", border: "1px solid rgba(255,255,255,0.3)" }}>
               Saber Mais
             </Link>
@@ -48,61 +55,83 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         </div>
       </section>
 
-      {/* Secção Best Sellers */}
-      <section className="bestsellers-section" style={{ padding: "80px 0" }}>
-        <div className="container">
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "40px" }}>
-            <div style={{ textAlign: "center", marginBottom: "20px" }}>
-              <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "8px" }}>Mais Vendidos</h2>
-              <p style={{ color: "var(--text-secondary)" }}>Os produtos favoritos dos nossos clientes.</p>
-            </div>
-            <Link href="/loja" className="btn-secondary">Ver Tudo</Link>
-          </div>
-
-          <div className="product-grid">
-            {bestSellers.map((product) => (
-              <div 
-                key={product.id} 
-                className="product-card"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleProductClick(product)}
-              >
-                {product.image ? (
-                  <img src={product.image} alt={product.name} className="product-image" />
-                ) : (
-                  <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
-                  </div>
-                )}
-                <div className="product-info">
-                  <span className="product-category">{product.category}</span>
-                  <h3 className="product-title">{product.name}</h3>
-                  <div className="product-footer" style={{ marginTop: "auto" }}>
-                    <span className="product-price">€ {product.price.toFixed(2)}</span>
-                    <button 
-                      className="btn-primary" 
-                      style={{ padding: "8px 20px" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          quantity: 1,
-                          image: product.image,
-                          color: product.color
-                        });
-                      }}
-                    >
-                      Comprar
-                    </button>
-                  </div>
-                </div>
+      {!authLoading && (
+        <section className="bestsellers-section" style={{ padding: "80px 0" }}>
+          <div className="container">
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "40px" }}>
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <h2 style={{ fontSize: "2.5rem", color: "var(--accent-gold)", marginBottom: "8px" }}>Mais Vendidos</h2>
+                <p style={{ color: "var(--text-secondary)" }}>Os produtos favoritos dos nossos clientes.</p>
               </div>
-            ))}
+              {user ? (
+                <Link href="/loja" className="btn-secondary">Ver Tudo</Link>
+              ) : (
+                <Link href="/login" className="btn-secondary">Entrar para Ver</Link>
+              )}
+            </div>
+
+            {user ? (
+              <div className="product-grid">
+                {bestSellers.map((product) => (
+                  <div 
+                    key={product.id} 
+                    className="product-card"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleProductClick(product)}
+                  >
+                    {product.image ? (
+                      <img src={product.image} alt={product.name} className="product-image" />
+                    ) : (
+                      <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
+                      </div>
+                    )}
+                    <div className="product-info">
+                      <span className="product-category">{product.category}</span>
+                      <h3 className="product-title">{product.name}</h3>
+                      <div className="product-footer" style={{ marginTop: "auto" }}>
+                        <span className="product-price">€ {product.price.toFixed(2)}</span>
+                        <button 
+                          className="btn-primary" 
+                          style={{ padding: "8px 20px" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart({
+                              id: product.id,
+                              name: product.name,
+                              price: product.price,
+                              quantity: 1,
+                              image: product.image,
+                              color: product.color
+                            });
+                          }}
+                        >
+                          Comprar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="product-grid" style={{ filter: "blur(8px)", pointerEvents: "none", userSelect: "none" }}>
+                {bestSellers.map((product) => (
+                  <div key={product.id} className="product-card">
+                    <div className="product-image" style={{ background: product.color, minHeight: "200px" }}></div>
+                    <div className="product-info">
+                      <span className="product-category">{product.category}</span>
+                      <h3 className="product-title">{product.name}</h3>
+                      <div className="product-footer" style={{ marginTop: "auto" }}>
+                        <span className="product-price">€ ••.••</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <ProductModal 
         product={selectedProduct} 

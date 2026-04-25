@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import ProductModal from "@/components/ProductModal";
 
 interface LojaClientProps {
@@ -15,6 +17,7 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addToCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
 
   const categories = ["Todos", ...Array.from(new Set(initialProducts.map(p => p.category)))];
 
@@ -27,13 +30,40 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
     setIsModalOpen(true);
   };
 
+  if (authLoading) {
+    return (
+      <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
+        <Navbar />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "80vh", color: "var(--text-secondary)" }}>
+          A verificar acesso...
+        </div>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
+        <Navbar />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "80vh", gap: "24px" }}>
+          <h2 style={{ color: "var(--accent-gold)", fontSize: "2rem" }}>Acesso Reservado</h2>
+          <p style={{ color: "var(--text-secondary)", textAlign: "center", maxWidth: "400px" }}>
+            Inicie sessão para aceder ao nosso catálogo completo de produtos premium.
+          </p>
+          <Link href="/login" className="btn-primary" style={{ padding: "14px 40px", fontSize: "1rem" }}>
+            Entrar na Conta
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)", paddingTop: "100px" }}>
       <Navbar />
       
       <div className="container">
         <div className="shop-layout" style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "40px", marginTop: "40px" }}>
-          {/* Sidebar Filtros */}
           <aside className="shop-sidebar">
             <h3 style={{ marginBottom: "20px", color: "var(--accent-gold)" }}>Categorias</h3>
             <div className="category-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -59,7 +89,6 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
             </div>
           </aside>
 
-          {/* Grid de Produtos */}
           <div className="shop-main">
             <div className="section-header" style={{ marginBottom: "32px" }}>
               <h1 style={{ fontSize: "2.5rem", marginBottom: "8px" }}>Catálogo Completo</h1>
