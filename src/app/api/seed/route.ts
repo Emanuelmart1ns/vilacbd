@@ -16,9 +16,8 @@ export async function GET() {
     // Adicionar todos os produtos do ficheiro estático ao Firestore
     const batch = db.batch();
     initialProducts.forEach((product) => {
-      const { id: _id, ...productData } = product;
-      const docRef = db.collection("products").doc();
-      batch.set(docRef, productData);
+      const docRef = db.collection("products").doc(product.id);
+      batch.set(docRef, product);
     });
 
     await batch.commit();
