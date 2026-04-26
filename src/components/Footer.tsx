@@ -7,8 +7,7 @@ import "./footer.css";
 
 export default function Footer() {
   const pathname = usePathname();
-  
-  // Não mostrar footer em admin, login ou checkout
+
   if (pathname?.startsWith("/admin") || pathname === "/login" || pathname === "/checkout") {
     return null;
   }
@@ -16,48 +15,57 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="footer-container">
         <div className="footer-grid">
-          {/* Coluna 1 - Marca */}
           <div className="footer-col">
             <h3 className="footer-logo">Vila Cãnhamo</h3>
             <p className="footer-desc">
-              A melhor seleção de produtos Cãnhamo premium em Santa Maria da Feira.
+              Produtos de cânhamo premium em Santa Maria da Feira. Qualidade certificada e testada em laboratório.
             </p>
           </div>
 
-          {/* Coluna 2 - Links */}
           <div className="footer-col">
-            <h4>Navegação</h4>
+            <h4>Informação</h4>
             <ul>
               <li><Link href="/">Início</Link></li>
               <li><Link href="/loja">Loja</Link></li>
-              <li><Link href="/#sobre">Sobre Nós</Link></li>
+              <li><Link href="/sobre">Sobre Nós &amp; Contactos</Link></li>
             </ul>
           </div>
 
-          {/* Coluna 3 - Contacto */}
           <div className="footer-col">
-            <h4>Contacto</h4>
+            <h4>Legal</h4>
             <ul>
-              <li>📍 Rua Dr. Roberto Alves 56</li>
-              <li>4520-213 Santa Maria da Feira</li>
-              <li>📞 +351 912 345 678</li>
-              <li>✉️ info@vilacbd.com</li>
+              <li><Link href="/sobre#termos">Termos e Condições</Link></li>
+              <li><Link href="/sobre#privacidade">Política de Privacidade</Link></li>
+              <li><Link href="/sobre#idade">Verificação de Idade</Link></li>
+              <li><Link href="/sobre#devolucoes">Política de Devoluções</Link></li>
             </ul>
           </div>
 
-          {/* Coluna 4 - Horário */}
           <div className="footer-col">
-            <h4>Horário</h4>
+            <h4>Compliance</h4>
             <ul>
-              <li>Seg-Sex: 10:00 - 13:00 | 14:30 - 19:00</li>
-              <li>Sábado: 10:00 - 13:00</li>
-              <li>Domingo: Encerrado</li>
+              <li><Link href="/sobre#regulamentacao">Regulamentação CBD</Link></li>
+              <li><Link href="/sobre#thc">Teor de THC &lt;0,2%</Link></li>
+              <li><Link href="/sobre#laboratorio">Certificados Laboratoriais</Link></li>
+              <li><Link href="/sobre#isencao">Isenção de Responsabilidade</Link></li>
             </ul>
           </div>
         </div>
 
+        <div className="footer-legal">
+          <p>
+            Os produtos vendidos neste website contêm CBD (canabidiol) derivado de cânhamo industrial com teor de THC inferior a 0,2%, 
+            em conformidade com o Regulamento (UE) 2023/915 e a legislação portuguesa em vigor. 
+            Os produtos de CBD não são medicamentos e não substituem consultas ou tratamentos médicos.
+          </p>
+          <p>
+            A venda de produtos de cânhamo é destinada exclusivamente a maiores de 18 anos. 
+            A Vila Cãnhamo reserva-se o direito de recusar vendas a menores de idade.
+          </p>
+        </div>
+
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Vila Cãnhamo. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Vila Cãnhamo. Todos os direitos reservados. NIF: 518XXXXXXX</p>
         </div>
       </div>
     </footer>

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import CartSidebar from "@/components/CartSidebar";
 import Footer from "@/components/Footer";
+import AgeGate from "@/components/AgeGate";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,9 +32,11 @@ export default function RootLayout({
       <body className={`${inter.variable} ${outfit.variable}`}>
         <AuthProvider>
           <CartProvider>
-            {children}
-            <CartSidebar />
-            <Footer />
+            <AgeGate>
+              {children}
+              <CartSidebar />
+              <Footer />
+            </AgeGate>
           </CartProvider>
         </AuthProvider>
       </body>

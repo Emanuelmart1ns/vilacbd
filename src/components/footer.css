@@ -73,6 +73,25 @@
   font-size: 0.85rem;
 }
 
+.footer-legal {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.footer-legal p {
+  color: rgba(154, 168, 154, 0.6);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.footer-legal p + p {
+  margin-top: 8px;
+}
+
 @media (max-width: 768px) {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
