@@ -16,7 +16,7 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-grid">
           <div className="footer-col">
-            <h3 className="footer-logo">Vila Cãnhamo</h3>
+            <h3 className="footer-logo">Vila CBD</h3>
             <p className="footer-desc">
               Produtos de cânhamo premium em Santa Maria da Feira. Qualidade certificada e testada em laboratório.
             </p>
@@ -60,12 +60,12 @@ export default function Footer() {
           </p>
           <p>
             A venda de produtos de cânhamo é destinada exclusivamente a maiores de 18 anos. 
-            A Vila Cãnhamo reserva-se o direito de recusar vendas a menores de idade.
+            A Vila CBD reserva-se o direito de recusar vendas a menores de idade.
           </p>
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Vila Cãnhamo. Todos os direitos reservados. NIF: 518XXXXXXX</p>
+          <p>&copy; {new Date().getFullYear()} Vila CBD. Todos os direitos reservados a VilaCBD</p>
         </div>
       </div>
     </footer>

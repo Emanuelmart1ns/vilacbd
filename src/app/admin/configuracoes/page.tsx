@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 export default function ConfiguracoesPage() {
   const router = useRouter();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [storeName, setStoreName] = useState("Vila Cãnhamo");
+  const [storeName, setStoreName] = useState("Vila CBD");
   const [stripePublic, setStripePublic] = useState("");
   const [stripeSecret, setStripeSecret] = useState("");
   const [mbwayKey, setMbwayKey] = useState("");
@@ -133,7 +133,7 @@ export default function ConfiguracoesPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td>{auth.currentUser?.email || "admin@vilacanhamo.com"}</td>
+                    <td>{auth.currentUser?.email || "admin@vilacbd.com"}</td>
                     <td>Administrador</td>
                     <td>-</td>
                   </tr>
@@ -145,7 +145,7 @@ export default function ConfiguracoesPage() {
               <h4>Novo Utilizador</h4>
               <div className="form-group" style={{ marginTop: "16px" }}>
                 <label>Email do novo utilizador</label>
-                <input type="email" className="input-field" placeholder="ex: colega@vilacanhamo.com" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
+                <input type="email" className="input-field" placeholder="ex: colega@vilacbd.com" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
               </div>
               <button type="submit" className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
             </form>

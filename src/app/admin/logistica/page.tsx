@@ -24,7 +24,7 @@ const mockOrders: Order[] = [
     paymentStatus: "pago",
     shippingStatus: "enviado",
     trackingCode: "PT123456789",
-    items: [{ name: "Óleo Premium Cãnhamo 5%", quantity: 1 }, { name: "Gomas Relaxantes Morango", quantity: 1 }],
+    items: [{ name: "Óleo Premium CBD 5%", quantity: 1 }, { name: "Gomas Relaxantes Morango", quantity: 1 }],
   },
   {
     id: "ORD-002",

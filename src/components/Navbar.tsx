@@ -24,7 +24,7 @@ export default function Navbar() {
   return (
     <nav className="global-navbar">
       <div className="nav-container">
-        <Link href="/" className="nav-logo">Vila Cãnhamo</Link>
+        <Link href="/" className="nav-logo">Vila CBD</Link>
         <div className="nav-links">
           <Link href="/">Início</Link>
           {user && <Link href="/loja">Loja</Link>}

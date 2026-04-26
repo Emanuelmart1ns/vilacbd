@@ -59,7 +59,7 @@ export default function ProductPageClient({ product, allProducts }: ProductPageC
               }}
             >
               {!activeImg && (
-                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila Cãnhamo</span>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila CBD</span>
               )}
             </div>
 

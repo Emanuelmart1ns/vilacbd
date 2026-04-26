@@ -12,7 +12,7 @@ export default function SobrePage() {
         <div className="container">
           <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
             <h1 style={{ fontSize: "3.5rem", color: "var(--accent-gold)", marginBottom: "24px", lineHeight: "1.2" }}>
-              Sobre a Vila Cãnhamo
+              Sobre a Vila CBD
             </h1>
             <p style={{ fontSize: "1.2rem", color: "var(--text-secondary)", lineHeight: "1.8" }}>
               Somos uma empresa dedicada a oferecer produtos premium de cânhamo com qualidade certificada e testada em laboratório.
@@ -73,7 +73,7 @@ export default function SobrePage() {
             </h2>
             <div style={{ background: "rgba(255,255,255,0.03)", padding: "40px", borderRadius: "16px", border: "1px solid var(--glass-border)" }}>
               <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "24px" }}>
-                A Vila Cãnhamo nasceu da paixão por produtos naturais e do desejo de trazer para Santa Maria da Feira
+                A Vila CBD nasceu da paixão por produtos naturais e do desejo de trazer para Santa Maria da Feira
                 uma seleção premium de produtos de cânhamo de alta qualidade.
               </p>
               <p style={{ color: "var(--text-primary)", fontSize: "1.1rem", lineHeight: "1.8", marginBottom: "24px" }}>
@@ -150,17 +150,17 @@ export default function SobrePage() {
               <div id="termos" style={{ background: "rgba(255,255,255,0.03)", padding: "32px", borderRadius: "16px", border: "1px solid var(--glass-border)" }}>
                 <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Termos e Condi&ccedil;&otilde;es</h3>
                 <p style={{ color: "var(--text-secondary)", lineHeight: "1.7", fontSize: "0.95rem" }}>
-                  Ao utilizar este website e efetuar compras na Vila C&atilde;nhamo, concorda com os nossos termos e condi&ccedil;&otilde;es de venda.
+                  Ao utilizar este website e efetuar compras na Vila CBD, concorda com os nossos termos e condi&ccedil;&otilde;es de venda.
                   Todos os pre&ccedil;os incluem IVA &agrave; taxa legal em vigor. As encomendas est&atilde;o sujeitas a disponibilidade de stock.
                   Reservamo-nos o direito de cancelar encomendas em caso de erro de pre&ccedil;o ou indisponibilidade.
-                  Os tempos de entrega s&atilde;o estimados e n&atilde;o garantidos. A Vila C&atilde;nhamo n&atilde;o se responsabiliza por atrasos causados por transportadoras.
+                  Os tempos de entrega s&atilde;o estimados e n&atilde;o garantidos. A Vila CBD n&atilde;o se responsabiliza por atrasos causados por transportadoras.
                 </p>
               </div>
 
               <div id="privacidade" style={{ background: "rgba(255,255,255,0.03)", padding: "32px", borderRadius: "16px", border: "1px solid var(--glass-border)" }}>
                 <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Pol&iacute;tica de Privacidade</h3>
                 <p style={{ color: "var(--text-secondary)", lineHeight: "1.7", fontSize: "0.95rem" }}>
-                  A Vila C&atilde;nhamo respeita a privacidade dos seus clientes em conformidade com o Regulamento Geral de Prote&ccedil;&atilde;o de Dados (RGPD).
+                  A Vila CBD respeita a privacidade dos seus clientes em conformidade com o Regulamento Geral de Prote&ccedil;&atilde;o de Dados (RGPD).
                   Os dados pessoais recolhidos s&atilde;o utilizados exclusivamente para o processamento de encomendas, comunica&ccedil;&otilde;es de servi&ccedil;o
                   e melhoria da experi&ecirc;ncia do cliente. N&atilde;o partilhamos dados com terceiros sem consentimento expresso,
                   exceto quando exigido por lei ou para cumprimento de obriga&ccedil;&otilde;es fiscais e de entrega.
@@ -172,7 +172,7 @@ export default function SobrePage() {
                 <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Verifica&ccedil;&atilde;o de Idade</h3>
                 <p style={{ color: "var(--text-secondary)", lineHeight: "1.7", fontSize: "0.95rem" }}>
                   Este website destina-se exclusivamente a maiores de 18 anos. A venda de produtos de c&atilde;nhamo e CBD &eacute; proibida a menores de idade.
-                  Ao aceder ao website e efetuar uma compra, confirma que tem 18 anos ou mais. A Vila C&atilde;nhamo reserva-se o direito de solicitar
+                  Ao aceder ao website e efetuar uma compra, confirma que tem 18 anos ou mais. A Vila CBD reserva-se o direito de solicitar
                   verifica&ccedil;&atilde;o de idade antes de processar qualquer encomenda. Encomendas feitas por menores ser&atilde;o canceladas e reembolsadas.
                 </p>
               </div>
@@ -201,7 +201,7 @@ export default function SobrePage() {
               <div id="thc" style={{ background: "rgba(255,255,255,0.03)", padding: "32px", borderRadius: "16px", border: "1px solid var(--glass-border)" }}>
                 <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Teor de THC</h3>
                 <p style={{ color: "var(--text-secondary)", lineHeight: "1.7", fontSize: "0.95rem" }}>
-                  Todos os produtos vendidos na Vila C&atilde;nhamo cont&ecirc;m um teor de THC inferior a 0,2%, conforme exigido pela legisla&ccedil;&atilde;o
+                  Todos os produtos vendidos na Vila CBD cont&ecirc;m um teor de THC inferior a 0,2%, conforme exigido pela legisla&ccedil;&atilde;o
                   europeia e portuguesa. Os certificados de an&aacute;lise laboratorial est&atilde;o dispon&iacute;veis mediante solicita&ccedil;&atilde;o.
                   As flores de c&atilde;nhamo s&atilde;o vendidas exclusivamente como produto de cole&ccedil;&atilde;o, arom&aacute;tico ou para infus&otilde;es,
                   n&atilde;o sendo destinadas ao consumo por combust&atilde;o ou inala&ccedil;&atilde;o.
@@ -224,7 +224,7 @@ export default function SobrePage() {
                   As informa&ccedil;&otilde;es fornecidas neste website t&ecirc;m car&aacute;ter informativo e n&atilde;o substituem aconselhamento m&eacute;dico profissional.
                   Os produtos de CBD n&atilde;o s&atilde;o medicamentos e n&atilde;o se destinam a diagnosticar, tratar, curar ou prevenir qualquer doen&ccedil;a.
                   Consulte sempre um profissional de sa&uacute;de antes de iniciar o uso de suplementos alimentares.
-                  Os resultados podem variar de pessoa para pessoa. A Vila C&atilde;nhamo n&atilde;o se responsabiliza pelo uso incorreto dos produtos.
+                  Os resultados podem variar de pessoa para pessoa. A Vila CBD n&atilde;o se responsabiliza pelo uso incorreto dos produtos.
                 </p>
               </div>
             </div>

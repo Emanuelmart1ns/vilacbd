@@ -36,7 +36,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         <div className="hero-content">
           <h1 className="hero-title fade-in">A Essência Pura <br/>da Natureza</h1>
           <p className="hero-subtitle fade-in" style={{ animationDelay: "0.2s" }}>
-            Produtos Cãnhamo Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
+            Produtos CBD Premium em Santa Maria da Feira. Qualidade rigorosa, testes de laboratório suíço e resultados reais.
           </p>
           <div className="hero-buttons fade-in" style={{ animationDelay: "0.4s" }}>
             {user ? (
@@ -88,7 +88,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
                     <img src={product.image} alt={product.name} className="product-image" />
                   ) : (
                     <div className="product-image" style={{ background: product.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila Cãnhamo</span>
+                      <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "2rem" }}>Vila CBD</span>
                     </div>
                   )}
                   <div className="product-info">

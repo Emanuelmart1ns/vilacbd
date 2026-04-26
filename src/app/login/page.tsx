@@ -114,7 +114,7 @@ export default function LoginPage() {
     <main className="login-page">
       <div className="login-container glass-panel fade-in">
         <div className="login-header">
-          <h2>Vila Cãnhamo</h2>
+          <h2>Vila CBD</h2>
           <p>{mode === "login" ? "Bem-vindo de volta" : "Criar Conta"}</p>
         </div>
 

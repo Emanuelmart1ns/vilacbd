@@ -37,5 +37,5 @@
   </g>
   <circle cx="320" cy="80" r="3" fill="#cfaa6b" opacity="0.3" filter="url(#glow)"/>
   <circle cx="80" cy="320" r="2" fill="#42825e" opacity="0.3" filter="url(#glow)"/>
-  <text x="200" y="375" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(207,170,107,0.35)" letter-spacing="3">VILA CÃNHAMO</text>
+  <text x="200" y="375" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(207,170,107,0.35)" letter-spacing="3">VILA CBD</text>
 </svg>

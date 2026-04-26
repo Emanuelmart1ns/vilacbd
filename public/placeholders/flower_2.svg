@@ -41,5 +41,5 @@
     <circle cx="250" cy="190" r="1" fill="url(#trichome)"/>
     <circle cx="135" cy="215" r="1" fill="url(#trichome)"/>
   </g>
-  <text x="200" y="370" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(88,129,87,0.4)" letter-spacing="3">VILA CÃNHAMO</text>
+  <text x="200" y="370" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(88,129,87,0.4)" letter-spacing="3">VILA CBD</text>
 </svg>

@@ -40,5 +40,5 @@
     <ellipse cx="278" cy="177" rx="15" ry="10" fill="rgba(255,255,255,0.3)" transform="rotate(-10,278,177)"/>
     <ellipse cx="232" cy="252" rx="16" ry="10" fill="rgba(255,255,255,0.3)" transform="rotate(-25,232,252)"/>
   </g>
-  <text x="200" y="385" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(255,138,128,0.3)" letter-spacing="3">VILA CÃNHAMO</text>
+  <text x="200" y="385" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(255,138,128,0.3)" letter-spacing="3">VILA CBD</text>
 </svg>

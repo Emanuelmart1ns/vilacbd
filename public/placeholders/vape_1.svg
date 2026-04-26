@@ -39,5 +39,5 @@
     <circle cx="220" cy="25" r="2" fill="#fda085"/>
     <circle cx="170" cy="15" r="2" fill="#f093fb"/>
   </g>
-  <text x="200" y="385" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(246,211,101,0.3)" letter-spacing="3">VILA CÃNHAMO</text>
+  <text x="200" y="385" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(246,211,101,0.3)" letter-spacing="3">VILA CBD</text>
 </svg>

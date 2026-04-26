@@ -132,7 +132,7 @@ export default function CheckoutPage() {
                 {isProcessing ? "A processar..." : "Confirmar e Pagar"}
               </button>
               <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textAlign: "center", marginTop: "16px" }}>
-                Pagamento seguro garantido pela Vila Cãnhamo.
+                Pagamento seguro garantido pela Vila CBD.
               </p>
             </div>
           </div>

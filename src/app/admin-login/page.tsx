@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
       }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <h2 style={{ color: "var(--accent-gold)", fontSize: "1.8rem", marginBottom: "8px" }}>
-            Vila Cãnhamo
+            Vila CBD
           </h2>
           <p style={{ color: "var(--accent-gold)", fontSize: "0.85rem", letterSpacing: "2px", textTransform: "uppercase" }}>
             Painel de Administração
@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-field"
-              placeholder="admin@vilacanhamo.com"
+              placeholder="admin@vilacbd.com"
               required
             />
           </div>

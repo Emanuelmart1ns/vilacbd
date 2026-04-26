@@ -68,7 +68,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
           <>
             <div className="age-gate-logo">
               <span className="age-gate-logo-icon">&#9752;</span>
-              <h1 className="age-gate-title">Vila Cãnhamo</h1>
+              <h1 className="age-gate-title">Vila CBD</h1>
               <p className="age-gate-subtitle">Premium CBD &amp; Cânhamo</p>
             </div>
 
