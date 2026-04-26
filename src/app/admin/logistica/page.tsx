@@ -14,47 +14,39 @@ interface Order {
   items: { name: string; quantity: number }[];
 }
 
-const mockOrders: Order[] = [
-  {
-    id: "ORD-001",
-    date: "2026-04-20",
-    customer: "João Silva",
-    email: "joao@email.com",
-    total: 67.50,
-    paymentStatus: "pago",
-    shippingStatus: "enviado",
-    trackingCode: "PT123456789",
-    items: [{ name: "Óleo Premium CBD 5%", quantity: 1 }, { name: "Gomas Relaxantes Morango", quantity: 1 }],
-  },
-  {
-    id: "ORD-002",
-    date: "2026-04-22",
-    customer: "Maria Santos",
-    email: "maria@email.com",
-    total: 35.00,
-    paymentStatus: "pendente",
-    shippingStatus: "pendente",
-    trackingCode: "",
-    items: [{ name: "Bálsamo Muscular Efeito Frio", quantity: 1 }],
-  },
-  {
-    id: "ORD-003",
-    date: "2026-04-24",
-    customer: "Pedro Costa",
-    email: "pedro@email.com",
-    total: 110.00,
-    paymentStatus: "pago",
-    shippingStatus: "preparando",
-    trackingCode: "",
-    items: [{ name: "Vaporizador de Erva Seca Premium", quantity: 1 }],
-  },
-];
+// Encomendas reais serão carregadas da base de dados (Firestore)
+const initialOrders: Order[] = [];
 
 export default function LogisticaPage() {
   const [filter, setFilter] = useState<"todas" | "pendentes" | "pagas" | "enviadas">("todas");
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [loading, setLoading] = useState(true);
   const [editingTracking, setEditingTracking] = useState<string | null>(null);
   const [trackingValue, setTrackingValue] = useState("");
+
+  const fetchOrders = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        // Mapear dados do Firestore para a interface Order se necessário
+        setOrders(data.orders.map((o: any) => ({
+          ...o,
+          date: o.createdAt,
+          customer: `${o.shippingInfo.firstName} ${o.shippingInfo.lastName}`,
+          email: o.shippingInfo.email,
+        })));
+      }
+    } catch (error) {
+      console.error("Erro ao carregar encomendas:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const filteredOrders = orders.filter((order) => {
     if (filter === "todas") return true;
@@ -122,7 +114,11 @@ export default function LogisticaPage() {
       </header>
 
       <div className="glass-panel" style={{ marginTop: "24px" }}>
-        {filteredOrders.length === 0 ? (
+        {loading ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
+            A carregar base de dados de encomendas...
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div style={{ padding: "40px", textAlign: "center", color: "var(--text-secondary)" }}>
             Nenhuma encomenda encontrada com este filtro.
           </div>

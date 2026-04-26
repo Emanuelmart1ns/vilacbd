@@ -13,10 +13,13 @@ export async function POST(request: NextRequest) {
 
     let decodedToken;
     try {
+      // Garantir que o Admin SDK está inicializado antes de usar o Auth
+      getAdminDb(); 
       const adminAuth = getAuth();
       decodedToken = await adminAuth.verifyIdToken(idToken);
-    } catch {
-      return NextResponse.json({ error: "Token inválido." }, { status: 401 });
+    } catch (e: any) {
+      console.error("Erro ao verificar token:", e);
+      return NextResponse.json({ error: "Token inválido.", details: e.message }, { status: 401 });
     }
 
     const uid = decodedToken.uid;
@@ -43,28 +46,35 @@ export async function POST(request: NextRequest) {
       });
       return NextResponse.json({ isNew: true, role: "customer", provider: firebaseProvider }, { status: 201 });
     } else {
+      const existingData = userDoc.data();
       const updateData: Record<string, string | number> = {
         lastLogin: new Date().toISOString(),
-        loginCount: (userDoc.data()?.loginCount || 0) + 1,
+        loginCount: (existingData?.loginCount || 0) + 1,
         provider: firebaseProvider,
       };
+      
       if (name && name !== email.split("@")[0]) {
         updateData.displayName = name;
       }
       if (photoURL) {
         updateData.photoURL = photoURL;
       }
+
       const isGoogle = firebaseProvider === "google.com";
-      if (isGoogle) {
+      if (isGoogle && !existingData?.role) {
         updateData.role = "customer";
       }
+
       await userRef.update(updateData);
-      const storedRole = userDoc.data()?.role || "customer";
-      const role = isGoogle ? "customer" : storedRole;
-      return NextResponse.json({ isNew: false, role, provider: firebaseProvider, createdAt: userDoc.data()?.createdAt }, { status: 200 });
+      
+      const finalRole = existingData?.role || updateData.role || "customer";
+      return NextResponse.json({ isNew: false, role: finalRole, provider: firebaseProvider, createdAt: existingData?.createdAt }, { status: 200 });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro no sync de utilizador:", error);
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Erro interno.", 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    }, { status: 500 });
   }
 }

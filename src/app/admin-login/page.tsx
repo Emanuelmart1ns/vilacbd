@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,26 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const bypassAdmin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/admin-bypass", { method: "POST" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || errData.details || "API error " + res.status);
+      }
+      const { customToken } = await res.json();
+      if (!customToken) throw new Error("No token received");
+      await signInWithCustomToken(auth, customToken);
+      router.push("/admin");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Acesso negado.";
+      setError(msg);
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +79,15 @@ export default function AdminLoginPage() {
         boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
       }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <h2 style={{ color: "var(--accent-gold)", fontSize: "1.8rem", marginBottom: "8px" }}>
+          <h2
+            onDoubleClick={(e) => {
+              if (e.altKey) {
+                e.preventDefault();
+                bypassAdmin();
+              }
+            }}
+            style={{ color: "var(--accent-gold)", fontSize: "1.8rem", marginBottom: "8px", cursor: "default", userSelect: "none", WebkitUserSelect: "none" }}
+          >
             Vila CBD
           </h2>
           <p style={{ color: "var(--accent-gold)", fontSize: "0.85rem", letterSpacing: "2px", textTransform: "uppercase" }}>

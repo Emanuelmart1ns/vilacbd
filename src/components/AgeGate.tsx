@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import "./age-gate.css";
 
 const AGE_GATE_KEY = "vilacbd-age-verified";
@@ -12,7 +13,9 @@ function getInitialVerified(): boolean | null {
 }
 
 export default function AgeGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [verified, setVerified] = useState<boolean | null>(getInitialVerified);
+  const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/admin-login");
   const [denied, setDenied] = useState(false);
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
@@ -44,7 +47,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
 
   if (verified === null) return null;
 
-  if (verified) return <>{children}</>;
+  if (verified || isAdminPath) return <>{children}</>;
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - 18 - i);

@@ -135,6 +135,8 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         </section>
       )}
 
+
+
       <ProductModal 
         product={selectedProduct} 
         isOpen={isModalOpen} 

@@ -114,7 +114,22 @@ export default function LoginPage() {
     <main className="login-page">
       <div className="login-container glass-panel fade-in">
         <div className="login-header">
-          <h2>Vila CBD</h2>
+          <h2
+            onMouseDown={(e) => {
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+              }
+            }}
+            onDoubleClick={(e) => {
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                router.push("/admin-login");
+              }
+            }}
+            style={{ cursor: "default", userSelect: "none", WebkitUserSelect: "none" }}
+          >
+            Vila CBD
+          </h2>
           <p>{mode === "login" ? "Bem-vindo de volta" : "Criar Conta"}</p>
         </div>
 

@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Token em falta." }, { status: 400 });
     }
 
+    const db = getAdminDb();
     const adminAuth = getAuth();
     const decodedToken = await adminAuth.verifyIdToken(idToken);
     const uid = decodedToken.uid;
@@ -20,7 +21,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email não encontrado." }, { status: 400 });
     }
 
-    const db = getAdminDb();
 
     const targetUid = targetEmail ? undefined : uid;
     const targetUserEmail = targetEmail || email;

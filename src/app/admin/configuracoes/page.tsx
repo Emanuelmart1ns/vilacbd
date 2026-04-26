@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -9,31 +9,72 @@ export default function ConfiguracoesPage() {
   const router = useRouter();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [storeName, setStoreName] = useState("Vila CBD");
+  const [socials, setSocials] = useState({
+    instagram: "",
+    facebook: "",
+    tiktok: "",
+    whatsapp: "",
+    whatsappToken: "",
+    whatsappPhoneId: "",
+    whatsappBusinessId: "",
+    whatsappVerifyToken: "vilacbd_secret_token"
+  });
   const [stripePublic, setStripePublic] = useState("");
   const [stripeSecret, setStripeSecret] = useState("");
   const [mbwayKey, setMbwayKey] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.socials) setSocials(data.socials);
+          if (data.storeName) setStoreName(data.storeName);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar definições:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/login");
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSocials(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveIdentity = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaveMessage("Identidade guardada com sucesso!");
+    setSaveMessage("A guardar...");
+    
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, socials, storeName })
+      });
+
+      if (res.ok) {
+        setSaveMessage("Definições guardadas com sucesso!");
+      } else {
+        setSaveMessage("Erro ao guardar definições.");
+      }
+    } catch (error) {
+      setSaveMessage("Erro de ligação.");
+    }
+
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
@@ -43,12 +84,7 @@ export default function ConfiguracoesPage() {
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
-  const handleCreateUser = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaveMessage(`Convite enviado para ${newUserEmail}`);
-    setNewUserEmail("");
-    setTimeout(() => setSaveMessage(""), 3000);
-  };
+  if (loading) return <div style={{ padding: "40px", color: "var(--text-secondary)" }}>A carregar definições...</div>;
 
   return (
     <div className="configuracoes-page">
@@ -62,36 +98,58 @@ export default function ConfiguracoesPage() {
             {saveMessage}
           </div>
         )}
+        
         {/* Identidade Visual */}
-        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveIdentity}>
+        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveSettings}>
           <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Identidade Visual</h3>
-          <div className="form-group" style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Logótipo da Loja</label>
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              <div 
-                style={{ 
-                  width: "80px", height: "80px", borderRadius: "8px", 
-                  background: "var(--bg-primary)", border: "1px dashed var(--glass-border)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  overflow: "hidden"
-                }}
-              >
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo Preview" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                ) : (
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Sem Logo</span>
-                )}
-              </div>
-              <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ color: "var(--text-secondary)" }} />
-            </div>
-          </div>
-          
           <div className="form-group" style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", marginBottom: "8px" }}>Nome da Loja</label>
             <input type="text" className="input-field" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
           </div>
+          <button type="submit" className="btn-primary">Guardar Alterações</button>
+        </form>
 
-          <button type="submit" className="btn-primary">Guardar Identidade</button>
+        {/* Redes Sociais */}
+        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveSettings}>
+          <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Redes Sociais</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Instagram</label>
+              <input type="text" name="instagram" className="input-field" value={socials.instagram} onChange={handleSocialChange} placeholder="https://instagram.com/..." />
+            </div>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Facebook</label>
+              <input type="text" name="facebook" className="input-field" value={socials.facebook} onChange={handleSocialChange} placeholder="https://facebook.com/..." />
+            </div>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>TikTok</label>
+              <input type="text" name="tiktok" className="input-field" value={socials.tiktok} onChange={handleSocialChange} placeholder="https://tiktok.com/@..." />
+            </div>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>WhatsApp (Nº de Exibição)</label>
+              <input type="text" name="whatsapp" className="input-field" value={socials.whatsapp} onChange={handleSocialChange} placeholder="Ex: 351912345678" />
+            </div>
+            
+            <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(37, 211, 102, 0.1)", borderRadius: "8px", border: "1px solid #25d366" }}>
+              <h4 style={{ margin: "0 0 15px 0", color: "#25d366" }}>Configuração WhatsApp (via QR Code)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Use serviços como UltraMsg ou Z-API para conectar sem Facebook.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Instance ID (ID da Instância)</label>
+                  <input type="text" name="whatsappPhoneId" className="input-field" value={socials.whatsappPhoneId || ""} onChange={handleSocialChange} placeholder="Ex: instance12345" />
+                </div>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Token de Acesso</label>
+                  <input type="password" name="whatsappToken" className="input-field" value={socials.whatsappToken || ""} onChange={handleSocialChange} placeholder="O seu token secreto" />
+                </div>
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Verify Token (Opcional)</label>
+                  <input type="text" name="whatsappVerifyToken" className="input-field" value={socials.whatsappVerifyToken || "vilacbd_secret_token"} onChange={handleSocialChange} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Redes Sociais</button>
         </form>
 
         {/* Pagamentos */}
@@ -108,55 +166,14 @@ export default function ConfiguracoesPage() {
             <input type="password" className="input-field" value={stripeSecret} onChange={(e) => setStripeSecret(e.target.value)} placeholder="sk_test_..." />
           </div>
 
-          <div className="form-group" style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Chave MBWay (EuPago / IfThenPay)</label>
-            <input type="text" className="input-field" value={mbwayKey} onChange={(e) => setMbwayKey(e.target.value)} placeholder="Opcional se usar Stripe" />
-          </div>
-
           <button type="submit" className="btn-primary">Guardar Pagamentos</button>
         </form>
 
-        {/* Gestão de Utilizadores */}
-        <div className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
-          <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Gestão de Utilizadores</h3>
-          <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>Crie e gira as contas de acesso ao painel administrativo.</p>
-          
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-            <div className="user-list">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Cargo</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{auth.currentUser?.email || "admin@vilacbd.com"}</td>
-                    <td>Administrador</td>
-                    <td>-</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <form className="add-user-form" style={{ borderLeft: "1px solid var(--glass-border)", paddingLeft: "24px" }} onSubmit={handleCreateUser}>
-              <h4>Novo Utilizador</h4>
-              <div className="form-group" style={{ marginTop: "16px" }}>
-                <label>Email do novo utilizador</label>
-                <input type="email" className="input-field" placeholder="ex: colega@vilacbd.com" value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} />
-              </div>
-              <button type="submit" className="btn-primary" style={{ marginTop: "16px" }}>Convidar / Criar</button>
-            </form>
-          </div>
-        </div>
-
-        {/* Conta de Admin */}
-        <div className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }}>
+        {/* Sessão e Segurança */}
+        <div className="glass-panel" style={{ padding: "24px" }}>
           <h3 style={{ color: "#ff6b6b", marginBottom: "16px" }}>Sessão e Segurança</h3>
-          <p style={{ color: "var(--text-secondary)", marginBottom: "16px" }}>Estás autenticado como Administrador.</p>
-          <button className="btn-action outline" onClick={handleLogout} style={{ borderColor: "#ff6b6b", color: "#ff6b6b" }}>
+          <p style={{ color: "var(--text-secondary)", marginBottom: "16px", fontSize: "0.9rem" }}>Estás autenticado como Administrador.</p>
+          <button className="btn-action outline" onClick={handleLogout} style={{ borderColor: "#ff6b6b", color: "#ff6b6b", width: "100%" }}>
             Terminar Sessão Segura
           </button>
         </div>

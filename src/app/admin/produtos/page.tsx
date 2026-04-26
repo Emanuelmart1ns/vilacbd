@@ -3,12 +3,8 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   getProducts,
-  addProduct,
-  updateProduct,
-  deleteProduct,
   FirestoreProduct,
   uploadProductImage,
-  deleteProductImage,
 } from "@/lib/firebase";
 import { products as staticProducts } from "@/data/products";
 
@@ -40,19 +36,18 @@ export default function ProdutosAdminPage() {
   const secDropRef = useRef<HTMLDivElement>(null);
   const mainFileInputRef = useRef<HTMLInputElement>(null);
   const secFileInputRef = useRef<HTMLInputElement>(null);
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
+  const [replaceImageIndex, setReplaceImageIndex] = useState<number>(-1);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       try {
-        const data = await getProducts();
+        const data = await getProducts(true); // Force refresh
         if (!cancelled) {
-          if (data.length === 0) {
-            setProducts(staticProducts as unknown as FirestoreProduct[]);
-          } else {
-            setProducts(data);
-          }
+          const merged = mergeProducts(staticProducts as unknown as FirestoreProduct[], data);
+          setProducts(merged);
         }
       } catch {
         if (!cancelled) setProducts(staticProducts as unknown as FirestoreProduct[]);
@@ -89,6 +84,24 @@ export default function ProdutosAdminPage() {
     setUploadProgress("");
   };
 
+  const handleReplaceImage = (index: number) => {
+    setReplaceImageIndex(index);
+    replaceFileInputRef.current?.click();
+  };
+
+  const handleReplaceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || replaceImageIndex < 0) return;
+    const url = await compressImage(file);
+    setSecondaryImages(prev => {
+      const updated = [...prev];
+      updated[replaceImageIndex] = url;
+      return updated;
+    });
+    setReplaceImageIndex(-1);
+    e.target.value = "";
+  };
+
   const handleMainImageFile = (file: File) => {
     setMainImageFile(file);
     const reader = new FileReader();
@@ -109,22 +122,51 @@ export default function ProdutosAdminPage() {
     if (mainFileInputRef.current) mainFileInputRef.current.value = "";
   };
 
+  const compressImage = (file: File, maxSize = 450, quality = 0.5): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d")!;
+        
+        // Fundo branco para garantir que transparências não ficam pretas no WebP/JPG
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, w, h);
+        
+        ctx.drawImage(img, 0, 0, w, h);
+        // Usar WebP para máxima compressão
+        resolve(canvas.toDataURL("image/webp", quality));
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleSecondaryFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
 
     setUploadingImages(true);
-    setUploadProgress(`A carregar 0/${files.length} imagens...`);
+    setUploadProgress(`A processar 0/${files.length} imagens...`);
     try {
       const urls: string[] = [];
       const fileArr = Array.from(files);
       for (let i = 0; i < fileArr.length; i++) {
-        setUploadProgress(`A carregar ${i + 1}/${fileArr.length} imagens...`);
-        const url = await uploadProductImage(fileArr[i], editingProduct?.id);
+        setUploadProgress(`A processar ${i + 1}/${fileArr.length} imagens...`);
+        const url = await compressImage(fileArr[i]);
         urls.push(url);
       }
       setSecondaryImages((prev) => [...prev, ...urls]);
-    } catch {
-      alert("Erro ao fazer upload das imagens");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      alert("Erro ao fazer upload das imagens: " + (error instanceof Error ? error.message : "Erro desconhecido"));
     } finally {
       setUploadingImages(false);
       setUploadProgress("");
@@ -137,12 +179,6 @@ export default function ProdutosAdminPage() {
   };
 
   const removeSecondaryImage = async (index: number) => {
-    const img = secondaryImages[index];
-    try {
-      await deleteProductImage(img);
-    } catch {
-      // Silently continue even if deletion fails
-    }
     setSecondaryImages((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -237,10 +273,26 @@ export default function ProdutosAdminPage() {
 
     try {
       setUploadingImages(true);
+      setUploadProgress("A preparar imagens...");
 
-      let mainImageUrl = editingProduct?.image || "";
+      // 1. Lidar com a imagem principal
+      let mainImageUrl = mainImagePreview;
       if (mainImageFile) {
-        mainImageUrl = await uploadProductImage(mainImageFile, editingProduct?.id);
+        setUploadProgress("A otimizar imagem principal...");
+        mainImageUrl = await compressImage(mainImageFile);
+      }
+
+      // 2. Lidar com imagens secundárias
+      const finalSecondaryImages: string[] = [];
+      for (let i = 0; i < secondaryImages.length; i++) {
+        const img = secondaryImages[i];
+        if (img.startsWith("data:")) {
+          // Já está em base64 (possivelmente já otimizado pelo handleSecondaryFiles)
+          finalSecondaryImages.push(img);
+        } else {
+          // É um URL antigo ou ficheiro
+          finalSecondaryImages.push(img);
+        }
       }
 
       const productData = {
@@ -251,33 +303,76 @@ export default function ProdutosAdminPage() {
         category: formData.get("category") as string,
         description: formData.get("description") as string,
         image: mainImageUrl,
-        images: secondaryImages,
+        images: finalSecondaryImages,
         color: colorValue,
         isPopular: isPopular,
       };
 
+      setUploadProgress("A guardar dados no servidor...");
       if (editingProduct?.id) {
-        await updateProduct(editingProduct.id as string, productData);
+        const res = await fetch("/api/products", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingProduct.id, ...productData }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.details || "Erro ao atualizar");
+        }
       } else {
-        await addProduct(productData);
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(productData),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.details || "Erro ao criar");
+        }
       }
 
       closeModal();
 
+      // Recarregar lista
       const data = await getProducts(true);
-      setProducts(data.length === 0 ? (staticProducts as unknown as FirestoreProduct[]) : data);
+      const merged = mergeProducts(staticProducts as unknown as FirestoreProduct[], data);
+      setProducts(merged);
     } catch (error) {
-      alert("Erro ao guardar produto.");
+      alert("Erro ao guardar produto: " + (error instanceof Error ? error.message : "Erro desconhecido"));
       console.error(error);
     } finally {
       setUploadingImages(false);
+      setUploadProgress("");
     }
   };
+
+  function mergeProducts(staticProds: FirestoreProduct[], fbProds: FirestoreProduct[]): FirestoreProduct[] {
+    const mergedMap = new Map<string, FirestoreProduct>();
+    staticProds.forEach(p => mergedMap.set(p.id, p));
+    fbProds.forEach(fb => {
+      const existing = mergedMap.get(fb.id);
+      if (existing) {
+         mergedMap.set(fb.id, {
+           ...existing,
+           ...fb,
+           images: fb.images !== undefined ? fb.images : existing.images,
+         });
+      } else {
+         mergedMap.set(fb.id, fb);
+      }
+    });
+    return Array.from(mergedMap.values());
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza que deseja eliminar este produto?")) return;
     try {
-      await deleteProduct(id);
+      const res = await fetch("/api/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Erro ao eliminar");
       const data = await getProducts();
       setProducts(data.length === 0 ? (staticProducts as unknown as FirestoreProduct[]) : data);
     } catch {
@@ -464,7 +559,7 @@ export default function ProdutosAdminPage() {
                 <h4 className="form-section-title">Imagem Principal</h4>
                 {mainImagePreview && (
                   <div className="main-image-preview">
-                    <img src={mainImagePreview} alt="Preview" />
+                    <img src={mainImagePreview} alt="Preview" onClick={() => mainFileInputRef.current?.click()} style={{ cursor: "pointer" }} title="Clique para substituir" />
                     <button type="button" className="btn-remove-image" onClick={removeMainImage}>
                       Remover imagem
                     </button>
@@ -535,7 +630,7 @@ export default function ProdutosAdminPage() {
                   <div className="secondary-images-grid">
                     {secondaryImages.map((img, index) => (
                       <div key={index} className="secondary-image-item">
-                        <img src={img} alt={`Imagem ${index + 1}`} />
+                        <img src={img} alt={`Imagem ${index + 1}`} onClick={() => handleReplaceImage(index)} style={{ cursor: "pointer" }} title="Clique para substituir" />
                         <div className="secondary-image-controls">
                           <button
                             type="button"
@@ -613,6 +708,13 @@ export default function ProdutosAdminPage() {
                   {uploadingImages ? "A guardar..." : "Guardar Produto"}
                 </button>
               </div>
+              <input
+                ref={replaceFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleReplaceFile}
+                style={{ display: "none" }}
+              />
             </form>
           </div>
         </div>

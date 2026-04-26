@@ -4,11 +4,29 @@ import { products as staticProducts, Product } from "@/data/products";
 import ProductPageClient from "./ProductPageClient";
 import { notFound } from "next/navigation";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export async function generateStaticParams() {
   const allProducts = [...staticProducts];
   return allProducts.map((p) => ({ id: p.id }));
+}
+
+function mergeProducts(staticProds: Product[], fbProds: Product[]): Product[] {
+  const mergedMap = new Map<string, Product>();
+  staticProds.forEach(p => mergedMap.set(p.id, p));
+  fbProds.forEach(fb => {
+    const existing = mergedMap.get(fb.id);
+    if (existing) {
+       mergedMap.set(fb.id, {
+         ...existing,
+         ...fb,
+         images: fb.images !== undefined ? fb.images : existing.images,
+       });
+    } else {
+       mergedMap.set(fb.id, fb);
+    }
+  });
+  return Array.from(mergedMap.values());
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,11 +36,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   
   try {
     const data = await getProducts();
-    if (data && data.length > 0) {
-      products = data as Product[];
-    } else {
-      products = staticProducts;
-    }
+    products = mergeProducts(staticProducts, data as Product[]);
   } catch {
     products = staticProducts;
   }

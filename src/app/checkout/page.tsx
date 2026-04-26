@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     nome: "",
@@ -26,11 +28,42 @@ export default function CheckoutPage() {
   const handleConfirmPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    // Simulação de processamento - integrar com Stripe/MBWay depois
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setOrderPlaced(true);
-    clearCart();
-    setIsProcessing(false);
+
+    try {
+      const idToken = user ? await user.getIdToken() : null;
+      
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          items,
+          total: cartTotal,
+          shippingInfo: {
+            firstName: formData.nome.split(' ')[0],
+            lastName: formData.nome.split(' ').slice(1).join(' '),
+            address: formData.morada,
+            city: formData.cidade,
+            postalCode: formData.codigoPostal,
+            phone: formData.telemovel,
+            email: formData.email
+          },
+          paymentMethod
+        })
+      });
+
+      if (res.ok) {
+        setOrderPlaced(true);
+        clearCart();
+      } else {
+        alert("Erro ao processar a encomenda. Por favor, tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro no checkout:", error);
+      alert("Erro de ligação.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (orderPlaced) {

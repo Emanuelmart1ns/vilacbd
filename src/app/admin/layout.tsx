@@ -20,9 +20,18 @@ export default function AdminLayout({
     if (!loading) {
       if (!user) {
         router.push("/admin-login");
-      } else if (profile && (profile.role !== "admin" || profile.provider === "google.com")) {
-        router.push("/");
       }
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!loading && user && profile && profile.role !== "admin") {
+      const timer = setTimeout(() => {
+        if (profile.role !== "admin") {
+          router.push("/");
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
     }
   }, [user, profile, loading, router]);
 
@@ -39,7 +48,9 @@ export default function AdminLayout({
     return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>A verificar acesso...</div>;
   }
 
-  if (!user || profile?.role !== "admin" || profile?.provider === "google.com") return null;
+  const isAdmin = profile?.role === "admin" || (user && !profile);
+
+  if (!user) return null;
 
   return (
     <div className="admin-container">
@@ -51,7 +62,8 @@ export default function AdminLayout({
           <Link href="/admin" className="admin-nav-link">Visão Geral</Link>
           <Link href="/admin/logistica" className="admin-nav-link">Logística & Encomendas</Link>
           <Link href="/admin/produtos" className="admin-nav-link">Produtos</Link>
-          <Link href="/admin/utilizadores" className="admin-nav-link">Utilizadores</Link>
+          <Link href="/admin/utilizadores" className="admin-nav-link">Administradores</Link>
+          <Link href="/admin/crm" className="admin-nav-link">CRM & Clientes</Link>
           <Link href="/admin/comentarios" className="admin-nav-link">Comentários</Link>
           <Link href="/admin/configuracoes" className="admin-nav-link">Configurações</Link>
         </nav>
