@@ -9,12 +9,20 @@ export async function GET(request: NextRequest) {
     
     if (!settingsDoc.exists) {
       return NextResponse.json({ 
+        storeName: "Vila CBD",
         socials: {
           instagram: "",
           facebook: "",
           tiktok: "",
           whatsapp: ""
-        }
+        },
+        categories: [
+          { name: "Óleos e Tinturas", subcategories: ["Isolate", "Full Spectrum", "Broad Spectrum", "Pets"] },
+          { name: "Flores de Cânhamo", subcategories: ["Indoor", "Outdoor", "Greenhouse"] },
+          { name: "Gomas e Edibles", subcategories: ["Gomas", "Chás", "Mel"] },
+          { name: "Tópicos e Cosméticos", subcategories: ["Cremes", "Bálsamos", "Séruns"] },
+          { name: "Acessórios e Vapes", subcategories: ["Vapes", "Grinders", "Papel de Enrolar"] }
+        ]
       });
     }
     
