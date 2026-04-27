@@ -2,8 +2,18 @@
 
 import React from "react";
 import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
 
 export default function SobrePage() {
+  const [settings, setSettings] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(err => console.error("Erro ao carregar definições:", err));
+  }, []);
+
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
       <Navbar />
@@ -12,7 +22,7 @@ export default function SobrePage() {
         <div className="container">
           <div style={{ textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
             <h1 style={{ fontSize: "3.5rem", color: "var(--accent-gold)", marginBottom: "24px", lineHeight: "1.2" }}>
-              Sobre a Vila CBD
+              Sobre a {settings?.storeName || "Vila CBD"}
             </h1>
             <p style={{ fontSize: "1.2rem", color: "var(--text-secondary)", lineHeight: "1.8" }}>
               Somos uma empresa dedicada a oferecer produtos premium de cânhamo com qualidade certificada e testada em laboratório.
@@ -102,25 +112,21 @@ export default function SobrePage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "24px", borderRadius: "14px", border: "1px solid var(--glass-border)" }}>
                 <h4 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Morada</h4>
-                <p style={{ color: "var(--text-primary)", lineHeight: "1.6" }}>
-                  Rua Dr. Roberto Alves 56<br />
-                  4520-213 Santa Maria da Feira<br />
-                  Portugal
+                <p style={{ color: "var(--text-primary)", lineHeight: "1.6", whiteSpace: "pre-line" }}>
+                  {settings?.address || "Rua Dr. Roberto Alves 56\n4520-213 Santa Maria da Feira\nPortugal"}
                 </p>
               </div>
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "24px", borderRadius: "14px", border: "1px solid var(--glass-border)" }}>
                 <h4 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Telefone &amp; Email</h4>
                 <p style={{ color: "var(--text-primary)", lineHeight: "1.8" }}>
-                  +351 912 345 678<br />
-                  info@vilacbd.com
+                  {settings?.phone || "+351 912 345 678"}<br />
+                  {settings?.email || "info@vilacbd.com"}
                 </p>
               </div>
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "24px", borderRadius: "14px", border: "1px solid var(--glass-border)" }}>
                 <h4 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Hor&aacute;rio</h4>
-                <p style={{ color: "var(--text-primary)", lineHeight: "1.8" }}>
-                  Seg-Sex: 10:00 - 13:00 | 14:30 - 19:00<br />
-                  S&aacute;bado: 10:00 - 13:00<br />
-                  Domingo: Encerrado
+                <p style={{ color: "var(--text-primary)", lineHeight: "1.8", whiteSpace: "pre-line" }}>
+                  {settings?.schedule || "Seg-Sex: 10:00 - 13:00 | 14:30 - 19:00\nSábado: 10:00 - 13:00\nDomingo: Encerrado"}
                 </p>
               </div>
             </div>

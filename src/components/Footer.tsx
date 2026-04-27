@@ -4,9 +4,18 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "./footer.css";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
   const pathname = usePathname();
+  const [settings, setSettings] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(err => console.error("Erro ao carregar definições:", err));
+  }, []);
 
   if (pathname?.startsWith("/admin") || pathname === "/login" || pathname === "/checkout") {
     return null;
@@ -16,9 +25,9 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-grid">
           <div className="footer-col">
-            <h3 className="footer-logo">Vila CBD</h3>
+            <h3 className="footer-logo">{settings?.storeName || "Vila CBD"}</h3>
             <p className="footer-desc">
-              Produtos de cânhamo premium em Santa Maria da Feira. Qualidade certificada e testada em laboratório.
+              Produtos de cânhamo premium em {settings?.address?.split(',')[1]?.trim() || "Santa Maria da Feira"}. Qualidade certificada e testada em laboratório.
             </p>
           </div>
 
@@ -65,7 +74,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Vila CBD. Todos os direitos reservados a VilaCBD</p>
+          <p>&copy; {new Date().getFullYear()} {settings?.storeName || "Vila CBD"}. Todos os direitos reservados a {settings?.storeName || "Vila CBD"}</p>
         </div>
       </div>
     </footer>
