@@ -20,6 +20,13 @@ export async function GET(request: NextRequest) {
       ];
     }
     
+    // Fallback para dados da loja se não existirem
+    if (!data.address) data.address = "Rua Dr. Roberto Alves 56, 4520-213 Santa Maria da Feira, Portugal";
+    if (!data.phone) data.phone = "+351 912 345 678";
+    if (!data.email) data.email = "info@vilacbd.com";
+    if (!data.schedule) data.schedule = "Seg-Sex: 10:00 - 13:00 | 14:30 - 19:00, Sábado: 10:00 - 13:00, Domingo: Encerrado";
+    if (!data.logo) data.logo = "";
+    
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao carregar definições." }, { status: 500 });

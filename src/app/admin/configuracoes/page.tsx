@@ -9,6 +9,11 @@ export default function ConfiguracoesPage() {
   const router = useRouter();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [storeName, setStoreName] = useState("Vila CBD");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [schedule, setSchedule] = useState("");
+  const [logo, setLogo] = useState("");
   const [socials, setSocials] = useState({
     instagram: "",
     facebook: "",
@@ -36,6 +41,11 @@ export default function ConfiguracoesPage() {
           if (data.socials) setSocials(data.socials);
           if (data.storeName) setStoreName(data.storeName);
           if (data.categories) setCategories(data.categories);
+          if (data.address) setAddress(data.address);
+          if (data.phone) setPhone(data.phone);
+          if (data.email) setEmail(data.email);
+          if (data.schedule) setSchedule(data.schedule);
+          if (data.logo) setLogo(data.logo);
         }
       } catch (error) {
         console.error("Erro ao carregar definições:", error);
@@ -65,7 +75,17 @@ export default function ConfiguracoesPage() {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken, socials, storeName, categories })
+        body: JSON.stringify({ 
+          idToken, 
+          socials, 
+          storeName, 
+          categories,
+          address,
+          phone,
+          email,
+          schedule,
+          logo
+        })
       });
 
       if (res.ok) {
@@ -96,6 +116,17 @@ export default function ConfiguracoesPage() {
   const removeCategory = (name: string) => {
     if (confirm(`Tem a certeza que deseja remover a categoria '${name}'?`)) {
       setCategories(categories.filter(c => c.name !== name));
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -137,14 +168,45 @@ export default function ConfiguracoesPage() {
           </div>
         )}
         
-        {/* Identidade Visual */}
+        {/* Identidade Visual e Dados */}
         <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveSettings}>
-          <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Identidade Visual</h3>
+          <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Dados da Loja</h3>
+          
           <div className="form-group" style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Nome da Loja</label>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Nome da Loja</label>
             <input type="text" className="input-field" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
           </div>
-          <button type="submit" className="btn-primary">Guardar Alterações</button>
+
+          <div className="form-group" style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Logo (URL ou Upload)</label>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              {logo && <img src={logo} alt="Logo Preview" style={{ height: "40px", borderRadius: "4px" }} />}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ fontSize: "0.8rem" }} />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Morada Completa</label>
+            <textarea className="input-field" value={address} onChange={(e) => setAddress(e.target.value)} rows={2} style={{ resize: "none" }} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Telefone</label>
+              <input type="text" className="input-field" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Email de Contacto</label>
+              <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginBottom: "16px" }}>
+            <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Horário de Funcionamento</label>
+            <input type="text" className="input-field" value={schedule} onChange={(e) => setSchedule(e.target.value)} placeholder="Ex: Seg-Sex: 10h-19h..." />
+          </div>
+
+          <button type="submit" className="btn-primary">Guardar Dados da Loja</button>
         </form>
 
         {/* Categorias e Subcategorias */}
