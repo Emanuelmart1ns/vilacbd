@@ -24,16 +24,11 @@ export default function AdminLayout({
     }
   }, [user, loading, router]);
 
-  useEffect(() => {
-    if (!loading && user && profile && profile.role !== "admin") {
-      const timer = setTimeout(() => {
-        if (profile.role !== "admin") {
-          router.push("/");
-        }
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [user, profile, loading, router]);
+
+
+  // Remover o redirecionamento com timer para evitar falsos positivos
+  // A proteção real acontece nas APIs do backend.
+
 
   const handleLogout = async () => {
     try {
