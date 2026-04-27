@@ -6,22 +6,6 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export default function LegislacaoPage() {
-  const handleSecureOpen = (url: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    
-    const clickEvent = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      ctrlKey: true
-    });
-    
-    link.dispatchEvent(clickEvent);
-  };
-
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
       <Navbar />
@@ -59,13 +43,14 @@ export default function LegislacaoPage() {
                     No entanto, as variedades de cânhamo para fins industriais, com teores de THC (Tetrahidrocanabinol) inferiores aos limites 
                     estabelecidos pela UE, são excluídas destas restrições quando devidamente autorizadas.
                   </p>
-                  <button 
-                    onClick={() => handleSecureOpen("https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178")}
+                  <a 
+                    href="https://href.li/?https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
                     className="btn-text"
-                    style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}
                   >
                     Diário da República →
-                  </button>
+                  </a>
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "30px" }}>
@@ -74,13 +59,14 @@ export default function LegislacaoPage() {
                     Define os requisitos e procedimentos para a autorização do cultivo de variedades de cânhamo industrial em Portugal. 
                     Estabelece as competências da DGAV (Direção-Geral de Alimentação e Veterinária) e as normas de controlo e fiscalização.
                   </p>
-                  <button 
-                    onClick={() => handleSecureOpen("https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504")}
+                  <a 
+                    href="https://href.li/?https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
                     className="btn-text"
-                    style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}
                   >
                     Consultar Portaria →
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
