@@ -11,9 +11,15 @@ export default function LegislacaoPage() {
     link.href = url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    
+    const clickEvent = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true
+    });
+    
+    link.dispatchEvent(clickEvent);
   };
 
   return (
