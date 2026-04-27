@@ -97,48 +97,61 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
               >
                 Todos
               </button>
-              {settingsCategories.map((cat) => (
-                <div key={cat.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <button 
-                    className={`category-btn ${selectedCategory === cat.name ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat.name)}
-                    style={{
-                      textAlign: "left",
-                      padding: "10px",
-                      background: selectedCategory === cat.name ? "rgba(212, 175, 55, 0.1)" : "transparent",
-                      border: "none",
-                      color: selectedCategory === cat.name || selectedCategory.startsWith(cat.name + "|") ? "var(--accent-gold)" : "var(--text-secondary)",
-                      cursor: "pointer",
-                      borderRadius: "8px",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    {cat.name}
-                  </button>
-                  {cat.subcategories && cat.subcategories.length > 0 && cat.subcategories.map(sub => {
-                    const subKey = `${cat.name}|${sub}`;
-                    return (
-                      <button
-                        key={subKey}
-                        onClick={() => setSelectedCategory(subKey)}
-                        style={{
-                          textAlign: "left",
-                          padding: "6px 10px 6px 20px",
-                          background: selectedCategory === subKey ? "rgba(212, 175, 55, 0.1)" : "transparent",
-                          border: "none",
-                          color: selectedCategory === subKey ? "var(--accent-gold)" : "var(--text-secondary)",
-                          cursor: "pointer",
-                          borderRadius: "8px",
-                          fontSize: "0.9rem",
-                          transition: "all 0.2s"
-                        }}
-                      >
-                        {sub}
-                      </button>
-                    )
-                  })}
-                </div>
-              ))}
+              {settingsCategories.map((cat) => {
+                const isSelected = selectedCategory === cat.name || selectedCategory.startsWith(cat.name + "|");
+                
+                return (
+                  <div key={cat.name} style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <button 
+                      className={`category-btn ${isSelected ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(cat.name)}
+                      style={{
+                        textAlign: "left",
+                        padding: "10px",
+                        background: selectedCategory === cat.name ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                        border: "none",
+                        color: isSelected ? "var(--accent-gold)" : "var(--text-secondary)",
+                        cursor: "pointer",
+                        borderRadius: "8px",
+                        transition: "all 0.2s",
+                        fontWeight: isSelected ? "600" : "400"
+                      }}
+                    >
+                      {cat.name}
+                    </button>
+                    
+                    {/* Subcategorias colapsáveis: só aparecem se a categoria pai estiver selecionada */}
+                    {isSelected && cat.subcategories && cat.subcategories.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginLeft: "10px", borderLeft: "1px solid rgba(212, 175, 55, 0.2)", paddingLeft: "10px" }}>
+                        {cat.subcategories.map(sub => {
+                          const subKey = `${cat.name}|${sub}`;
+                          const isSubSelected = selectedCategory === subKey;
+                          return (
+                            <button
+                              key={subKey}
+                              onClick={() => setSelectedCategory(subKey)}
+                              style={{
+                                textAlign: "left",
+                                padding: "6px 10px",
+                                background: isSubSelected ? "rgba(212, 175, 55, 0.05)" : "transparent",
+                                border: "none",
+                                color: isSubSelected ? "var(--accent-gold)" : "var(--text-secondary)",
+                                cursor: "pointer",
+                                borderRadius: "4px",
+                                fontSize: "0.85rem",
+                                transition: "all 0.2s",
+                                opacity: isSubSelected ? 1 : 0.7
+                              }}
+                            >
+                              {sub}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </aside>
 
