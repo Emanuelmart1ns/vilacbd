@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import "./navbar.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +12,7 @@ import { auth } from "@/lib/firebase";
 export default function Navbar() {
   const { items, setIsCartOpen } = useCart();
   const { user, profile, loading } = useAuth();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [settings, setSettings] = useState<any>(null);
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -38,11 +40,18 @@ export default function Navbar() {
       console.error("Erro ao sair:", error);
     }
   };
+  
+  const handleLogoDoubleClick = (e: React.MouseEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      router.push("/admin-login");
+    }
+  };
 
   return (
     <nav className={`global-navbar ${scrolled ? "scrolled" : ""}`}>
       <div className="nav-container">
-        <Link href="/" className="nav-logo">
+        <Link href="/" className="nav-logo" onDoubleClick={handleLogoDoubleClick}>
           {settings?.logo ? (
             <img src={settings.logo} alt={settings.storeName} style={{ height: "32px", width: "auto" }} />
           ) : (
