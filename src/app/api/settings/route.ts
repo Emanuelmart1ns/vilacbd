@@ -7,26 +7,20 @@ export async function GET(request: NextRequest) {
     const db = getAdminDb();
     const settingsDoc = await db.collection("settings").doc("global").get();
     
-    if (!settingsDoc.exists) {
-      return NextResponse.json({ 
-        storeName: "Vila CBD",
-        socials: {
-          instagram: "",
-          facebook: "",
-          tiktok: "",
-          whatsapp: ""
-        },
-        categories: [
-          { name: "Óleos e Tinturas", subcategories: ["Isolate", "Full Spectrum", "Broad Spectrum", "Pets"] },
-          { name: "Flores de Cânhamo", subcategories: ["Indoor", "Outdoor", "Greenhouse"] },
-          { name: "Gomas e Edibles", subcategories: ["Gomas", "Chás", "Mel"] },
-          { name: "Tópicos e Cosméticos", subcategories: ["Cremes", "Bálsamos", "Séruns"] },
-          { name: "Acessórios e Vapes", subcategories: ["Vapes", "Grinders", "Papel de Enrolar"] }
-        ]
-      });
+    const data = settingsDoc.data() || {};
+    
+    // Fallback para categorias padrão se não existirem no Firestore
+    if (!data.categories) {
+      data.categories = [
+        { name: "Óleos e Tinturas", subcategories: ["Isolate", "Full Spectrum", "Broad Spectrum", "Pets"] },
+        { name: "Flores de Cânhamo", subcategories: ["Indoor", "Outdoor", "Greenhouse"] },
+        { name: "Gomas e Edibles", subcategories: ["Gomas", "Chás", "Mel"] },
+        { name: "Tópicos e Cosméticos", subcategories: ["Cremes", "Bálsamos", "Séruns"] },
+        { name: "Acessórios e Vapes", subcategories: ["Vapes", "Grinders", "Papel de Enrolar"] }
+      ];
     }
     
-    return NextResponse.json(settingsDoc.data());
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: "Erro ao carregar definições." }, { status: 500 });
   }

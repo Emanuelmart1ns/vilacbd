@@ -147,6 +147,36 @@ export default function ConfiguracoesPage() {
           <button type="submit" className="btn-primary">Guardar Alterações</button>
         </form>
 
+        {/* Categorias e Subcategorias */}
+        <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveSettings}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h3 style={{ color: "var(--accent-gold)" }}>Categorias e Subcategorias</h3>
+            <button type="button" className="btn-action outline" onClick={addCategory}>+ Nova Categoria</button>
+          </div>
+          
+          <div style={{ display: "grid", gap: "12px", gridTemplateColumns: "1fr" }}>
+            {categories.map((cat, idx) => (
+              <div key={idx} style={{ background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "8px", border: "1px solid var(--glass-border)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <h4 style={{ margin: 0, color: "var(--text-primary)", fontSize: "0.95rem" }}>{cat.name}</h4>
+                  <button type="button" className="btn-text text-danger" style={{ fontSize: "0.75rem" }} onClick={() => removeCategory(cat.name)}>Eliminar</button>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "8px" }}>
+                  {cat.subcategories && cat.subcategories.map((sub, sIdx) => (
+                    <span key={sIdx} style={{ background: "rgba(212, 175, 55, 0.1)", color: "var(--accent-gold)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}>
+                      {sub}
+                      <button type="button" style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0 }} onClick={() => removeSubcategory(cat.name, sub)}>×</button>
+                    </span>
+                  ))}
+                </div>
+                <button type="button" className="btn-text" style={{ fontSize: "0.75rem" }} onClick={() => addSubcategory(cat.name)}>+ Adicionar Subcategoria</button>
+              </div>
+            ))}
+            {categories.length === 0 && <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Nenhuma categoria configurada.</p>}
+          </div>
+          <button type="submit" className="btn-primary" style={{ marginTop: "20px" }}>Guardar Categorias</button>
+        </form>
+
         {/* Redes Sociais */}
         <form className="glass-panel" style={{ padding: "24px" }} onSubmit={handleSaveSettings}>
           <h3 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Redes Sociais</h3>
@@ -207,35 +237,7 @@ export default function ConfiguracoesPage() {
           <button type="submit" className="btn-primary">Guardar Pagamentos</button>
         </form>
 
-        {/* Categorias e Subcategorias */}
-        <form className="glass-panel" style={{ padding: "24px", gridColumn: "1 / -1" }} onSubmit={handleSaveSettings}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ color: "var(--accent-gold)" }}>Categorias e Subcategorias</h3>
-            <button type="button" className="btn-action outline" onClick={addCategory}>+ Nova Categoria</button>
-          </div>
-          
-          <div style={{ display: "grid", gap: "16px", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
-            {categories.map((cat, idx) => (
-              <div key={idx} style={{ background: "rgba(0,0,0,0.2)", padding: "16px", borderRadius: "8px", border: "1px solid var(--glass-border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <h4 style={{ margin: 0, color: "var(--text-primary)" }}>{cat.name}</h4>
-                  <button type="button" className="btn-text text-danger" onClick={() => removeCategory(cat.name)}>Eliminar</button>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
-                  {cat.subcategories && cat.subcategories.map((sub, sIdx) => (
-                    <span key={sIdx} style={{ background: "rgba(212, 175, 55, 0.1)", color: "var(--accent-gold)", padding: "4px 8px", borderRadius: "4px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px" }}>
-                      {sub}
-                      <button type="button" style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: 0 }} onClick={() => removeSubcategory(cat.name, sub)}>×</button>
-                    </span>
-                  ))}
-                </div>
-                <button type="button" className="btn-text" style={{ fontSize: "0.8rem" }} onClick={() => addSubcategory(cat.name)}>+ Adicionar Subcategoria</button>
-              </div>
-            ))}
-            {categories.length === 0 && <p style={{ color: "var(--text-secondary)" }}>Nenhuma categoria configurada.</p>}
-          </div>
-          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Categorias</button>
-        </form>
+
 
         {/* Sessão e Segurança */}
         <div className="glass-panel" style={{ padding: "24px" }}>
