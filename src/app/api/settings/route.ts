@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { idToken, socials, storeName } = body;
+    const { idToken, socials, storeName, categories } = body;
 
     const db = getAdminDb();
     const adminAuth = getAuth();
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const updateData: any = {};
     if (socials) updateData.socials = socials;
     if (storeName) updateData.storeName = storeName;
+    if (categories) updateData.categories = categories;
     
     updateData.updatedAt = new Date().toISOString();
 

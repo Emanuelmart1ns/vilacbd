@@ -19,11 +19,25 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
   const { addToCart } = useCart();
   const { user, loading: authLoading } = useAuth();
 
-  const categories = ["Todos", ...Array.from(new Set(initialProducts.map(p => p.category)))];
+  const categoriesMap = new Map<string, Set<string>>();
+  initialProducts.forEach(p => {
+    if (!categoriesMap.has(p.category)) {
+      categoriesMap.set(p.category, new Set());
+    }
+    if (p.subcategory) {
+      categoriesMap.get(p.category)?.add(p.subcategory);
+    }
+  });
 
   const filteredProducts = selectedCategory === "Todos" 
     ? initialProducts 
-    : initialProducts.filter(p => p.category === selectedCategory);
+    : initialProducts.filter(p => {
+        if (selectedCategory.includes("|")) {
+          const [cat, sub] = selectedCategory.split("|");
+          return p.category === cat && p.subcategory === sub;
+        }
+        return p.category === selectedCategory;
+      });
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -67,24 +81,63 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
           <aside className="shop-sidebar">
             <h3 style={{ marginBottom: "20px", color: "var(--accent-gold)" }}>Categorias</h3>
             <div className="category-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {categories.map(cat => (
-                <button 
-                  key={cat}
-                  className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat)}
-                  style={{
-                    textAlign: "left",
-                    padding: "10px",
-                    background: selectedCategory === cat ? "rgba(212, 175, 55, 0.1)" : "transparent",
-                    border: "none",
-                    color: selectedCategory === cat ? "var(--accent-gold)" : "var(--text-secondary)",
-                    cursor: "pointer",
-                    borderRadius: "8px",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  {cat}
-                </button>
+              <button 
+                className={`category-btn ${selectedCategory === "Todos" ? 'active' : ''}`}
+                onClick={() => setSelectedCategory("Todos")}
+                style={{
+                  textAlign: "left",
+                  padding: "10px",
+                  background: selectedCategory === "Todos" ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                  border: "none",
+                  color: selectedCategory === "Todos" ? "var(--accent-gold)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  borderRadius: "8px",
+                  transition: "all 0.2s"
+                }}
+              >
+                Todos
+              </button>
+              {Array.from(categoriesMap.entries()).map(([cat, subcats]) => (
+                <div key={cat} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <button 
+                    className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat)}
+                    style={{
+                      textAlign: "left",
+                      padding: "10px",
+                      background: selectedCategory === cat ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                      border: "none",
+                      color: selectedCategory === cat || selectedCategory.startsWith(cat + "|") ? "var(--accent-gold)" : "var(--text-secondary)",
+                      cursor: "pointer",
+                      borderRadius: "8px",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {cat}
+                  </button>
+                  {subcats.size > 0 && Array.from(subcats).map(sub => {
+                    const subKey = `${cat}|${sub}`;
+                    return (
+                      <button
+                        key={subKey}
+                        onClick={() => setSelectedCategory(subKey)}
+                        style={{
+                          textAlign: "left",
+                          padding: "6px 10px 6px 20px",
+                          background: selectedCategory === subKey ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                          border: "none",
+                          color: selectedCategory === subKey ? "var(--accent-gold)" : "var(--text-secondary)",
+                          cursor: "pointer",
+                          borderRadius: "8px",
+                          fontSize: "0.9rem",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {sub}
+                      </button>
+                    )
+                  })}
+                </div>
               ))}
             </div>
           </aside>

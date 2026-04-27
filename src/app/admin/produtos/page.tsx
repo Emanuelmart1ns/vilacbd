@@ -8,17 +8,11 @@ import {
 } from "@/lib/firebase";
 import { products as staticProducts } from "@/data/products";
 
-const CATEGORIES = [
-  "Óleos e Tinturas",
-  "Flores de Cânhamo",
-  "Gomas e Edibles",
-  "Tópicos e Cosméticos",
-  "Acessórios e Vapes",
-];
-
 export default function ProdutosAdminPage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [settingsCategories, setSettingsCategories] = useState<{name: string, subcategories: string[]}[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FirestoreProduct | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
@@ -49,6 +43,13 @@ export default function ProdutosAdminPage() {
           const merged = mergeProducts(staticProducts as unknown as FirestoreProduct[], data);
           setProducts(merged);
         }
+        const settingsRes = await fetch("/api/settings");
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          if (settingsData.categories && !cancelled) {
+            setSettingsCategories(settingsData.categories);
+          }
+        }
       } catch {
         if (!cancelled) setProducts(staticProducts as unknown as FirestoreProduct[]);
       } finally {
@@ -67,6 +68,7 @@ export default function ProdutosAdminPage() {
     setMainImagePreview(product?.image || "");
     setIsPopular(product?.isPopular || false);
     setColorValue(product?.color || "linear-gradient(135deg, #1e3c27, #2a6344)");
+    setSelectedCategory(product?.category || "");
     setValidationErrors({});
     setUploadProgress("");
     setIsModalOpen(true);
@@ -80,6 +82,7 @@ export default function ProdutosAdminPage() {
     setMainImagePreview("");
     setIsPopular(false);
     setColorValue("linear-gradient(135deg, #1e3c27, #2a6344)");
+    setSelectedCategory("");
     setValidationErrors({});
     setUploadProgress("");
   };
@@ -301,6 +304,7 @@ export default function ProdutosAdminPage() {
         cost: parseFloat(formData.get("cost") as string),
         stock: parseInt(formData.get("stock") as string),
         category: formData.get("category") as string,
+        subcategory: formData.get("subcategory") as string || "",
         description: formData.get("description") as string,
         image: mainImageUrl,
         images: finalSecondaryImages,
@@ -530,16 +534,30 @@ export default function ProdutosAdminPage() {
                     <select
                       name="category"
                       className={`input-field${validationErrors.category ? " input-error" : ""}`}
-                      defaultValue={editingProduct?.category || ""}
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
                       required
                     >
                       <option value="" disabled>
                         Selecionar categoria...
                       </option>
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                      {settingsCategories.map((cat) => (
+                        <option key={cat.name} value={cat.name}>
+                          {cat.name}
                         </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Subcategoria</label>
+                    <select
+                      name="subcategory"
+                      className="input-field"
+                      defaultValue={editingProduct?.subcategory || ""}
+                    >
+                      <option value="">Nenhuma</option>
+                      {settingsCategories.find(c => c.name === selectedCategory)?.subcategories?.map(sub => (
+                        <option key={sub} value={sub}>{sub}</option>
                       ))}
                     </select>
                   </div>

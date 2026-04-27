@@ -25,6 +25,7 @@ export interface FirestoreProduct {
   cost: number;
   stock: number;
   category: string;
+  subcategory?: string;
   description: string;
   image?: string;
   images?: string[];
