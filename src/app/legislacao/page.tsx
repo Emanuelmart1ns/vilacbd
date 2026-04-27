@@ -11,6 +11,35 @@ export default function LegislacaoPage() {
       <Navbar />
 
       <section style={{ padding: "120px 0 60px", background: "linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%)" }}>
+        <style>{`
+          .dre-link-container {
+            position: relative;
+            display: inline-block;
+          }
+          .dre-tooltip {
+            visibility: hidden;
+            background-color: var(--accent-gold);
+            color: var(--bg-primary);
+            text-align: center;
+            border-radius: 4px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+          }
+          .dre-link-container:hover .dre-tooltip {
+            visibility: visible;
+            opacity: 1;
+          }
+        `}</style>
         <div className="container">
           <div style={{ textAlign: "center", maxWidth: "900px", margin: "0 auto" }}>
             <h1 style={{ fontSize: "4rem", color: "var(--accent-gold)", marginBottom: "24px", lineHeight: "1.2" }}>
@@ -43,14 +72,22 @@ export default function LegislacaoPage() {
                     No entanto, as variedades de cânhamo para fins industriais, com teores de THC (Tetrahidrocanabinol) inferiores aos limites 
                     estabelecidos pela UE, são excluídas destas restrições quando devidamente autorizadas.
                   </p>
-                  <a 
-                    href="https://href.li/?https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn-text"
-                  >
-                    Diário da República →
-                  </a>
+                  <div className="dre-link-container">
+                    <span className="dre-tooltip">Pressione Control + Clique para abrir</span>
+                    <a 
+                      href="https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn-text"
+                      onClick={(e) => {
+                        if (!e.ctrlKey && !e.metaKey) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      Diário da República →
+                    </a>
+                  </div>
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "30px" }}>
@@ -59,14 +96,22 @@ export default function LegislacaoPage() {
                     Define os requisitos e procedimentos para a autorização do cultivo de variedades de cânhamo industrial em Portugal. 
                     Estabelece as competências da DGAV (Direção-Geral de Alimentação e Veterinária) e as normas de controlo e fiscalização.
                   </p>
-                  <a 
-                    href="https://href.li/?https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn-text"
-                  >
-                    Consultar Portaria →
-                  </a>
+                  <div className="dre-link-container">
+                    <span className="dre-tooltip">Pressione Control + Clique para abrir</span>
+                    <a 
+                      href="https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn-text"
+                      onClick={(e) => {
+                        if (!e.ctrlKey && !e.metaKey) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      Consultar Portaria →
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
