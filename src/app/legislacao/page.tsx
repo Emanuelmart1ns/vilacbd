@@ -6,6 +6,16 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 
 export default function LegislacaoPage() {
+  const handleSecureOpen = (url: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
       <Navbar />
@@ -43,7 +53,13 @@ export default function LegislacaoPage() {
                     No entanto, as variedades de cânhamo para fins industriais, com teores de THC (Tetrahidrocanabinol) inferiores aos limites 
                     estabelecidos pela UE, são excluídas destas restrições quando devidamente autorizadas.
                   </p>
-                  <a href="https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" target="_blank" className="btn-text">Diário da República →</a>
+                  <button 
+                    onClick={() => handleSecureOpen("https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178")}
+                    className="btn-text"
+                    style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    Diário da República →
+                  </button>
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "30px" }}>
@@ -52,7 +68,13 @@ export default function LegislacaoPage() {
                     Define os requisitos e procedimentos para a autorização do cultivo de variedades de cânhamo industrial em Portugal. 
                     Estabelece as competências da DGAV (Direção-Geral de Alimentação e Veterinária) e as normas de controlo e fiscalização.
                   </p>
-                  <a href="https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" target="_blank" className="btn-text">Consultar Portaria →</a>
+                  <button 
+                    onClick={() => handleSecureOpen("https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504")}
+                    className="btn-text"
+                    style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    Consultar Portaria →
+                  </button>
                 </div>
               </div>
             </div>
