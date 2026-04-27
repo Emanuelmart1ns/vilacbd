@@ -12,22 +12,17 @@ interface LojaClientProps {
   initialProducts: Product[];
 }
 
-export default function LojaClient({ initialProducts }: LojaClientProps) {
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { addToCart } = useCart();
   const { user, loading: authLoading } = useAuth();
+  const [settingsCategories, setSettingsCategories] = useState<{name: string, subcategories: string[]}[]>([]);
 
-  const categoriesMap = new Map<string, Set<string>>();
-  initialProducts.forEach(p => {
-    if (!categoriesMap.has(p.category)) {
-      categoriesMap.set(p.category, new Set());
-    }
-    if (p.subcategory) {
-      categoriesMap.get(p.category)?.add(p.subcategory);
-    }
-  });
+  useEffect(() => {
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data.categories) setSettingsCategories(data.categories);
+      })
+      .catch(err => console.error("Erro ao carregar categorias:", err));
+  }, []);
 
   const filteredProducts = selectedCategory === "Todos" 
     ? initialProducts 
@@ -97,26 +92,26 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
               >
                 Todos
               </button>
-              {Array.from(categoriesMap.entries()).map(([cat, subcats]) => (
-                <div key={cat} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {settingsCategories.map((cat) => (
+                <div key={cat.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   <button 
-                    className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    className={`category-btn ${selectedCategory === cat.name ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat.name)}
                     style={{
                       textAlign: "left",
                       padding: "10px",
-                      background: selectedCategory === cat ? "rgba(212, 175, 55, 0.1)" : "transparent",
+                      background: selectedCategory === cat.name ? "rgba(212, 175, 55, 0.1)" : "transparent",
                       border: "none",
-                      color: selectedCategory === cat || selectedCategory.startsWith(cat + "|") ? "var(--accent-gold)" : "var(--text-secondary)",
+                      color: selectedCategory === cat.name || selectedCategory.startsWith(cat.name + "|") ? "var(--accent-gold)" : "var(--text-secondary)",
                       cursor: "pointer",
                       borderRadius: "8px",
                       transition: "all 0.2s"
                     }}
                   >
-                    {cat}
+                    {cat.name}
                   </button>
-                  {subcats.size > 0 && Array.from(subcats).map(sub => {
-                    const subKey = `${cat}|${sub}`;
+                  {cat.subcategories && cat.subcategories.length > 0 && cat.subcategories.map(sub => {
+                    const subKey = `${cat.name}|${sub}`;
                     return (
                       <button
                         key={subKey}
