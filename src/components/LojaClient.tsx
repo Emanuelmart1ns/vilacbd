@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { Product } from "@/data/products";
@@ -12,6 +12,11 @@ interface LojaClientProps {
   initialProducts: Product[];
 }
 
+export default function LojaClient({ initialProducts }: LojaClientProps) {
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addToCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const [settingsCategories, setSettingsCategories] = useState<{name: string, subcategories: string[]}[]>([]);
 
