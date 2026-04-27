@@ -43,10 +43,7 @@ export default function LegislacaoPage() {
                     No entanto, as variedades de cânhamo para fins industriais, com teores de THC (Tetrahidrocanabinol) inferiores aos limites 
                     estabelecidos pela UE, são excluídas destas restrições quando devidamente autorizadas.
                   </p>
-                  <div style={{ display: "flex", gap: "20px" }}>
-                    <a href="https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" target="_blank" rel="noreferrer" className="btn-text">Diário da República →</a>
-                    <a href="https://diariodarepublica.pt/dr/download/pdf/585178" target="_blank" rel="noreferrer" className="btn-text" style={{ color: "var(--text-secondary)" }}>Baixar PDF 📄</a>
-                  </div>
+                  <a href="https://diariodarepublica.pt/dr/detalhe/decreto-lei/15-1993-585178" target="_blank" rel="noreferrer" className="btn-text">Diário da República →</a>
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--glass-border)", paddingTop: "30px" }}>
@@ -55,10 +52,7 @@ export default function LegislacaoPage() {
                     Define os requisitos e procedimentos para a autorização do cultivo de variedades de cânhamo industrial em Portugal. 
                     Estabelece as competências da DGAV (Direção-Geral de Alimentação e Veterinária) e as normas de controlo e fiscalização.
                   </p>
-                  <div style={{ display: "flex", gap: "20px" }}>
-                    <a href="https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" target="_blank" rel="noreferrer" className="btn-text">Consultar Portaria →</a>
-                    <a href="https://diariodarepublica.pt/dr/download/pdf/161433504" target="_blank" rel="noreferrer" className="btn-text" style={{ color: "var(--text-secondary)" }}>Baixar PDF 📄</a>
-                  </div>
+                  <a href="https://diariodarepublica.pt/dr/detalhe/portaria/83-2021-161433504" target="_blank" rel="noreferrer" className="btn-text">Consultar Portaria →</a>
                 </div>
               </div>
             </div>
