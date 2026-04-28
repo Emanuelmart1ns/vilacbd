@@ -6,7 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import CartSidebar from "@/components/CartSidebar";
 import Footer from "@/components/Footer";
 import AgeGate from "@/components/AgeGate";
-import WhatsAppWidget from "@/components/WhatsAppWidget";
+import ChatWidget from "@/components/ChatWidget";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,7 +38,7 @@ export default function RootLayout({
               <Footer />
             </AgeGate>
             <CartSidebar />
-            <WhatsAppWidget />
+            <ChatWidget />
           </CartProvider>
         </AuthProvider>
       </body>

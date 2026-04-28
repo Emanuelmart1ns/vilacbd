@@ -22,7 +22,9 @@ export default function ConfiguracoesPage() {
     whatsappToken: "",
     whatsappPhoneId: "",
     whatsappBusinessId: "",
-    whatsappVerifyToken: "vilacbd_secret_token"
+    whatsappVerifyToken: "vilacbd_secret_token",
+    telegramToken: "",
+    telegramChatId: ""
   });
   const [stripePublic, setStripePublic] = useState("");
   const [stripeSecret, setStripeSecret] = useState("");
@@ -260,26 +262,37 @@ export default function ConfiguracoesPage() {
               <input type="text" name="whatsapp" className="input-field" value={socials.whatsapp} onChange={handleSocialChange} placeholder="Ex: 351912345678" />
             </div>
             
-            <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(37, 211, 102, 0.1)", borderRadius: "8px", border: "1px solid #25d366" }}>
-              <h4 style={{ margin: "0 0 15px 0", color: "#25d366" }}>Configuração WhatsApp (via QR Code)</h4>
-              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Use serviços como UltraMsg ou Z-API para conectar sem Facebook.</p>
+            <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(0, 136, 204, 0.1)", borderRadius: "8px", border: "1px solid #0088cc" }}>
+              <h4 style={{ margin: "0 0 15px 0", color: "#0088cc" }}>Configuração Telegram (Modo Bot)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Encaminha as mensagens do site diretamente para o seu Telegram pessoal (Grátis).</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                 <div className="form-group">
-                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Instance ID (ID da Instância)</label>
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Bot Token (@BotFather)</label>
+                  <input type="password" name="telegramToken" className="input-field" value={(socials as any).telegramToken || ""} onChange={handleSocialChange} placeholder="Ex: 123456:ABC-DEF..." />
+                </div>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Chat ID (@userinfobot)</label>
+                  <input type="text" name="telegramChatId" className="input-field" value={(socials as any).telegramChatId || ""} onChange={handleSocialChange} placeholder="Ex: 987654321" />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(37, 211, 102, 0.1)", borderRadius: "8px", border: "1px solid #25d366" }}>
+              <h4 style={{ margin: "0 0 15px 0", color: "#25d366" }}>Configuração WhatsApp (via Gateway)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Use serviços como UltraMsg ou Z-API se preferir receber no WhatsApp.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Instance ID</label>
                   <input type="text" name="whatsappPhoneId" className="input-field" value={socials.whatsappPhoneId || ""} onChange={handleSocialChange} placeholder="Ex: instance12345" />
                 </div>
                 <div className="form-group">
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Token de Acesso</label>
-                  <input type="password" name="whatsappToken" className="input-field" value={socials.whatsappToken || ""} onChange={handleSocialChange} placeholder="O seu token secreto" />
-                </div>
-                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Verify Token (Opcional)</label>
-                  <input type="text" name="whatsappVerifyToken" className="input-field" value={socials.whatsappVerifyToken || "vilacbd_secret_token"} onChange={handleSocialChange} />
+                  <input type="password" name="whatsappToken" className="input-field" value={socials.whatsappToken || ""} onChange={handleSocialChange} placeholder="Token secreto do gateway" />
                 </div>
               </div>
             </div>
           </div>
-          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Redes Sociais</button>
+          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Redes Sociais e Bots</button>
         </form>
 
         {/* Pagamentos */}
