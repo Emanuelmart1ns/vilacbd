@@ -30,15 +30,15 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     try {
-      const idToken = user ? await user.getIdToken() : null;
-      
-      const res = await fetch("/api/orders", {
+      // 1. Criar sessão de checkout no Stripe
+      const res = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          idToken,
           items,
-          total: cartTotal,
+          customerEmail: formData.email,
+          successUrl: `${window.location.origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/checkout`,
           shippingInfo: {
             firstName: formData.nome.split(' ')[0],
             lastName: formData.nome.split(' ').slice(1).join(' '),
@@ -47,20 +47,35 @@ export default function CheckoutPage() {
             postalCode: formData.codigoPostal,
             phone: formData.telemovel,
             email: formData.email
-          },
-          paymentMethod
+          }
         })
       });
 
-      if (res.ok) {
-        setOrderPlaced(true);
-        clearCart();
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        // Guardar dados temporários da encomenda para processar no webhook ou no sucesso
+        localStorage.setItem("pending_order_info", JSON.stringify({
+          items,
+          shippingInfo: {
+            firstName: formData.nome.split(' ')[0],
+            lastName: formData.nome.split(' ').slice(1).join(' '),
+            address: formData.morada,
+            city: formData.cidade,
+            postalCode: formData.codigoPostal,
+            phone: formData.telemovel,
+            email: formData.email
+          }
+        }));
+
+        // Redirecionar para o Stripe
+        window.location.href = data.url;
       } else {
-        alert("Erro ao processar a encomenda. Por favor, tente novamente.");
+        alert("Erro ao iniciar pagamento: " + (data.error || "Tente novamente."));
       }
     } catch (error) {
-      console.error("Erro no checkout:", error);
-      alert("Erro de ligação.");
+      console.error("Erro no checkout Stripe:", error);
+      alert("Erro de ligação ao processador de pagamentos.");
     } finally {
       setIsProcessing(false);
     }
