@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword, signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
