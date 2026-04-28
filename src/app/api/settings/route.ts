@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
       data.socials = {
         instagram: "https://instagram.com/vilacbd",
         facebook: "https://facebook.com/vilacbd",
-        tiktok: ""
+        tiktok: "",
+        whatsapp: "+351 912 345 678"
       };
     }
     

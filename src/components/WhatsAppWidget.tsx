@@ -90,7 +90,8 @@ export default function WhatsAppWidget() {
     }
   };
 
-  if (!socials?.whatsapp) return null;
+  // Removido o check estrito para garantir que o componente monta
+  // if (!socials?.whatsapp) return null;
 
   return (
     <div className="wa-widget-wrapper">
@@ -178,8 +179,12 @@ export default function WhatsAppWidget() {
       {/* Botão de Trigger */}
       <button 
         className={`wa-trigger-btn ${isOpen ? 'active' : ''}`} 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          console.log("WhatsApp Trigger Clicked! Current State:", !isOpen);
+          setIsOpen(!isOpen);
+        }}
         aria-label="Abrir chat de WhatsApp"
+        style={{ zIndex: 999999 }}
       >
         <div className="wa-icon-container">
           <svg className="wa-icon-svg" viewBox="0 0 448 512" width="28" height="28" fill="currentColor">
