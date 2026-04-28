@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
       },
       topCustomers,
       categories,
-      orders: filteredOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      orders: filteredOrders.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt))
     });
   } catch (error: any) {
     console.error("Erro no relatório master:", error);
