@@ -312,8 +312,8 @@ export default function ConfiguracoesPage() {
                   <input type="text" name="telegramChatId" className="input-field" value={(socials as any).telegramChatId || ""} onChange={handleSocialChange} placeholder="Ex: 987654321" style={{ borderColor: "rgba(0, 136, 204, 0.3)" }} />
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                   <button type="button" className="btn-action" onClick={handleTestTelegram} style={{ background: "#0088cc", color: "white", width: "100%", padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "600" }}>
-                     Testar e Validar Ligação ao Telegram
+                   <button type="button" className="btn-action outline" onClick={handleTestTelegram} style={{ fontSize: "0.85rem", width: "100%", marginTop: "10px", borderColor: "var(--accent-gold)", color: "var(--accent-gold)", padding: "10px", borderRadius: "10px", background: "none", cursor: "pointer", fontWeight: "500" }}>
+                     Testar Ligação ao Telegram
                    </button>
                 </div>
               </div>

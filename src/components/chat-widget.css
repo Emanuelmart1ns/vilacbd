@@ -98,19 +98,21 @@
 
 
 .chat-window.open {
-  transform: scale(1) translateY(0);
-  opacity: 1;
+  transform: scale(1) translateY(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #1e3c27, #121812);
-  padding: 20px;
+  background: #121812;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: white;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
+
 
 .chat-header-info {
   display: flex;
@@ -292,30 +294,30 @@
 }
 
 .chat-send-btn {
-  background: var(--accent-gold);
-  color: #000;
+  background: none;
+  color: var(--accent-gold);
   border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  opacity: 0.8;
 }
 
 .chat-send-btn:hover {
   transform: scale(1.1);
-  background: #fff;
+  opacity: 1;
 }
 
 .chat-footer-note {
   font-size: 0.65rem;
   color: var(--text-secondary);
   text-align: center;
-  margin-top: 12px;
-  opacity: 0.6;
+  margin-top: 8px;
+  opacity: 0.4;
 }
 
 /* Botão Trigger */
