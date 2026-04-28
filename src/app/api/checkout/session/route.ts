@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
 
     // Criar a sessão do Stripe Checkout
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "mb_way", "google_pay", "apple_pay"], // Nota: MBWay e Wallets precisam estar ativos no dashboard do Stripe
+      automatic_payment_methods: {
+        enabled: true,
+      },
       line_items: items.map((item: any) => ({
         price_data: {
           currency: "eur",
@@ -36,7 +38,12 @@ export async function POST(request: NextRequest) {
       },
       // Adicionar metadados para o webhook processar depois
       metadata: {
-        orderItems: JSON.stringify(items.map((i: any) => ({ id: i.id, q: i.quantity }))),
+        orderItems: JSON.stringify(items.map((i: any) => ({ 
+          id: i.id, 
+          name: i.name, 
+          quantity: i.quantity,
+          price: i.price
+        }))),
       },
     });
 

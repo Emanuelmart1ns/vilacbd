@@ -56,18 +56,46 @@ export default function LogisticaPage() {
     return true;
   });
 
-  const updateShippingStatus = (id: string, status: Order["shippingStatus"]) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, shippingStatus: status } : o))
-    );
+  const updateShippingStatus = async (id: string, status: Order["shippingStatus"]) => {
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shippingStatus: status })
+      });
+      
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, shippingStatus: status } : o))
+        );
+      } else {
+        alert("Erro ao atualizar estado de envio.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar estado:", error);
+    }
   };
 
-  const saveTrackingCode = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, trackingCode: trackingValue, shippingStatus: "enviado" as const } : o))
-    );
-    setEditingTracking(null);
-    setTrackingValue("");
+  const saveTrackingCode = async (id: string) => {
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingCode: trackingValue, shippingStatus: "enviado" })
+      });
+
+      if (res.ok) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, trackingCode: trackingValue, shippingStatus: "enviado" as const } : o))
+        );
+        setEditingTracking(null);
+        setTrackingValue("");
+      } else {
+        alert("Erro ao guardar código de rastreamento.");
+      }
+    } catch (error) {
+      console.error("Erro ao guardar tracking:", error);
+    }
   };
 
   const getStatusColor = (status: string) => {

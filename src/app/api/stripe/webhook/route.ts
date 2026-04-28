@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
       
       // Criar a encomenda oficial na base de dados
       const orderRef = db.collection("orders").doc();
+      const orderItems = JSON.parse(metadata?.orderItems || "[]");
+      
       await orderRef.set({
         id: orderRef.id,
         email: customerEmail,
@@ -44,16 +46,45 @@ export async function POST(request: NextRequest) {
         paymentId: session.id,
         shippingStatus: "pendente",
         shippingInfo: session.shipping_details || {},
-        items: JSON.parse(metadata?.orderItems || "[]"),
+        items: orderItems,
         createdAt: new Date().toISOString(),
         source: "stripe_webhook"
       });
 
       console.log(`Encomenda ${orderRef.id} criada via Webhook Stripe.`);
       
-      // Aqui poderíamos também chamar o Vila Bot para notificar o Admin
+      // --- VILA BOT INTELLIGENCE: Stock e Notificações ---
+      let stockAlerts: string[] = [];
+      
+      for (const item of orderItems) {
+        const productRef = db.collection("products").doc(item.id);
+        const productDoc = await productRef.get();
+        
+        if (productDoc.exists) {
+          const currentStock = productDoc.data()?.stock || 0;
+          const newStock = Math.max(0, currentStock - item.quantity);
+          await productRef.update({ stock: newStock });
+          
+          if (newStock <= 2) {
+            stockAlerts.push(`⚠️ *${item.name}* está com stock crítico (${newStock} un.)`);
+          }
+        }
+      }
+
+      // Notificar Admin via Telegram
       const { sendTelegramNotification } = require("@/lib/telegram");
-      await sendTelegramNotification(`💰 *PAGAMENTO CONFIRMADO!*\n\n✅ Encomenda via Stripe concluída.\n📧 Cliente: ${customerEmail}\n💵 Valor: ${total.toFixed(2)}€\n\n_Vila Bot Intelligence_ 🤖`);
+      let notificationMsg = `💰 *PAGAMENTO CONFIRMADO!*\n\n`;
+      notificationMsg += `✅ Encomenda via Stripe concluída.\n`;
+      notificationMsg += `📧 *Cliente:* ${customerEmail}\n`;
+      notificationMsg += `💵 *Valor:* ${total.toFixed(2)}€\n\n`;
+      
+      if (stockAlerts.length > 0) {
+        notificationMsg += `🚨 *ALERTAS DE STOCK:*\n${stockAlerts.join("\n")}\n\n`;
+      }
+      
+      notificationMsg += `_Vila Bot Intelligence_ 🤖`;
+      
+      await sendTelegramNotification(notificationMsg);
 
     } catch (dbError) {
       console.error("Erro ao processar webhook no Firestore:", dbError);
