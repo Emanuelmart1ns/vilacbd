@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAdminDb } from "@/lib/firebase-admin";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.preview",
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 export async function POST(request: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-04-22.dahlia",
+  });
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const payload = await request.text();
   const signature = request.headers.get("stripe-signature")!;
 
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
         paymentStatus: "pago",
         paymentId: session.id,
         shippingStatus: "pendente",
-        shippingInfo: session.shipping_details || {},
+        shippingInfo: (session as any).shipping_details || {},
         items: orderItems,
         createdAt: new Date().toISOString(),
         source: "stripe_webhook"

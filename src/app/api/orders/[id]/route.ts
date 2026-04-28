@@ -3,10 +3,10 @@ import { getAdminDb } from "@/lib/firebase-admin";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { shippingStatus, trackingCode } = await request.json();
     
     const db = getAdminDb();

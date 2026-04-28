@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.preview", // Use a stable or latest version
-});
-
 export async function POST(request: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2026-04-22.dahlia",
+  });
+  
   try {
     const { items, successUrl, cancelUrl, customerEmail } = await request.json();
 
@@ -15,9 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Criar a sessão do Stripe Checkout
     const session = await stripe.checkout.sessions.create({
-      automatic_payment_methods: {
-        enabled: true,
-      },
+      payment_method_types: ["card", "mb_way"], 
       line_items: items.map((item: any) => ({
         price_data: {
           currency: "eur",
