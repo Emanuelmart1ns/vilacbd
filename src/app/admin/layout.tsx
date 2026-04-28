@@ -62,7 +62,7 @@ export default function AdminLayout({
 
   return (
     <div className="admin-container">
-      <aside className="admin-sidebar">
+      <aside className="admin-sidebar no-print">
         <div className="admin-sidebar-header">
           <h2>Vila CBD <span>Admin</span></h2>
         </div>
@@ -82,7 +82,7 @@ export default function AdminLayout({
       </aside>
 
       <main className="admin-main">
-        <header className="admin-header">
+        <header className="admin-header no-print">
           <h1>Painel de Controlo</h1>
           <div className="admin-user-info">
             <span>{profile?.displayName || user.email}</span>
