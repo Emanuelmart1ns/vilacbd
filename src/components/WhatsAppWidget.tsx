@@ -9,6 +9,7 @@ export default function WhatsAppWidget() {
   const [userMessage, setUserMessage] = useState("");
   const [socials, setSocials] = useState<any>(null);
   const [isSent, setIsSent] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -60,11 +61,13 @@ export default function WhatsAppWidget() {
     setIsSent(true);
 
     try {
+      setIsTyping(true);
       const res = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          text: `Nome: ${userName || "Anónimo"}\nMensagem: ${currentMsg}` 
+          name: userName || "Anónimo",
+          text: currentMsg 
         })
       });
       
@@ -72,9 +75,10 @@ export default function WhatsAppWidget() {
       
       // Simular resposta automática curta
       setTimeout(() => {
+        setIsTyping(false);
         setMessages(prev => [...prev, { 
           from: "admin", 
-          text: "Recebemos a sua mensagem! Um dos nossos especialistas irá responder em breve no seu WhatsApp.", 
+          text: "Mensagem entregue com sucesso! ✅ Já notifiquei a nossa equipa e responderemos em breve no seu WhatsApp.", 
           timestamp: new Date() 
         }]);
         setIsSent(false);
@@ -114,8 +118,8 @@ export default function WhatsAppWidget() {
               <span className="wa-status-dot"></span>
             </div>
             <div className="wa-header-text">
-              <span className="wa-name">Vila Cãnhamo</span>
-              <span className="wa-status">Online • Suporte Especializado</span>
+              <span className="wa-name">Vila Bot</span>
+              <span className="wa-status">Assistente Virtual • Vila Cãnhamo</span>
             </div>
           </div>
           <button className="wa-close-btn" onClick={() => setIsOpen(false)}>×</button>
@@ -124,8 +128,9 @@ export default function WhatsAppWidget() {
         <div className="wa-body">
           <div className="wa-message-received">
             <div className="wa-msg-bubble">
-              Olá! 🌱 Seja bem-vindo à <strong>Vila Cãnhamo</strong>.<br/><br/>
-              Como podemos ajudar hoje? Conte-nos a sua dúvida ou o que procura.
+              Olá! 🌱 Sou o <strong>Vila Bot</strong>.<br/><br/>
+              Estou aqui para encaminhar as suas dúvidas diretamente para o nosso WhatsApp.<br/><br/>
+              Como o posso ajudar?
               <span className="wa-msg-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
@@ -138,6 +143,16 @@ export default function WhatsAppWidget() {
               </div>
             </div>
           ))}
+
+          {isTyping && (
+            <div className="wa-message-received">
+              <div className="wa-msg-bubble wa-typing">
+                <span className="dot"></span>
+                <span className="dot"></span>
+                <span className="dot"></span>
+              </div>
+            </div>
+          )}
 
           <div ref={chatEndRef} />
         </div>

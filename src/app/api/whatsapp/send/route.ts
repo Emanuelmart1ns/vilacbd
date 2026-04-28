@@ -3,7 +3,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, customerId } = await request.json();
+    const { name, text, customerId } = await request.json();
     
     // Buscar credenciais da Meta no Firestore
     const db = getAdminDb();
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       body: new URLSearchParams({
         token: TOKEN,
         to: OWNER_NUMBER.replace(/\s/g, ''),
-        body: `[SITE CHAT] Novo cliente: ${text}`
+        body: `🤖 *VILA BOT - NOVO CHAT*\n\n👤 *Cliente:* ${name || "Anónimo"}\n💬 *Mensagem:* ${text}\n\n---`
       }),
     });
 
