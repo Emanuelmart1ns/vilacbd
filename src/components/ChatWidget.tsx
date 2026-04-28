@@ -1,37 +1,52 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
 import "./chat-widget.css";
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [userName, setUserName] = useState("");
   const [userMessage, setUserMessage] = useState("");
-  const [settings, setSettings] = useState<any>(null);
-  const [isSent, setIsSent] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Inicializar SessionID e carregar histórico
   useEffect(() => {
-    fetch("/api/settings")
-      .then(res => res.json())
-      .then(data => {
-        setSettings(data);
-      })
-      .catch(err => console.error("Erro ao carregar definições no widget:", err));
+    let sId = localStorage.getItem("chat_session_id");
+    if (!sId) {
+      sId = Math.random().toString(36).substring(7);
+      localStorage.getItem("chat_session_id");
+      localStorage.setItem("chat_session_id", sId);
+    }
+    setSessionId(sId);
 
-    const handleOpenChat = () => setIsOpen(true);
-    window.addEventListener('openWhatsAppChat', handleOpenChat); // Mantemos o nome do evento para compatibilidade com a navbar por agora
-    
+    // Escutar mensagens em tempo real (incluindo respostas do admin via bot)
+    const q = query(
+      collection(db, "support_chats"),
+      where("sessionId", "==", sId),
+      orderBy("timestamp", "asc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMessages(msgs);
+    });
+
     const timer = setTimeout(() => {
       setShowNotification(true);
     }, 8000);
 
     return () => {
-      window.removeEventListener('openWhatsAppChat', handleOpenChat);
+      unsubscribe();
       clearTimeout(timer);
     };
   }, []);
@@ -51,40 +66,35 @@ export default function ChatWidget() {
     if (!userMessage.trim()) return;
 
     const currentMsg = userMessage;
-    const msgObj = { from: "user", text: currentMsg, timestamp: new Date() };
-    setMessages(prev => [...prev, msgObj]);
     setUserMessage("");
 
     try {
+      // 1. Guardar no Firestore (o listener local vai atualizar a UI)
+      await addDoc(collection(db, "support_chats"), {
+        sessionId,
+        from: "customer",
+        name: userName || "Anónimo",
+        text: currentMsg,
+        timestamp: serverTimestamp(),
+      });
+
+      // 2. Notificar Admin via Telegram
       setIsTyping(true);
-      const res = await fetch("/api/telegram/send", {
+      await fetch("/api/telegram/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: userName || "Anónimo",
-          text: currentMsg 
+          text: currentMsg,
+          sessionId: sessionId
         })
       });
       
-      if (!res.ok) throw new Error("API failed");
-      
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [...prev, { 
-          from: "bot", 
-          text: "Mensagem enviada com sucesso! ✅ Já notifiquei a nossa equipa. Responderemos o mais breve possível.", 
-          timestamp: new Date() 
-        }]);
-      }, 1500);
+      setIsTyping(false);
 
     } catch (error) {
       console.error("Erro ao enviar via Telegram:", error);
       setIsTyping(false);
-      setMessages(prev => [...prev, { 
-        from: "bot", 
-        text: "Pedimos desculpa, mas houve um erro técnico. Por favor, tente contactar-nos por email ou telefone.", 
-        timestamp: new Date() 
-      }]);
     }
   };
 
@@ -120,16 +130,18 @@ export default function ChatWidget() {
           <div className="chat-message-received">
             <div className="chat-msg-bubble">
               Olá! 🌱 Sou o <strong>Vila Bot</strong>.<br/><br/>
-              Diga-nos o que procura ou as suas dúvidas e eu encaminharei imediatamente para a nossa equipa de suporte.
+              Diga-nos o que procura ou as suas dúvidas e a nossa equipa responderá aqui mesmo.
               <span className="chat-msg-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
 
-          {messages.map((msg, i) => (
-            <div key={i} className={msg.from === "user" ? "chat-message-sent" : "chat-message-received"}>
-              <div className={msg.from === "user" ? "chat-msg-bubble-sent" : "chat-msg-bubble"}>
+          {messages.map((msg) => (
+            <div key={msg.id} className={msg.from === "customer" ? "chat-message-sent" : "chat-message-received"}>
+              <div className={msg.from === "customer" ? "chat-msg-bubble-sent" : "chat-msg-bubble"}>
                 {msg.text}
-                <span className="chat-msg-time">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="chat-msg-time">
+                  {msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                </span>
               </div>
             </div>
           ))}
@@ -149,13 +161,15 @@ export default function ChatWidget() {
 
         <div className="chat-footer">
           <form onSubmit={handleSend} className="chat-form">
-            <input 
-              type="text" 
-              placeholder="O seu nome (opcional)" 
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="chat-input-name"
-            />
+            {!messages.some(m => m.from === 'customer') && (
+              <input 
+                type="text" 
+                placeholder="O seu nome (opcional)" 
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="chat-input-name"
+              />
+            )}
             <div className="chat-input-container">
               <textarea 
                 placeholder="Escreva a sua mensagem..." 

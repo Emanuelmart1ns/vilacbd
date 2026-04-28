@@ -125,6 +125,31 @@ export default function ConfiguracoesPage() {
     setTimeout(() => setSaveMessage(""), 5000);
   };
 
+  const handleActivateWebhook = async () => {
+    setSaveMessage("A ativar Webhook...");
+    try {
+      const url = `${window.location.origin}/api/telegram/webhook`;
+      const res = await fetch("/api/telegram/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "set_webhook",
+          webhookUrl: url
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        setSaveMessage("Respostas Ativadas! ✅ Agora pode responder via Telegram.");
+      } else {
+        setSaveMessage(`Erro: ${data.error || "Tente novamente"}`);
+      }
+    } catch (error) {
+      setSaveMessage("Erro ao registar Webhook.");
+    }
+    setTimeout(() => setSaveMessage(""), 5000);
+  };
+
   const handleSavePayments = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveMessage("Pagamentos guardados com sucesso!");
@@ -311,9 +336,12 @@ export default function ConfiguracoesPage() {
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem", color: "#0088cc" }}>O seu Chat ID (@userinfobot)</label>
                   <input type="text" name="telegramChatId" className="input-field" value={(socials as any).telegramChatId || ""} onChange={handleSocialChange} placeholder="Ex: 987654321" style={{ borderColor: "rgba(0, 136, 204, 0.3)" }} />
                 </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                   <button type="button" className="btn-action outline" onClick={handleTestTelegram} style={{ fontSize: "0.85rem", width: "100%", marginTop: "10px", borderColor: "var(--accent-gold)", color: "var(--accent-gold)", padding: "10px", borderRadius: "10px", background: "none", cursor: "pointer", fontWeight: "500" }}>
-                     Testar Ligação ao Telegram
+                 <div style={{ gridColumn: "1 / -1", display: "flex", gap: "12px" }}>
+                   <button type="button" className="btn-action outline" onClick={handleTestTelegram} style={{ flex: 1, fontSize: "0.85rem", marginTop: "10px", borderColor: "var(--accent-gold)", color: "var(--accent-gold)", padding: "10px", borderRadius: "10px", background: "none", cursor: "pointer", fontWeight: "500" }}>
+                     Testar Ligação
+                   </button>
+                   <button type="button" className="btn-action outline" onClick={handleActivateWebhook} style={{ flex: 1, fontSize: "0.85rem", marginTop: "10px", borderColor: "#0088cc", color: "#0088cc", padding: "10px", borderRadius: "10px", background: "none", cursor: "pointer", fontWeight: "500" }}>
+                     Ativar Respostas do Bot
                    </button>
                 </div>
               </div>
