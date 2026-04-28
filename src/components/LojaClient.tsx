@@ -169,14 +169,23 @@ export default function LojaClient({ initialProducts }: LojaClientProps) {
                   style={{ cursor: "pointer" }}
                   onClick={() => handleProductClick(product)}
                 >
-                  <div 
-                    className="product-image" 
-                    style={{ 
-                      background: product.color || "#121812", 
-                      backgroundImage: product.image ? `url(${product.image})` : 'none',
-                      backgroundSize: 'cover'
-                    }}
-                  >
+                  <div className="product-image" style={{ background: product.color || "rgba(255,255,255,0.03)", position: "relative", overflow: "hidden" }}>
+                    {product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          target.parentElement!.style.background = product.color || "var(--bg-secondary)";
+                        }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
+                        🖼
+                      </div>
+                    )}
                   </div>
                   <div className="product-info">
                     <span className="product-category">{product.category}</span>

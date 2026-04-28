@@ -1,55 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getAuth } from "firebase-admin/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    getAdminDb();
-    const adminAuth = getAuth();
-
-    const adminEmail = process.env.ADMIN_EMAIL || "emanuelfmartins@outlook.com";
-    const adminUid = process.env.ADMIN_UID;
-
-    let uid: string;
-    if (adminUid) {
-      uid = adminUid;
-    } else {
-      const userRecord = await adminAuth.getUserByEmail(adminEmail);
-      uid = userRecord.uid;
+    const { email, secret } = await request.json();
+    
+    // Proteção básica para evitar que qualquer pessoa use isto sem saber o segredo
+    if (secret !== "vilacbd_admin_2024") {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getAdminDb();
-    const userRef = db.collection("users").doc(uid);
-    const userDoc = await userRef.get();
+    
+    // Procurar o utilizador pelo email no Firestore
+    const usersRef = db.collection("users");
+    const snapshot = await usersRef.where("email", "==", email).get();
 
-    if (!userDoc.exists || userDoc.data()?.role !== "admin") {
-      const ownerEmail = "emanuelfmartins@outlook.com";
-      if (adminEmail !== ownerEmail) {
-        return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-      }
-      if (!userDoc.exists) {
-        await userRef.set({
-          uid,
-          email: adminEmail,
-          displayName: "Admin",
-          role: "admin",
-          provider: "admin-bypass",
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-          loginCount: 1,
-        });
-      } else {
-        await userRef.update({ role: "admin", lastLogin: new Date().toISOString() });
-      }
-    } else {
-      await userRef.update({ lastLogin: new Date().toISOString() });
+    if (snapshot.empty) {
+      return NextResponse.json({ error: "User not found. Please login on the site first." }, { status: 404 });
     }
 
-    const customToken = await adminAuth.createCustomToken(uid);
+    const userDoc = snapshot.docs[0];
+    await userDoc.ref.update({
+      isAdmin: true,
+      role: "admin"
+    });
 
-    return NextResponse.json({ customToken, uid });
+    return NextResponse.json({ success: true, message: `O utilizador ${email} é agora ADMIN.` });
   } catch (error) {
     console.error("Admin bypass error:", error);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to set admin" }, { status: 500 });
   }
 }

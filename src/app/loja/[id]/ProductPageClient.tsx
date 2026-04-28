@@ -49,16 +49,21 @@ export default function ProductPageClient({ product, allProducts }: ProductPageC
                 borderRadius: "16px",
                 overflow: "hidden",
                 background: product.color || "#121812",
-                backgroundImage: activeImg ? `url(${activeImg})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                position: "relative",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 marginBottom: "16px",
               }}
             >
-              {!activeImg && (
+              {activeImg ? (
+                <img 
+                  src={activeImg} 
+                  alt={product.name} 
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                />
+              ) : (
                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.5rem" }}>Vila CBD</span>
               )}
             </div>
@@ -76,11 +81,23 @@ export default function ProductPageClient({ product, allProducts }: ProductPageC
                       overflow: "hidden",
                       cursor: "pointer",
                       border: activeImg === img ? "2px solid var(--accent-gold)" : "2px solid transparent",
-                      backgroundImage: `url(${img})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        position: "relative"
+                      }}
+                    >
+                      <img 
+                        src={img} 
+                        alt="" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -175,10 +192,19 @@ export default function ProductPageClient({ product, allProducts }: ProductPageC
                     className="product-image"
                     style={{
                       background: p.color || "#121812",
-                      backgroundImage: p.image ? `url(${p.image})` : "none",
-                      backgroundSize: "cover",
+                      position: "relative",
+                      overflow: "hidden"
                     }}
-                  />
+                  >
+                    {p.image && (
+                      <img 
+                        src={p.image} 
+                        alt={p.name} 
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                      />
+                    )}
+                  </div>
                   <div className="product-info">
                     <span className="product-category">{p.category}</span>
                     <h3 className="product-title">{p.name}</h3>

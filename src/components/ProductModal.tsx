@@ -159,30 +159,30 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                         type="button"
                         aria-label={`Imagem ${i + 1} de ${allImages.length}`}
                       >
-                        <div
-                          className="thumb-vertical-img"
-                          style={{
-                            background: product.color || "#333",
-                            backgroundImage: `url(${img})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center"
-                          }}
-                        />
+                        <div className="thumb-vertical-img" style={{ background: product.color || "#333", position: "relative", overflow: "hidden" }}>
+                          <img 
+                            src={img} 
+                            alt="" 
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                          />
+                        </div>
                       </button>
                     ))}
                   </div>
                 )}
                 <div className="gallery-main">
                   <div className="modal-main-img-wrapper">
-                    <div
-                      className="modal-main-img"
-                      style={{
-                        background: product.color || "#333",
-                        backgroundImage: currentImg ? `url(${currentImg})` : "none",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center"
-                      }}
-                    />
+                    <div className="modal-main-img" style={{ background: product.color || "#333", position: "relative", overflow: "hidden" }}>
+                      {currentImg && (
+                        <img 
+                          src={currentImg} 
+                          alt={product.name} 
+                          style={{ width: "100%", height: "100%", objectFit: "contain" }} 
+                          onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                        />
+                      )}
+                    </div>
 
                     {allImages.length > 1 && (
                       <>
