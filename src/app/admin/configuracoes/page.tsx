@@ -102,6 +102,29 @@ export default function ConfiguracoesPage() {
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
+  const handleTestTelegram = async () => {
+    setSaveMessage("A enviar teste...");
+    try {
+      const res = await fetch("/api/telegram/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          name: "Vila Admin",
+          text: "Este é um teste de ligação do seu Painel de Administração! 🚀" 
+        })
+      });
+      if (res.ok) {
+        setSaveMessage("Teste enviado! Verifique o seu Telegram. ✅");
+      } else {
+        const data = await res.json();
+        setSaveMessage(`Erro no teste: ${data.error || "Verifique as chaves"}`);
+      }
+    } catch (error) {
+      setSaveMessage("Erro de ligação ao servidor.");
+    }
+    setTimeout(() => setSaveMessage(""), 5000);
+  };
+
   const handleSavePayments = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveMessage("Pagamentos guardados com sucesso!");
@@ -273,6 +296,11 @@ export default function ConfiguracoesPage() {
                 <div className="form-group">
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Chat ID (@userinfobot)</label>
                   <input type="text" name="telegramChatId" className="input-field" value={(socials as any).telegramChatId || ""} onChange={handleSocialChange} placeholder="Ex: 987654321" />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                   <button type="button" className="btn-action outline" onClick={handleTestTelegram} style={{ fontSize: "0.8rem", width: "100%", marginTop: "10px", borderColor: "#0088cc", color: "#0088cc" }}>
+                     Testar Ligação ao Telegram
+                   </button>
                 </div>
               </div>
             </div>
