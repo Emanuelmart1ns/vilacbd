@@ -69,6 +69,7 @@ export default function AdminLayout({
         <nav className="admin-nav">
           <Link href="/admin" className="admin-nav-link">Visão Geral</Link>
           <Link href="/admin/logistica" className="admin-nav-link">Logística & Encomendas</Link>
+          <Link href="/admin/relatorios" className="admin-nav-link">Relatórios</Link>
           <Link href="/admin/produtos" className="admin-nav-link">Produtos</Link>
           <Link href="/admin/utilizadores" className="admin-nav-link">Administradores</Link>
           <Link href="/admin/crm" className="admin-nav-link">CRM & Clientes</Link>
