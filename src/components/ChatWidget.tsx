@@ -27,19 +27,28 @@ export default function ChatWidget() {
     setSessionId(sId);
 
     // Escutar mensagens em tempo real (incluindo respostas do admin via bot)
+    // Removemos o orderBy para evitar erro de índice no Firestore
     const q = query(
       collection(db, "support_chats"),
-      where("sessionId", "==", sId),
-      orderBy("timestamp", "asc")
+      where("sessionId", "==", sId)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as any[];
+      
+      // Ordenar por timestamp no cliente
+      msgs.sort((a, b) => {
+        const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : 0);
+        const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : 0);
+        return timeA - timeB;
+      });
+      
       setMessages(msgs);
     });
+
 
     const timer = setTimeout(() => {
       setShowNotification(true);
