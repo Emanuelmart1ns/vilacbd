@@ -99,6 +99,38 @@
   overflow-y: auto;
 }
 
+/* Print Overrides */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .admin-container {
+    display: block !important;
+    background: white !important;
+  }
+  
+  .admin-main {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  .admin-content {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Force hide common chat widgets */
+  #tawk-chat-widget, 
+  .tawk-min-container,
+  [id^="chat-widget"],
+  .fale-conosco-bubble { 
+    display: none !important; 
+  }
+}
+
 /* Dashboard Overview Styles */
 .dashboard-overview {
   display: flex;
