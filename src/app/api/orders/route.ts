@@ -51,6 +51,48 @@ export async function POST(request: NextRequest) {
 
     await orderRef.set(orderData);
 
+    // --- AGENTE DE AUTOMAÇÃO (Vila Bot Admin) ---
+    try {
+      const { sendTelegramNotification } = require("@/lib/telegram");
+      let stockAlerts = [];
+      
+      // 1. Atualizar Stock e Verificar Baixo Stock
+      for (const item of items) {
+        const productRef = db.collection("products").doc(item.id);
+        const productDoc = await productRef.get();
+        
+        if (productDoc.exists) {
+          const currentStock = productDoc.data()?.stock || 0;
+          const newStock = Math.max(0, currentStock - item.quantity);
+          await productRef.update({ stock: newStock });
+          
+          if (newStock <= 2) {
+            stockAlerts.push(`⚠️ *${item.name}* está com stock crítico (${newStock} un.)`);
+          }
+        }
+      }
+
+      // 2. Contar Pendências
+      const pendingSnapshot = await db.collection("orders").where("shippingStatus", "==", "pendente").get();
+      const pendingCount = pendingSnapshot.size;
+
+      // 3. Notificar Admin
+      let notificationMsg = `📦 *NOVA ENCOMENDA REFEITA!*\n\n`;
+      notificationMsg += `💰 *Valor:* ${total.toFixed(2)}€\n`;
+      notificationMsg += `👤 *Cliente:* ${shippingInfo.firstName} ${shippingInfo.lastName}\n`;
+      notificationMsg += `🚚 *Pendências Atuais:* ${pendingCount} envios aguardam processamento.\n\n`;
+      
+      if (stockAlerts.length > 0) {
+        notificationMsg += `🚨 *ALERTAS DE STOCK:*\n${stockAlerts.join("\n")}\n\n`;
+      }
+      
+      notificationMsg += `_Vila Bot Intelligence_ 🤖`;
+      
+      await sendTelegramNotification(notificationMsg);
+    } catch (botError) {
+      console.error("Erro no Agente de Notificação:", botError);
+    }
+
     return NextResponse.json({ success: true, orderId: orderRef.id }, { status: 201 });
   } catch (error) {
     console.error("Erro ao processar encomenda:", error);
