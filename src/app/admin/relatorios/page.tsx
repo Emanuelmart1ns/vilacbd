@@ -180,7 +180,7 @@ export default function ReportsPage() {
           {/* DYNAMIC SECTIONS */}
           {reportType === 'overview' && (
             <div className="report-section fade-in">
-              <div className="section-title"><h3><AreaChart size={16} /> Evolução de Capital no Período</h3></div>
+              <div className="section-title"><h3><TrendingUp size={16} /> Evolução de Capital no Período</h3></div>
               <div className="report-chart-box">
                 <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={data?.charts?.salesByDate}>
