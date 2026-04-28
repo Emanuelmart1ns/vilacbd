@@ -1,54 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import fs from "fs";
+import path from "path";
 
-// Mapeamento das imagens reais descarregadas no servidor (public/products/...)
-const CATEGORY_POOLS: Record<string, string[]> = {
-  "Óleos e Tinturas": [
-    "/products/oleos/oil_real_1.jpg",
-    "/products/oleos/oil_real_2.jpg",
-    "/products/oleos/oil_real_3.png",
-    "/products/oleos/oil_real_4.png",
-    "/products/oleos/oil_real_5.jpg",
-    "/products/oleos/oil_real_6.png",
-    "/products/oleos/oil_real_7.png"
-  ],
-  "Flores de Cânhamo": [
-    "/products/flores/flores_real_1.jpg",
-    "/products/flores/flores_real_2.jpg",
-    "/products/flores/flores_real_3.jpg",
-    "/products/flores/flores_real_4.jpg",
-    "/products/flores/flores_real_5.png",
-    "/products/flores/flores_real_6.jpg",
-    "/products/flores/flores_real_7.jpg",
-    "/products/flores/flores_real_8.jpg"
-  ],
-  "Gomas e Edibles": [
-    "/products/edibles/edibles_real_1.jpg",
-    "/products/edibles/edibles_real_2.jpg",
-    "/products/edibles/edibles_real_3.jpg",
-    "/products/edibles/edibles_real_4.jpg",
-    "/products/edibles/edibles_real_5.png",
-    "/products/edibles/edibles_real_6.png",
-    "/products/edibles/edibles_real_7.png"
-  ],
-  "Tópicos e Cosméticos": [
-    "/products/cosmeticos/cosmeticos_real_1.jpg",
-    "/products/cosmeticos/cosmeticos_real_2.png",
-    "/products/cosmeticos/cosmeticos_real_3.png",
-    "/products/cosmeticos/cosmeticos_real_4.png",
-    "/products/cosmeticos/cosmeticos_real_5.png",
-    "/products/cosmeticos/cosmeticos_real_6.png",
-    "/products/cosmeticos/cosmeticos_real_7.png"
-  ],
-  "Acessórios e Vapes": [
-    "/products/vapes/vapes_real_2.jpg",
-    "/products/vapes/vapes_real_3.jpg",
-    "/products/vapes/vapes_real_4.jpg",
-    "/products/vapes/vapes_real_5.jpg"
-  ]
-};
-
-// Função para baralhar um array (para galerias únicas)
+// Função para baralhar um array
 function shuffleArray(array: string[]) {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -63,28 +18,52 @@ export async function GET() {
     const db = getAdminDb();
     const productsSnapshot = await db.collection("products").get();
     
+    // Carregar o inventário de imagens reais descarregadas
+    const inventoryPath = path.join(process.cwd(), "scripts", "image_inventory.json");
+    if (!fs.existsSync(inventoryPath)) {
+      return NextResponse.json({ error: "Inventory file not found. Run download script first." }, { status: 400 });
+    }
+    
+    const CATEGORY_POOLS = JSON.parse(fs.readFileSync(inventoryPath, "utf-8"));
+    
     const batch = db.batch();
     let count = 0;
 
     // Usar um contador por categoria para garantir imagens principais diferentes
     const categoryCounters: Record<string, number> = {};
 
+    // Preparar pools baralhados para cada categoria para maior aleatoriedade
+    const shuffledPools: Record<string, string[]> = {};
+    Object.keys(CATEGORY_POOLS).forEach(cat => {
+      shuffledPools[cat] = shuffleArray(CATEGORY_POOLS[cat]);
+    });
+
     productsSnapshot.docs.forEach((doc) => {
       const product = doc.data();
       const category = product.category;
       
-      const pool = CATEGORY_POOLS[category] || CATEGORY_POOLS["Óleos e Tinturas"];
+      // Encontrar pool correspondente ou usar fallback
+      let pool = shuffledPools[category];
+      if (!pool || pool.length === 0) {
+        pool = shuffledPools["Óleos e Tinturas"];
+      }
       
       if (!categoryCounters[category]) categoryCounters[category] = 0;
-      const index = categoryCounters[category] % pool.length;
       
-      // Imagem principal única para o produto (dentro do pool da categoria)
-      const mainImage = pool[index];
+      // Imagem principal: ciclar pelo pool baralhado
+      const mainIndex = categoryCounters[category] % pool.length;
+      const mainImage = pool[mainIndex];
       
-      // Criar galeria com 4 imagens (a principal + outras 3 aleatórias da mesma categoria)
-      const otherImages = pool.filter(img => img !== mainImage);
-      const shuffledOthers = shuffleArray(otherImages);
-      const gallery = [mainImage, ...shuffledOthers.slice(0, 3)];
+      // Sub-imagens: 4 imagens diferentes da principal
+      // Tentamos garantir que sejam diferentes, se houver pool suficiente
+      let galleryPool = pool.filter(img => img !== mainImage);
+      if (galleryPool.length < 4) {
+        // Se o pool for pequeno, repetimos algumas mas tentamos manter a variedade
+        galleryPool = [...galleryPool, ...pool]; 
+      }
+      
+      const shuffledGallery = shuffleArray(galleryPool);
+      const gallery = [mainImage, ...shuffledGallery.slice(0, 4)];
       
       batch.update(doc.ref, {
         image: mainImage,
@@ -99,8 +78,8 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: `${count} produtos agora possuem imagens REAIS e galerias únicas.`,
-      details: "As imagens foram importadas de lojas internacionais e estão agora alojadas localmente."
+      message: `${count} produtos agora possuem imagens REAIS e galerias de 5 imagens.`,
+      details: "As imagens foram importadas de marcas internacionais (CBDfx, The CBD Flower Shop) para máxima qualidade."
     });
   } catch (error) {
     console.error("Import error:", error);
