@@ -114,7 +114,7 @@ export default function ChatWidget() {
         <div className="chat-notification" onClick={() => setIsOpen(true)}>
           <div className="chat-notification-content">
             <span className="chat-notification-badge">1</span>
-            Olá! Alguma dúvida? Estou aqui para ajudar. 🌱
+            Fale conosco diretamente 🌱
           </div>
         </div>
       )}
