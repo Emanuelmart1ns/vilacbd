@@ -7,18 +7,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get("start");
     const endDate = searchParams.get("end");
-    const filterClient = searchParams.get("client");
-    const filterProduct = searchParams.get("product");
-    const filterStatus = searchParams.get("status");
+    const filterCategory = searchParams.get("category");
 
-    // 1. Fetch all data needed
+    // Fetch data
     const ordersSnapshot = await db.collection("orders").get();
     const productsSnapshot = await db.collection("products").get();
     
     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // 2. Intelligence Processing
+    // Processing variables
     let totalRevenue = 0;
     let pendingRevenue = 0;
     let totalOrdersPaid = 0;
@@ -28,19 +26,22 @@ export async function GET(request: NextRequest) {
     const salesByProduct: Record<string, { name: string, total: number, quantity: number, category: string }> = {};
     const salesByCategory: Record<string, number> = {};
     const salesByCustomer: Record<string, { email: string, total: number, orders: number }> = {};
+    const shippingStatusCount: Record<string, number> = { "pendente": 0, "preparando": 0, "enviado": 0, "entregue": 0 };
 
     const filteredOrders = orders.filter((order: any) => {
       const dateStr = order.createdAt ? order.createdAt.split("T")[0] : "N/A";
       
-      // Basic Filters
+      // Date Filter
       if (startDate && dateStr < startDate) return false;
       if (endDate && dateStr > endDate) return false;
-      if (filterClient && !order.email?.toLowerCase().includes(filterClient.toLowerCase())) return false;
-      if (filterStatus && order.paymentStatus !== filterStatus) return false;
-      
-      if (filterProduct) {
-        const hasProduct = order.items?.some((item: any) => item.id === filterProduct || item.name.includes(filterProduct));
-        if (!hasProduct) return false;
+
+      // Category Filter (check if any item in order belongs to category)
+      if (filterCategory && filterCategory !== "all") {
+        const hasCategory = order.items?.some((item: any) => {
+          const prod = productsList.find(p => p.id === item.id);
+          return (prod as any)?.category === filterCategory;
+        });
+        if (!hasCategory) return false;
       }
 
       // Aggregate Stats
@@ -48,35 +49,30 @@ export async function GET(request: NextRequest) {
         totalRevenue += order.total || 0;
         totalOrdersPaid++;
         
-        // Sales by Date (Only paid)
         salesByDate[dateStr] = salesByDate[dateStr] || { total: 0, orders: 0 };
         salesByDate[dateStr].total += order.total || 0;
         salesByDate[dateStr].orders++;
 
-        // Customer loyalty
         const email = order.email || "Anon";
         if (!salesByCustomer[email]) salesByCustomer[email] = { email, total: 0, orders: 0 };
         salesByCustomer[email].total += order.total || 0;
         salesByCustomer[email].orders++;
 
-        // Product & Category aggregation
-        if (order.items && Array.isArray(order.items)) {
+        if (order.items) {
           order.items.forEach((item: any) => {
             const prodId = item.id;
-            if (!salesByProduct[prodId]) {
-              const originalProd = productsList.find(p => p.id === prodId) as any;
-              salesByProduct[prodId] = { 
-                name: item.name, 
-                total: 0, 
-                quantity: 0, 
-                category: originalProd?.category || "Outros" 
-              };
+            const originalProd = productsList.find(p => p.id === prodId) as any;
+            const cat = originalProd?.category || "Outros";
+
+            // If filtering by category, we only aggregate sales of that category
+            if (!filterCategory || filterCategory === "all" || cat === filterCategory) {
+              if (!salesByProduct[prodId]) {
+                salesByProduct[prodId] = { name: item.name, total: 0, quantity: 0, category: cat };
+              }
+              salesByProduct[prodId].total += (item.price * item.quantity);
+              salesByProduct[prodId].quantity += item.quantity;
+              salesByCategory[cat] = (salesByCategory[cat] || 0) + (item.price * item.quantity);
             }
-            salesByProduct[prodId].total += (item.price * item.quantity);
-            salesByProduct[prodId].quantity += item.quantity;
-            
-            const cat = salesByProduct[prodId].category;
-            salesByCategory[cat] = (salesByCategory[cat] || 0) + (item.price * item.quantity);
           });
         }
       } else {
@@ -84,23 +80,20 @@ export async function GET(request: NextRequest) {
         totalOrdersPending++;
       }
 
+      const status = (order.shippingStatus || "pendente").toLowerCase();
+      shippingStatusCount[status] = (shippingStatusCount[status] || 0) + 1;
+
       return true;
     });
 
-    // Formatting for Charts
     const chartSalesByDate = Object.entries(salesByDate)
       .map(([date, stats]) => ({ date, total: stats.total, orders: stats.orders }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    const chartSalesByProduct = Object.values(salesByProduct)
-      .sort((a, b) => b.total - a.total);
-
-    const chartSalesByCategory = Object.entries(salesByCategory)
-      .map(([name, value]) => ({ name, value }));
-
-    const topCustomers = Object.values(salesByCustomer)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 10);
+    const chartSalesByProduct = Object.values(salesByProduct).sort((a, b) => b.total - a.total);
+    const chartSalesByCategory = Object.entries(salesByCategory).map(([name, value]) => ({ name, value }));
+    const topCustomers = Object.values(salesByCustomer).sort((a, b) => b.total - a.total).slice(0, 15);
+    const categories = Array.from(new Set(productsList.map(p => (p as any).category))).filter(Boolean);
 
     return NextResponse.json({
       summary: {
@@ -114,13 +107,14 @@ export async function GET(request: NextRequest) {
         salesByDate: chartSalesByDate,
         salesByProduct: chartSalesByProduct,
         salesByCategory: chartSalesByCategory,
+        shippingStats: Object.entries(shippingStatusCount).map(([name, value]) => ({ name, value }))
       },
       topCustomers,
-      orders: filteredOrders,
-      products: productsList.map(p => ({ id: p.id, name: p.name }))
+      categories,
+      orders: filteredOrders.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     });
   } catch (error: any) {
-    console.error("Erro no relatório avançado:", error);
+    console.error("Erro no relatório master:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
