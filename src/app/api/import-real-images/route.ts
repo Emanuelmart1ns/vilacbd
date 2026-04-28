@@ -13,6 +13,15 @@ function shuffleArray(array: string[]) {
   return newArray;
 }
 
+// Função para normalizar strings (remover acentos e converter para minúsculas)
+function normalizeString(str: string) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export async function GET() {
   try {
     const db = getAdminDb();
@@ -32,26 +41,31 @@ export async function GET() {
     // Usar um contador por categoria para garantir imagens principais diferentes
     const categoryCounters: Record<string, number> = {};
 
-    // Preparar pools baralhados para cada categoria para maior aleatoriedade
-    const shuffledPools: Record<string, string[]> = {};
+    // Preparar pools baralhados e normalizados
+    const normalizedPools: Record<string, string[]> = {};
     Object.keys(CATEGORY_POOLS).forEach(cat => {
-      shuffledPools[cat] = shuffleArray(CATEGORY_POOLS[cat]);
+      const normalizedCat = normalizeString(cat);
+      normalizedPools[normalizedCat] = shuffleArray(CATEGORY_POOLS[cat]);
     });
 
     productsSnapshot.docs.forEach((doc) => {
       const product = doc.data();
-      const category = product.category;
+      const rawCategory = product.category;
+      const normalizedCat = normalizeString(rawCategory);
+      
+      console.log(`Processing product: ${product.name} | Raw Category: "${rawCategory}" | Normalized: "${normalizedCat}"`);
       
       // Encontrar pool correspondente ou usar fallback
-      let pool = shuffledPools[category];
+      let pool = normalizedPools[normalizedCat];
       if (!pool || pool.length === 0) {
-        pool = shuffledPools["Óleos e Tinturas"];
+        console.log(`  !! Category mismatch for "${rawCategory}" (${normalizedCat}), falling back to oils.`);
+        pool = normalizedPools[normalizeString("Óleos e Tinturas")];
       }
       
-      if (!categoryCounters[category]) categoryCounters[category] = 0;
+      if (!categoryCounters[normalizedCat]) categoryCounters[normalizedCat] = 0;
       
       // Imagem principal: ciclar pelo pool baralhado
-      const mainIndex = categoryCounters[category] % pool.length;
+      const mainIndex = categoryCounters[normalizedCat] % pool.length;
       const mainImage = pool[mainIndex];
       
       // Sub-imagens: 4 imagens diferentes da principal
@@ -70,7 +84,7 @@ export async function GET() {
         images: gallery
       });
       
-      categoryCounters[category]++;
+      categoryCounters[normalizedCat]++;
       count++;
     });
 
