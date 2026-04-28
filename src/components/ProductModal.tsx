@@ -282,7 +282,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     placeholder="O que achou deste produto?" 
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    style={{ minHeight: "80px", marginBottom: "12px" }}
+                    style={{ minHeight: "80px", marginBottom: "12px", width: "100%" }}
                     required
                   />
                   <button type="submit" className="btn-primary outline" disabled={isSubmitting} style={{ width: "100%" }}>
