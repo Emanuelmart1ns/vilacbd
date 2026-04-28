@@ -6,6 +6,14 @@ export async function POST(request: NextRequest) {
     const update = await request.json();
     console.log("Telegram Webhook Update:", JSON.stringify(update));
 
+    const db = getAdminDb();
+    
+    // Log para depuração
+    await db.collection("webhook_logs").add({
+      timestamp: new Date(),
+      update: update
+    });
+
     const message = update.message;
     if (!message || !message.text) {
       return NextResponse.json({ ok: true });
@@ -14,18 +22,20 @@ export async function POST(request: NextRequest) {
     // Verificar se é uma resposta a uma mensagem anterior do bot
     const replyTo = message.reply_to_message;
     if (!replyTo) {
-      // Se não for uma resposta, ignoramos por agora (ou poderíamos enviar para um chat geral)
       return NextResponse.json({ ok: true });
     }
 
-    const db = getAdminDb();
     const telegramMessageId = replyTo.message_id.toString();
 
     // Procurar a sessão associada a esta mensagem
     const sessionDoc = await db.collection("telegram_sessions").doc(telegramMessageId).get();
     
     if (!sessionDoc.exists) {
-      console.warn("Nenhuma sessão encontrada para telegramMessageId:", telegramMessageId);
+      await db.collection("webhook_logs").add({
+        timestamp: new Date(),
+        error: "Sessão não encontrada",
+        msgId: telegramMessageId
+      });
       return NextResponse.json({ ok: true });
     }
 
@@ -40,6 +50,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date(),
       type: "telegram_reply"
     });
+
 
     return NextResponse.json({ ok: true });
   } catch (error) {
