@@ -222,7 +222,7 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
             <h2 className="product-title">{product.name}</h2>
             <p className="product-description">{product.description}</p>
             
-            <div className="product-meta">
+            <div className="product-meta" style={{ display: "flex", alignItems: "center", gap: "32px", marginTop: "24px", marginBottom: "24px" }}>
               <span className="price">€ {product.price.toFixed(2)}</span>
               <button 
                 className="btn-primary" 
@@ -282,7 +282,13 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
                     placeholder="O que achou deste produto?" 
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    style={{ minHeight: "80px", marginBottom: "12px", width: "100%" }}
+                    style={{ 
+                      minHeight: "100px", 
+                      marginBottom: "16px", 
+                      width: "100%", 
+                      display: "block",
+                      boxSizing: "border-box" 
+                    }}
                     required
                   />
                   <button type="submit" className="btn-primary outline" disabled={isSubmitting} style={{ width: "100%" }}>
