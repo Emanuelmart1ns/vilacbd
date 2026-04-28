@@ -35,10 +35,10 @@ export default function RootLayout({
           <CartProvider>
             <AgeGate>
               {children}
-              <CartSidebar />
-              <WhatsAppWidget />
               <Footer />
             </AgeGate>
+            <CartSidebar />
+            <WhatsAppWidget />
           </CartProvider>
         </AuthProvider>
       </body>

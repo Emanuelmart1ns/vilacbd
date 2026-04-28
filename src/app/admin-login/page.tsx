@@ -9,8 +9,15 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { user, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (!authLoading && user && profile?.role === "admin") {
+      router.push("/admin");
+    }
+  }, [user, profile, authLoading, router]);
 
   const bypassAdmin = async () => {
     setLoading(true);

@@ -43,9 +43,22 @@ export default function AdminLayout({
     return <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>A verificar acesso...</div>;
   }
 
-  const isAdmin = profile?.role === "admin" || (user && !profile);
+  const isAdmin = profile?.role === "admin";
 
   if (!user) return null;
+
+  if (!isAdmin && !loading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "#121812", color: "white", textAlign: "center", padding: "20px" }}>
+        <h1 style={{ color: "var(--accent-gold)", marginBottom: "16px" }}>Acesso Restrito</h1>
+        <p style={{ marginBottom: "24px" }}>A sua conta ({user.email}) não tem permissões de administrador.</p>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <button className="btn-primary" onClick={() => router.push("/")}>Voltar à Loja</button>
+          <button className="btn-secondary" onClick={handleLogout}>Sair / Trocar Conta</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-container">
