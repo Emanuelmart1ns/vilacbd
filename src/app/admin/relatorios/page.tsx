@@ -422,9 +422,9 @@ export default function ReportsPage() {
         .filter-box label { font-size: 0.7rem; text-transform: uppercase; color: #666; font-weight: bold; display: flex; align-items: center; gap: 6px; }
         .input-row { display: flex; align-items: center; gap: 10px; }
         .input-row input, .filter-box select {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--glass-border);
-          color: white;
+          background: rgba(255, 255, 255, 0.03) !important;
+          border: 1px solid var(--glass-border) !important;
+          color: white !important;
           padding: 10px 16px;
           border-radius: 10px;
           outline: none;
@@ -433,15 +433,20 @@ export default function ReportsPage() {
           color-scheme: dark;
         }
 
+        .filter-box select option {
+          background-color: #121812;
+          color: white;
+        }
+
         .input-row input:focus, .filter-box select:focus {
-          border-color: var(--accent-gold);
-          background: rgba(255, 255, 255, 0.08);
+          border-color: var(--accent-gold) !important;
+          background: rgba(255, 255, 255, 0.08) !important;
           box-shadow: 0 0 0 2px rgba(207, 170, 107, 0.1);
         }
 
         .input-row input:hover, .filter-box select:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(212, 175, 55, 0.3);
+          background: rgba(255, 255, 255, 0.05) !important;
+          border-color: rgba(212, 175, 55, 0.3) !important;
         }
 
         .btn-generate {
@@ -485,19 +490,24 @@ export default function ReportsPage() {
             border-radius: 24px;
             backdrop-filter: blur(10px);
           }
-          .dossier-header-corporate { border-bottom-color: var(--glass-border); }
-          .kpi-card { background: rgba(255,255,255,0.03); color: white; border: 1px solid var(--glass-border); }
-          .k-val { color: var(--accent-gold); }
-          .section-title h3 { color: var(--accent-gold); }
-          .report-chart-box { background: rgba(0,0,0,0.2); border-color: var(--glass-border); }
-          .data-column h4 { border-bottom-color: var(--glass-border); color: var(--accent-gold); }
-          .data-row strong { color: white; }
-          .dossier-full-table th { background: rgba(255,255,255,0.05); color: var(--accent-gold); }
-          .dossier-full-table td { border-bottom-color: var(--glass-border); color: var(--text-secondary); }
-          .bold { color: white; }
-          .sig-placeholder { background: var(--glass-border); }
-          .brand-logo { background: var(--accent-green); }
-          .brand-text h2 { color: var(--accent-gold); }
+          .dossier-document { background: transparent !important; color: var(--text-primary) !important; padding: 40px !important; }
+          .kpi-card { background: rgba(255,255,255,0.03) !important; color: white !important; border: 1px solid var(--glass-border) !important; }
+          .dossier-kpi-grid { background: transparent !important; border: none !important; gap: 12px !important; }
+          .k-val { color: var(--accent-gold) !important; }
+          .section-title h3 { color: var(--accent-gold) !important; }
+          .report-chart-box { background: rgba(255,255,255,0.02) !important; border-color: var(--glass-border) !important; }
+          .data-column h4 { border-bottom-color: var(--glass-border) !important; color: var(--accent-gold) !important; }
+          .data-row strong { color: white !important; }
+          .dossier-full-table th { background: rgba(255,255,255,0.05) !important; color: var(--accent-gold) !important; }
+          .dossier-full-table td { border-bottom-color: var(--glass-border) !important; color: var(--text-secondary) !important; }
+          .bold { color: white !important; }
+          .sig-placeholder { background: var(--glass-border) !important; }
+          .brand-logo { background: var(--accent-green) !important; }
+          .brand-text h2 { color: var(--accent-gold) !important; }
+          .dossier-header-corporate { border-bottom-color: var(--glass-border) !important; }
+          .dossier-mini-table th { background: rgba(255,255,255,0.05) !important; color: var(--accent-gold) !important; }
+          .dossier-mini-table td { border-bottom-color: var(--glass-border) !important; color: white !important; }
+          .status-text.pago { color: var(--accent-green-light) !important; }
         }
 
         .dossier-header-corporate {
@@ -536,7 +546,7 @@ export default function ReportsPage() {
         .section-title { border-bottom: 2px solid #f0f0f0; margin-bottom: 30px; padding-bottom: 10px; }
         .section-title h3 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #555; }
 
-        .report-chart-box { background: #fcfcfc; padding: 30px; border: 1px solid #eee; border-radius: 4px; }
+        .report-chart-box { background: rgba(255, 255, 255, 0.01); padding: 30px; border: 1px solid var(--glass-border); border-radius: 12px; }
         .section-footer-note { margin-top: 15px; font-size: 0.75rem; font-style: italic; color: #aaa; text-align: right; }
 
         .dossier-data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
