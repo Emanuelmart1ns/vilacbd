@@ -286,8 +286,14 @@ export default function ConfiguracoesPage() {
             </div>
             
             <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(0, 136, 204, 0.1)", borderRadius: "8px", border: "1px solid #0088cc" }}>
-              <h4 style={{ margin: "0 0 15px 0", color: "#0088cc" }}>Configuração Telegram (Modo Bot)</h4>
-              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Encaminha as mensagens do site diretamente para o seu Telegram pessoal (Grátis).</p>
+              <h4 style={{ margin: "0 0 15px 0", color: "#0088cc" }}>Configuração Telegram (Modo Bot - RECOMENDADO)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "10px" }}>O método mais simples e gratuito (Estilo OpenClaw).</p>
+              <div style={{ background: "rgba(255,255,255,0.05)", padding: "10px", borderRadius: "6px", marginBottom: "15px", fontSize: "0.75rem", borderLeft: "3px solid #0088cc" }}>
+                <strong>Como configurar:</strong><br/>
+                1. Crie o seu bot no Telegram com o <strong>@BotFather</strong> e copie o <strong>HTTP API Token</strong>.<br/>
+                2. Fale com o bot <strong>@userinfobot</strong> para obter o seu <strong>ID de Utilizador</strong>.<br/>
+                3. Cole ambos abaixo e clique em "Testar".
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                 <div className="form-group">
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Bot Token (@BotFather)</label>
@@ -306,8 +312,8 @@ export default function ConfiguracoesPage() {
             </div>
 
             <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(37, 211, 102, 0.1)", borderRadius: "8px", border: "1px solid #25d366" }}>
-              <h4 style={{ margin: "0 0 15px 0", color: "#25d366" }}>Configuração WhatsApp (via Gateway)</h4>
-              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Use serviços como UltraMsg ou Z-API se preferir receber no WhatsApp.</p>
+              <h4 style={{ margin: "0 0 15px 0", color: "#25d366" }}>Configuração WhatsApp (via Gateway UltraMsg/Z-API)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Ideal para quem quer receber no WhatsApp sem usar a API oficial da Meta.</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
                 <div className="form-group">
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Instance ID</label>
@@ -319,8 +325,27 @@ export default function ConfiguracoesPage() {
                 </div>
               </div>
             </div>
+
+            <div style={{ gridColumn: "1 / -1", marginTop: "20px", padding: "15px", backgroundColor: "rgba(100, 100, 100, 0.1)", borderRadius: "8px", border: "1px solid #999" }}>
+              <h4 style={{ margin: "0 0 15px 0", color: "#ccc" }}>WhatsApp Business API (Oficial Meta)</h4>
+              <p style={{ fontSize: "0.8rem", marginBottom: "15px" }}>Configuração avançada para Meta for Developers.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Phone Number ID</label>
+                  <input type="text" name="whatsappPhoneId" className="input-field" value={socials.whatsappPhoneId || ""} onChange={handleSocialChange} />
+                </div>
+                <div className="form-group">
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Business Account ID</label>
+                  <input type="text" name="whatsappBusinessId" className="input-field" value={socials.whatsappBusinessId || ""} onChange={handleSocialChange} />
+                </div>
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem" }}>Permanent Access Token</label>
+                  <input type="password" name="whatsappToken" className="input-field" value={socials.whatsappToken || ""} onChange={handleSocialChange} />
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Redes Sociais e Bots</button>
+          <button type="submit" className="btn-primary" style={{ marginTop: "24px" }}>Guardar Todas as Definições de Bots</button>
         </form>
 
         {/* Pagamentos */}
