@@ -83,24 +83,7 @@ export default function Navbar() {
                 <a href={settings?.socials?.tiktok || undefined} {...(settings?.socials?.tiktok ? { target: "_blank", rel: "noopener noreferrer" } : { onClick: (e: React.MouseEvent) => e.preventDefault() })} title="TikTok" style={{ opacity: settings?.socials?.tiktok ? 1 : 0.3, cursor: settings?.socials?.tiktok ? "pointer" : "default" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>
                 </a>
-                <button 
-                  onClick={() => {
-                    const event = new CustomEvent('openWhatsAppChat');
-                    window.dispatchEvent(event);
-                  }}
-                  title="Abrir Chat de Suporte" 
-                  className="btn-icon-social"
-                  style={{ 
-                    background: "none", 
-                    border: "none", 
-                    cursor: "pointer", 
-                    padding: 0,
-                    color: "inherit",
-                    opacity: 1 
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-14 8.38 8.38 0 0 1 3.8.9L21 3z"></path></svg>
-                </button>
+
               </div>
 
               {user ? (
