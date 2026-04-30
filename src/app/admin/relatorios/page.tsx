@@ -141,7 +141,7 @@ export default function ReportsPage() {
             <div className="branding-section">
               <div className="logo-square">VC</div>
               <div className="brand-text">
-                <h2>VILA CÃNHAMO</h2>
+                <h2>VILA CBD</h2>
                 <p>DEPARTAMENTO DE BUSINESS INTELLIGENCE • AUDITORIA 2026</p>
               </div>
             </div>
@@ -309,11 +309,11 @@ export default function ReportsPage() {
               </div>
               <div className="signature-box">
                 <div className="sig-placeholder"></div>
-                <span>Direção Executiva • Vila Cãnhamo</span>
+                <span>Direção Executiva • Vila CBD</span>
               </div>
             </div>
             <div className="legal-disclaimer">
-              Este documento constitui um relatório oficial de auditoria interna. Os dados aqui contidos são confidenciais e protegidos por protocolos de segurança Vila Cãnhamo. Gerado via VC Intelligence Core 2.0.
+              Este documento constitui um relatório oficial de auditoria interna. Os dados aqui contidos são confidenciais e protegidos por protocolos de segurança Vila CBD. Gerado via VC Intelligence Core 2.0.
             </div>
           </div>
 

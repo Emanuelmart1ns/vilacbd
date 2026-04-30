@@ -19,8 +19,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Vila Cãnhamo | A melhor seleção de Cãnhamo em Santa Maria da Feira",
-  description: "Descubra a melhor seleção de produtos de cãnhamo premium em Santa Maria da Feira. Óleos, flores, gomas e cosmética com qualidade certificada em laboratório.",
+  title: "Vila CBD | A melhor seleção CBD em Santa Maria da Feira",
+  description: "Descubra a melhor seleção de produtos CBD premium em Santa Maria da Feira. Óleos, flores, gomas e cosmética com qualidade certificada em laboratório.",
 };
 
 export default function RootLayout({

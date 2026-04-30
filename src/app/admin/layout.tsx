@@ -64,7 +64,7 @@ export default function AdminLayout({
     <div className="admin-container">
       <aside className="admin-sidebar no-print">
         <div className="admin-sidebar-header">
-          <h2>Vila Cãnhamo <span>Admin</span></h2>
+          <h2>Vila CBD <span>Admin</span></h2>
         </div>
         <nav className="admin-nav">
           <Link href="/admin" className="admin-nav-link">Visão Geral</Link>
