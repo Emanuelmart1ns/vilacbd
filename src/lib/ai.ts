@@ -35,28 +35,24 @@ export async function askAI(prompt: string, context: any) {
     - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
     - Estrutura: Produtos (name, price, stock, reference), Encomendas, Relatórios.
     
-    DICIONÁRIO DE MAPEAMENTO:
-    - "Percentagem" (%) -> Alterar no campo "name" (ex: trocar "5%" por "10%").
-    - "Preço" / "Valor" -> Alterar no campo "price".
-    - "Stock" / "Quantidade" -> Alterar no campo "stock".
+    REGRA DE PRIORIDADE (IDENTIFICAÇÃO):
+    1. SKU/ID EXPLÍCITO: Se o user escrever um SKU (ex: VCBD914593) na mensagem, tu deves ignorar o histórico e usar EXCLUSIVAMENTE o produto que corresponde a esse SKU. 
+    2. PRODUTO ATIVO: Só usas o histórico para referências vagas como "ele", "esse", "dele" se NÃO houver um SKU na mensagem atual.
+    3. VALIDAÇÃO: Antes de gerar o JSON, confirma se o `productId` que escolheste corresponde ao nome ou SKU que o utilizador pediu.
 
-    REGRAS DE OURO (NÃO FALHAR):
-    1. Se o user pede "muda para 10%", tu olhas para o nome "Óleo 6%", vês que ele quer mudar o 6 para 10, e escreves o NOME NOVO COMPLETO: "Óleo 10%".
-    2. NUNCA envies um campo no updates com o mesmo valor que ele já tem na base de dados.
-    3. Se não houver alteração real, explica o porquê na message.
-
+    REGRAS DE MANIPULAÇÃO:
+    - Mudar % ou mg -> Reconstruir o campo "name" completo com o novo valor.
+    - Se o nome atual é "A" e o user pede para mudar para "B", o updates.name deve ser "B".
+    
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Ex: O utilizador quer mudar a percentagem de 6 para 10. Vou atualizar o campo 'name' substituindo o valor.",
+      "reasoning": "Passo 1: Identificar produto pelo SKU VCBD... Passo 2: Ver que o nome atual é X e mudar para Y.",
       "action": "update_product",
       "data": {
-        "productId": "id-firestore-do-produto",
-        "updates": { 
-          "name": "Óleo Premium Cânhamo 10%", 
-          "price": 22 
-        }
+        "productId": "id-do-produto-correto",
+        "updates": { "name": "..." }
       },
-      "message": "Confirmação humana do que mudou."
+      "message": "Mensagem confirmando a alteração no produto correto."
     }
   `;
 
