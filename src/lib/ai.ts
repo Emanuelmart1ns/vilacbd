@@ -26,11 +26,11 @@ export async function askAI(prompt: string, context: any) {
     MENU: ${JSON.stringify(categories)}
     PRODUTOS: ${productSummary}
 
-    JSON OUTPUT (OBRIGATÓRIO):
+    JSON OUTPUT (OBRIGATÓRIO - RESPONDE APENAS O JSON, SEM TEXTO ANTES OU DEPOIS):
     {
-      "reasoning": "O utilizador confirmou a transferência do Óleo VCBD914593, vou executar agora.",
-      "message": "Ação confirmada! A processar...",
-      "actions": [ { "action": "update_product", "data": { "productId": "...", "updates": { "subcategory": "Relaxantes" } } } ]
+      "reasoning": "...",
+      "message": "...",
+      "actions": [ ... ]
     }
   `;
 
@@ -46,7 +46,8 @@ export async function askAI(prompt: string, context: any) {
       body: JSON.stringify({
         model: modelId,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
-        temperature: 0.1
+        temperature: 0, // Temperatura zero para máxima previsibilidade JSON
+        response_format: { type: "json_object" } // Tentar forçar modo JSON se a API suportar
       })
     });
     if (!response.ok) throw new Error(await response.text());
@@ -56,18 +57,24 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      // TROCA PARA GEMINI 2.0 FLASH - MAIS INTELIGENTE E RÁPIDO
-      console.log("Vila: A usar Gemini 2.0 Flash...");
       result = await tryModel("google/gemini-2.0-flash-001");
     } catch {
       await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
     }
-    const content = result.choices[0].message.content;
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const jsonStr = jsonMatch ? jsonMatch[0] : content;
-    return JSON.parse(jsonStr);
+    
+    let content = result.choices[0].message.content;
+    
+    // Extração Robusta de JSON
+    const start = content.indexOf("{");
+    const end = content.lastIndexOf("}");
+    if (start !== -1 && end !== -1) {
+      content = content.substring(start, end + 1);
+    }
+    
+    return JSON.parse(content);
   } catch (error: any) {
-    return { action: "info", message: `❌ Erro Vila: ${error.message}` };
+    console.error("Erro Parse IA:", error);
+    return { action: "info", message: `❌ Erro de Formato: ${error.message}` };
   }
 }
