@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls });
+        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls, settings });
 
         await db.collection("bot_history").add({ chatId, role: "user", content: text, timestamp: new Date() });
         await db.collection("bot_history").add({ chatId, role: "assistant", content: aiResponse.message || "", timestamp: new Date() });
@@ -138,6 +138,13 @@ export async function POST(request: NextRequest) {
 
           const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
           await sendReply(`✅ *Alteração Gravada com Sucesso!*\n\n📦 *${productAfter.name}*\n${changeLines}${humanMessage}${reasoning}\n\n_O site foi atualizado e a cache limpa._`);
+        }
+        else if (aiResponse.action === "update_settings") {
+          const { updates } = aiResponse.data;
+          await db.collection("settings").doc("global").update(updates);
+          revalidatePath("/", "layout");
+          revalidatePath("/loja", "layout");
+          await sendReply(`⚙️ *Definições Atualizadas!* \nAs configurações globais do site (ex: categorias) foram alteradas.${reasoning}`);
         }
         else if (aiResponse.action === "bulk_update") {
           const { bulkUpdates } = aiResponse.data;

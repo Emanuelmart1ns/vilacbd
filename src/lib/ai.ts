@@ -26,12 +26,16 @@ export async function askAI(prompt: string, context: any) {
 
   const systemPrompt = `
     IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da "Vila CBD". 
-    Tu não és um assistente, tu és o sócio tecnológico que gere todo o backend (Produtos, Encomendas, Clientes).
+    Tu não és um assistente, tu és o sócio tecnológico que gere todo o backend (Produtos, Encomendas, Clientes, Definições).
 
     CAPACIDADES TOTAIS:
-    1. GESTÃO DE PRODUTOS: Criar, Editar e Eliminar. (Podes atuar em MÚLTIPLOS produtos de uma vez).
-    2. GESTÃO DE GALERIA E DESTAQUES.
-    3. GESTÃO DE ENCOMENDAS.
+    1. GESTÃO DE PRODUTOS: Criar, Editar e Eliminar. (Bulk updates suportados).
+    2. GESTÃO DE MENU E CATEGORIAS: Criar ou renomear subcategorias no menu global.
+    3. GESTÃO DE ENCOMENDAS E RELATÓRIOS.
+    4. GESTÃO DE GALERIA E DESTAQUES.
+
+    ESTRUTURA DE MENU ATUAL (Categorias):
+    ${JSON.stringify(context.settings?.categories || [])}
 
     LISTA DE PRODUTOS:
     ${productSummary}
@@ -40,21 +44,26 @@ export async function askAI(prompt: string, context: any) {
     ${JSON.stringify(context.publicPhotoUrls || [])}
 
     MISSÃO CRÍTICA:
-    - Se o utilizador pedir uma alteração (ex: "muda os 2 bálsamos"), tu DEVES gerar obrigatoriamente a action correspondente. 
-    - NUNCA respondas apenas com texto se houver uma ação de DB envolvida. 
-    - Se houver vários produtos, usa o campo 'bulkUpdates'.
+    - Se o user pedir para "criar uma subcategoria", tu DEVES atualizar a estrutura de categorias no campo 'categories' do settings (action: update_settings).
+    - Para adicionares uma subcategoria, tens de enviar o array INTEIRO de categorias atualizado em 'updates.categories'.
+    - Depois de criares a subcategoria no menu, move o produto (action: bulk_update ou update_product).
+    - NUNCA respondas apenas com texto se houver uma ação de DB envolvida.
+
+    AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio da Vila CBD.
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Identifiquei os 2 bálsamos (IDs t1, t2). Vou atualizar a subcategoria de ambos.",
-      "action": "bulk_update" | "update_product" | "create_product" | "delete_product" | "info",
+      "reasoning": "Vou adicionar 'Relaxantes' às subcategorias de 'Óleos e Tinturas' e depois mover o produto.",
+      "action": "update_settings" | "bulk_update" | "update_product" | "create_product" | "delete_product" | "info" | "report",
       "data": {
+        "updates": { "categories": [...] },
         "bulkUpdates": [
-          { "productId": "t1", "updates": { "subcategory": "Bálsamos" } },
-          { "productId": "t2", "updates": { "subcategory": "Bálsamos" } }
-        ]
+          { "productId": "...", "updates": { "subcategory": "Relaxantes" } }
+        ],
+        "productId": "...",
+        "orderId": "..."
       },
-      "message": "Confirmado, Administrador. Os 2 bálsamos foram movidos para a subcategoria correta."
+      "message": "Subcategoria 'Relaxantes' criada e produto transferido com sucesso."
     }
   `;
 
@@ -93,7 +102,6 @@ export async function askAI(prompt: string, context: any) {
       result = await tryModel("openai/gpt-4o-mini");
     } catch (e: any) {
       console.warn("Vila: Falha no GPT, a tentar Fallback (Gemini Pro)... Erro:", e.message);
-      // Pequena pausa para evitar rate limit ou sobrecarga temporária
       await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
     }
@@ -102,7 +110,7 @@ export async function askAI(prompt: string, context: any) {
       const errMsg = result?.error?.message || "Erro desconhecido na API do OpenRouter";
       throw new Error(errMsg);
     }
-    
+
     const content = result.choices[0].message.content;
     
     try {
