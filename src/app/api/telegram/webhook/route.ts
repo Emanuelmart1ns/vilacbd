@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
       const publicPhotoUrls = [];
       for (const fId of photoIds) {
-        publicPhotoUrls.push(await uploadTelegramPhotoToFirebase(fId));
+        try { publicPhotoUrls.push(await uploadTelegramPhotoToFirebase(fId)); } catch(e) {}
       }
 
       const { askAI } = await import("@/lib/ai");
@@ -85,7 +85,19 @@ export async function POST(request: NextRequest) {
             await db.collection("products").doc(item.productId).update(item.updates);
           }
         } else if (action === "update_settings") {
-          await db.collection("settings").doc("global").update(data.updates);
+          if (data.updates?.categories) {
+            const currentDoc = await db.collection("settings").doc("global").get();
+            const currentCats = currentDoc.data()?.categories || [];
+            const merged = [...currentCats];
+            for (const nc of data.updates.categories) {
+              const idx = merged.findIndex(c => c.name === nc.name);
+              if (idx > -1) merged[idx] = nc;
+              else merged.push(nc);
+            }
+            await db.collection("settings").doc("global").update({ ...data.updates, categories: merged });
+          } else {
+            await db.collection("settings").doc("global").update(data.updates);
+          }
         } else if (action === "create_supplier") {
           await db.collection("suppliers").add({ ...data.newSupplier, createdAt: new Date() });
         } else if (action === "update_user") {
@@ -93,10 +105,9 @@ export async function POST(request: NextRequest) {
         }
       };
 
-      // SUPORTE PARA MÚLTIPLAS AÇÕES
       const actions = aiResponse.actions || (aiResponse.action ? [aiResponse] : []);
       for (const act of actions) {
-        await processAction(act.action, act.data);
+        try { await processAction(act.action, act.data); } catch(e) { console.error("Action Error:", e); }
       }
 
       revalidatePath("/", "layout");
@@ -112,4 +123,8 @@ export async function POST(request: NextRequest) {
     await db.collection("webhook_logs").add({ timestamp: new Date(), type: "error", chatId, error: err.message, aiRawResponse: aiResponse || "None" });
     return NextResponse.json({ ok: true });
   }
+}
+
+export async function GET() {
+  return new NextResponse("Vila Webhook Active.");
 }
