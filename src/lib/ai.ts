@@ -14,36 +14,49 @@ export async function askAI(prompt: string, context: any) {
     throw new Error("Configuração de API (OpenRouter Key) ausente.");
   }
 
+  const productSummary = context.products.map((p: any) =>
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
+  ).join("\n");
+
   const systemPrompt = `
     És o Assistente Inteligente da loja "Vila CBD".
     O teu objetivo é ajudar o administrador a gerir a loja via Telegram.
     
-    Contexto da Loja:
-    - Produtos: ${JSON.stringify(context.products)}
+    LISTA COMPLETA DE PRODUTOS DISPONÍVEIS:
+    ${productSummary}
     
-    INSTRUÇÕES CRÍTICAS:
-    1. PRIORIDADE À REFERÊNCIA (SKU): Se o utilizador fornecer um código como "VCBD914593", identifica IMEDIATAMENTE o produto correspondente através do campo "reference".
-    2. Linguagem Natural: O administrador pode falar de forma livre. Interpreta a intenção.
-    3. Ações: "update_product", "create_order", "info", "report".
+    REGRAS ABSOLUTAS:
+    1. Identifica SEMPRE o produto pelo nome exato ou SKU. NUNCA uses referências vagas como "o mesmo produto", "esse produto" ou "o anterior".
+    2. Se o utilizador usar expressões vagas sem contexto, responde com action "info" e pede o nome ou SKU exato do produto.
+    3. Para alterar o NOME: coloca o novo nome completo em updates.name.
+    4. Para alterar o PREÇO: coloca o valor numérico em updates.price (sem € ou texto).
+    5. Para alterar o STOCK: coloca o número inteiro em updates.stock.
+    6. O campo "productId" deve ser o ID EXATO da lista acima (ex: "abc123xyz").
+    7. Apenas inclui em "updates" os campos que devem ser alterados. Deixa os outros a null.
+    
+    EXEMPLOS:
+    - "Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%" → name: "Óleo Premium Cânhamo 6%"
+    - "Bot, altera o preço do Óleo para 22€" → price: 22
+    - "Bot, stock do Óleo Premium para 50 unidades" → stock: 50
     
     Responde SEMPRE em formato JSON válido:
     {
       "action": "update_product" | "create_order" | "info" | "report" | "unknown",
       "data": {
-        "productId": "id-do-produto",
+        "productId": "id-exato-do-produto",
         "productName": "nome-do-produto",
         "updates": {
-          "name": "novo nome (se aplicável)",
+          "name": "novo nome completo ou null",
           "price": 12.50,
           "stock": 100,
-          "description": "nova descrição (se aplicável)",
-          "supplierId": "id-do-fornecedor"
+          "description": "nova descrição ou null",
+          "supplierId": "id-do-fornecedor ou null"
         },
         "customer": "nome-do-cliente",
         "quantity": 1,
         "filter": "semana/mês/fornecedor-id"
       },
-      "message": "Uma mensagem curta, amigável e profissional a confirmar a ação ou a pedir esclarecimentos."
+      "message": "Confirmação curta e profissional da ação realizada."
     }
   `;
 

@@ -64,18 +64,42 @@ export async function POST(request: NextRequest) {
         if (aiResponse.action === "update_product") {
           const { productId, updates } = aiResponse.data;
           if (!productId || !updates || Object.keys(updates).length === 0) {
-             throw new Error("Dados de atualização insuficientes.");
+             throw new Error("Dados de atualização insuficientes. Seja mais específico, ex: 'Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%'");
           }
 
           // Remover campos nulos ou indefinidos
           const cleanUpdates = Object.fromEntries(
-            Object.entries(updates).filter(([_, v]) => v != null)
+            Object.entries(updates).filter(([_, v]) => v != null && v !== "")
           );
 
+          if (Object.keys(cleanUpdates).length === 0) {
+            await sendReply("⚠️ *Não percebi o que alterar.* Seja mais específico, ex:\n_\"Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%\"_");
+            return NextResponse.json({ ok: true });
+          }
+
+          // Verificar que o produto existe antes de atualizar
+          const productDoc = await db.collection("products").doc(productId).get();
+          if (!productDoc.exists) {
+            await sendReply(`⚠️ Produto com ID \`${productId}\` não encontrado na base de dados. Use o SKU (ex: VCBD123456) para mais precisão.`);
+            return NextResponse.json({ ok: true });
+          }
+
+          const productBefore = productDoc.data() as any;
           await db.collection("products").doc(productId).update(cleanUpdates);
           revalidatePath("/loja", "layout");
-          
-          await sendReply(`✅ *Sucesso!* \n${aiResponse.message}`);
+
+          // Construir mensagem detalhada do que foi alterado
+          const changeLines = Object.entries(cleanUpdates).map(([key, val]) => {
+            const fieldNames: Record<string, string> = {
+              name: "Nome", price: "Preço", stock: "Stock",
+              description: "Descrição", supplierId: "Fornecedor"
+            };
+            const fieldLabel = fieldNames[key] || key;
+            const before = productBefore[key] !== undefined ? `_${productBefore[key]}_` : "_(vazio)_";
+            return `• *${fieldLabel}*: ${before} → *${val}*`;
+          }).join("\n");
+
+          await sendReply(`✅ *Produto Atualizado!*\n\n📦 *${productBefore.name || productId}*\n\n${changeLines}`);
         } 
         else if (aiResponse.action === "create_order") {
           const { productId, quantity, customer } = aiResponse.data;
