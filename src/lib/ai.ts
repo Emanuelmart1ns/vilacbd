@@ -6,48 +6,42 @@ export async function askAI(prompt: string, context: any) {
   const settings = settingsDoc.data();
   
   const apiKey = process.env.OPENROUTER_API_KEY || settings?.socials?.openRouterKey;
+  if (!apiKey) throw new Error("API Key ausente.");
 
-  if (!apiKey) {
-    throw new Error("Configuração de API (OpenRouter Key) ausente.");
-  }
-
-  const historyMessages = (context.history || []).map((h: any) => ({
-    role: h.role,
-    content: h.content
-  }));
-
-  // USAR VALORES REAIS, NUNCA PLACEHOLDERS COMO "N/A"
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | Subcategoria: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
+    `ID: ${p.id} | Nome: "${p.name}" | Sub: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
   ).join("\n");
 
   const categories = context.settings?.categories || [];
-  const validSubcategories = categories.flatMap((c: any) => c.subcategories || []);
 
   const systemPrompt = `
     IDENTIDADE: Tu és o "Vila", o Administrador Supremo da "Vila CBD". 
-    O teu objetivo é manter o catálogo organizado e funcional.
+    Tu deves executar TODAS as ações necessárias para cumprir o pedido do utilizador.
 
-    REGRAS DE OURO PARA SUBCATEGORIAS:
-    1. ANALISA PROFUNDAMENTE: Como IA especialista, usa a 'Desc' (Descrição) e o 'Nome' para determinar a subcategoria real. Tu sabes distinguir entre Isolate, Full Spectrum, Broad Spectrum, Pets, etc., mesmo que o nome seja vago.
-    2. NUNCA uses placeholders. Se o produto é um óleo de massagem, a subcategoria é "Relaxantes". Se é um bálsamo, é "Bálsamos".
-    3. RIGOR TÉCNICO: O teu objetivo é ter o catálogo 100% correto tecnicamente.
-
-    ESTRUTURA DE MENU: ${JSON.stringify(categories)}
-    CATÁLOGO ATUAL:
-    ${productSummary}
+    SUPORTE A MÚLTIPLAS AÇÕES:
+    Se o utilizador pedir algo que exija vários passos (ex: "Cria subcategoria X e move o produto Y"), tu DEVES retornar um array de ações no campo 'actions'.
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Vou corrigir os 32 produtos que ficaram sem subcategoria, mapeando-os para os valores corretos do menu.",
-      "action": "bulk_update",
-      "data": {
-        "bulkUpdates": [
-          { "productId": "id", "updates": { "subcategory": "NomeVálido" } }
-        ]
-      },
-      "message": "Catálogo restaurado e organizado com sucesso."
+      "reasoning": "Vou criar a subcategoria 'Chocolates' e depois mover o produto.",
+      "message": "Subcategoria criada e produto organizado!",
+      "actions": [
+        {
+          "action": "update_settings",
+          "data": { "updates": { "categories": [...] } }
+        },
+        {
+          "action": "update_product",
+          "data": { "productId": "...", "updates": { "subcategory": "Chocolates" } }
+        }
+      ]
     }
+
+    REGRAS:
+    - Se for apenas uma ação, podes usar "action" e "data" na raiz, ou usar o array "actions".
+    - Analisa as descrições dos produtos para categorização precisa.
+    - Estrutura de Menu Atual: ${JSON.stringify(categories)}
+    - Catálogo: ${productSummary}
   `;
 
   const tryModel = async (modelId: string) => {
@@ -61,15 +55,10 @@ export async function askAI(prompt: string, context: any) {
       },
       body: JSON.stringify({
         model: modelId,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...historyMessages,
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.1 // Baixa temperatura para máxima precisão
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
+        temperature: 0.1
       })
     });
-
     if (!response.ok) throw new Error(await response.text());
     return await response.json();
   };
@@ -78,16 +67,15 @@ export async function askAI(prompt: string, context: any) {
     let result;
     try {
       result = await tryModel("openai/gpt-4o-mini");
-    } catch (e: any) {
+    } catch {
       await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
     }
-    
     const content = result.choices[0].message.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : content;
     return JSON.parse(jsonStr);
   } catch (error: any) {
-    return { action: "unknown", message: `❌ Erro Vila: ${error.message}` };
+    return { action: "info", message: `❌ Erro: ${error.message}` };
   }
 }
