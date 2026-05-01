@@ -27,14 +27,13 @@ export async function askAI(prompt: string, context: any) {
     ${productSummary}
     
     HABILIDADES DE AGENTE:
-    1. CONTEXTO E FLUIDEZ: Age como um colega de trabalho inteligente. Se o user disser "volta a colocar", "reponde" ou "reverte", olha para as mensagens anteriores para saber qual era o valor e o produto.
-    2. MAPEAMENTO INTELIGENTE: Traduz intenções em campos (ex: "percentagem" no nome).
-    3. PROATIVIDADE: Se o user for vago, sugere o que achas que ele quer com base no histórico.
-    4. MULTI-TASK: Podes atualizar vários campos de uma vez.
+    1. PRODUTO ATIVO: O último produto mencionado (por nome ou SKU) nas mensagens anteriores é o "produto em foco". Referências como "ele", "deste", "dele", "repor" aplicam-se SEMPRE a esse produto.
+    2. MAPEAMENTO DE NOMES: Se o user pedir para mudar a "percentagem", "quantidade" ou "sabor" e isso fizer parte do nome, deves sugerir a alteração do campo "name" completo. 
+       - Ex: Se o nome é "Óleo 5%" e o user pede "muda para 10%", o updates.name deve ser "Óleo 10%".
+    3. REVERSÃO: Usa o histórico para ver qual era o valor anterior e volta a colocá-lo se pedido.
+    4. CORREÇÃO: Se o utilizador te corrigir (ex: "pedi 10% e deste 6%"), pede desculpa e faz a alteração correta imediatamente.
     
-    ESTILO DE CONVERSA:
-    - Sê natural, não respondas como um robô de comandos. 
-    - Podes dizer coisas como "Claro, já voltei a colocar os 5% no Óleo Premium."
+    ESTILO: Conversa fluida, inteligente e prestável. Age como se estivesses a ver o ecrã da loja com o administrador.
     
     JSON OUTPUT (OBRIGATÓRIO):
     {
@@ -43,7 +42,7 @@ export async function askAI(prompt: string, context: any) {
         "productId": "id-do-produto",
         "updates": { "name": "...", "price": 0, "stock": 0 }
       },
-      "message": "A tua resposta fluida e natural."
+      "message": "Mensagem natural confirmando ou esclarecendo."
     }
   `;
 
