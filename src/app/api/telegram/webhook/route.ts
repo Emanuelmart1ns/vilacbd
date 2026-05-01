@@ -59,29 +59,53 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
+      // 2. Obter Histórico da Conversa (Memória do Agente)
+      const historySnap = await db.collection("bot_history")
+        .where("chatId", "==", chatId)
+        .orderBy("timestamp", "desc")
+        .limit(5)
+        .get();
+      
+      const history = historySnap.docs.map(doc => ({
+        role: doc.data().role,
+        content: doc.data().content
+      })).reverse();
+
       // Obter lista de produtos para dar contexto à IA
       const productsSnap = await db.collection("products").get();
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products });
+        const aiResponse = await askAI(text, { products, history });
+
+        // Guardar a interação no histórico
+        await db.collection("bot_history").add({
+          chatId,
+          role: "user",
+          content: text,
+          timestamp: new Date()
+        });
+        await db.collection("bot_history").add({
+          chatId,
+          role: "assistant",
+          content: aiResponse.message || "",
+          timestamp: new Date()
+        });
 
         console.log("IA Response:", aiResponse);
 
         if (aiResponse.action === "update_product") {
           const { productId, updates } = aiResponse.data;
-          if (!productId || !updates || Object.keys(updates).length === 0) {
-             throw new Error("Dados de atualização insuficientes. Seja mais específico, ex: 'Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%'");
-          }
-
-          // Remover campos nulos ou indefinidos
-          const cleanUpdates = Object.fromEntries(
+          
+          // Se a IA não identificou updates mas enviou uma mensagem (ex: explicar algo ou pedir info)
+          // enviamos a mensagem dela em vez do erro.
+          const cleanUpdates = updates ? Object.fromEntries(
             Object.entries(updates).filter(([_, v]) => v != null && v !== "")
-          );
+          ) : {};
 
-          if (Object.keys(cleanUpdates).length === 0) {
-            await sendReply("⚠️ *Não percebi o que alterar.* Seja mais específico, ex:\n_\"Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%\"_");
+          if (Object.keys(cleanUpdates).length === 0 || !productId) {
+            await sendReply(aiResponse.message || "🤔 Não percebi exatamente o que pretende alterar. Pode ser mais específico?");
             return NextResponse.json({ ok: true });
           }
 

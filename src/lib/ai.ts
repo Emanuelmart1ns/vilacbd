@@ -14,49 +14,32 @@ export async function askAI(prompt: string, context: any) {
     throw new Error("Configuração de API (OpenRouter Key) ausente.");
   }
 
-  const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
-  ).join("\n");
+  const historyMessages = (context.history || []).map((h: any) => ({
+    role: h.role,
+    content: h.content
+  }));
 
   const systemPrompt = `
-    És o Assistente Inteligente da loja "Vila CBD".
-    O teu objetivo é ajudar o administrador a gerir a loja via Telegram.
+    És o Agente de Inteligência Artificial da "Vila CBD".
+    O teu objetivo é gerir a loja de forma inteligente, compreendendo linguagem natural e o contexto da conversa.
     
-    LISTA COMPLETA DE PRODUTOS DISPONÍVEIS:
+    LISTA DE PRODUTOS:
     ${productSummary}
     
-    REGRAS ABSOLUTAS:
-    1. Identifica SEMPRE o produto pelo nome exato ou SKU. NUNCA uses referências vagas como "o mesmo produto", "esse produto" ou "o anterior".
-    2. Se o utilizador usar expressões vagas sem contexto, responde com action "info" e pede o nome ou SKU exato do produto.
-    3. Para alterar o NOME: coloca o novo nome completo em updates.name.
-    4. Para alterar o PREÇO: coloca o valor numérico em updates.price (sem € ou texto).
-    5. Para alterar o STOCK: coloca o número inteiro em updates.stock.
-    6. O campo "productId" deve ser o ID EXATO da lista acima (ex: "abc123xyz").
-    7. Apenas inclui em "updates" os campos que devem ser alterados. Deixa os outros a null.
+    HABILIDADES DE AGENTE:
+    1. CONTEXTO: Usa o histórico para saber de que produto estamos a falar (ex: "o mesmo", "esse").
+    2. MAPEAMENTO INTELIGENTE: Se o user disser "muda a percentagem para 6%", e o produto se chamar "Óleo 5%", tu deves sugerir mudar o "name" para "Óleo 6%".
+    3. ESCLARECIMENTO: Se não tiveres a certeza, NÃO inventes. Usa action "info" e explica o que precisas de saber.
+    4. MULTI-TASK: Podes sugerir várias alterações num só pedido (preço e stock ao mesmo tempo).
     
-    EXEMPLOS:
-    - "Bot, muda o nome do Óleo Premium Cânhamo 5% para Óleo Premium Cânhamo 6%" → name: "Óleo Premium Cânhamo 6%"
-    - "Bot, altera o preço do Óleo para 22€" → price: 22
-    - "Bot, stock do Óleo Premium para 50 unidades" → stock: 50
-    
-    Responde SEMPRE em formato JSON válido:
+    JSON OUTPUT (OBRIGATÓRIO):
     {
       "action": "update_product" | "create_order" | "info" | "report" | "unknown",
       "data": {
-        "productId": "id-exato-do-produto",
-        "productName": "nome-do-produto",
-        "updates": {
-          "name": "novo nome completo ou null",
-          "price": 12.50,
-          "stock": 100,
-          "description": "nova descrição ou null",
-          "supplierId": "id-do-fornecedor ou null"
-        },
-        "customer": "nome-do-cliente",
-        "quantity": 1,
-        "filter": "semana/mês/fornecedor-id"
+        "productId": "id-do-produto-identificado",
+        "updates": { "name": "...", "price": 0, "stock": 0 }
       },
-      "message": "Confirmação curta e profissional da ação realizada."
+      "message": "A tua resposta amigável e explicativa para o administrador."
     }
   `;
 
@@ -66,16 +49,17 @@ export async function askAI(prompt: string, context: any) {
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": "https://vilacbd.com",
-        "X-Title": "Vila CBD Admin Bot",
+        "X-Title": "Vila CBD Agent",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         model: modelId,
         messages: [
           { role: "system", content: systemPrompt },
+          ...historyMessages,
           { role: "user", content: prompt }
         ],
-        temperature: 0.1
+        temperature: 0.3
       })
     });
 
@@ -90,12 +74,11 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      // Primeira tentativa com Gemini 1.5 Flash (Super estável)
-      result = await tryModel("google/gemini-flash-1.5");
+      // Primeira tentativa com Gemini 1.5 PRO (Cérebro de Agente)
+      result = await tryModel("google/gemini-pro-1.5");
     } catch (e) {
-      console.warn("Falha no Gemini, a tentar Llama 3.1...", e);
-      // Fallback para Llama 3.1 8B sem o sufixo :free que deu erro
-      result = await tryModel("meta-llama/llama-3.1-8b-instruct");
+      console.warn("Falha no Gemini Pro, a tentar Flash...", e);
+      result = await tryModel("google/gemini-flash-1.5");
     }
     
     if (result.error) {
