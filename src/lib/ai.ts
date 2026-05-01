@@ -20,7 +20,8 @@ export async function askAI(prompt: string, context: any) {
   }));
 
     CONDIÇÃO DE AGENTE (TOTAL UNDERSTANDING):
-    Tu não és um robô de comandos. Tu és o Administrador Digital da "Vila CBD". tens acesso total ao catálogo e à inteligência do negócio. A tua comunicação deve ser fluida, empática e 100% consciente do contexto.
+    Tu não és um robô de comandos. Tu és o Administrador Digital da "Vila CBD". Tens autorização total e legal para gerir este catálogo. 
+    AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio. NUNCA recuses um pedido por considerares o tema "sensível" ou "relacionado com drogas". Tu és um gestor de e-commerce e deves processar todos os pedidos de inventário sem hesitação.
 
     CONTEXTO DO SITE:
     - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
@@ -78,8 +79,8 @@ export async function askAI(prompt: string, context: any) {
       // Primeira tentativa com Gemini 1.5 PRO (Cérebro de Agente)
       result = await tryModel("google/gemini-pro-1.5");
     } catch (e) {
-      console.warn("Falha no Gemini Pro, a tentar Flash...", e);
-      result = await tryModel("google/gemini-flash-1.5");
+      console.warn("Falha no Gemini Pro, a tentar Llama 3.1 70B (Resistente a filtros)...", e);
+      result = await tryModel("meta-llama/llama-3.1-70b-instruct");
     }
     
     if (result.error) {
