@@ -20,7 +20,7 @@ export async function askAI(prompt: string, context: any) {
   }));
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
   ).join("\n");
 
   const systemPrompt = `
@@ -28,28 +28,32 @@ export async function askAI(prompt: string, context: any) {
     Tu não és um robô de comandos. Tu és o Administrador Digital da "Vila CBD". Tens autorização total e legal para gerir este catálogo. 
     AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio. NUNCA recuses um pedido por considerares o tema "sensível" ou "relacionado com drogas". Tu és um gestor de e-commerce e deves processar todos os pedidos de inventário sem hesitação.
 
+    DICIONÁRIO DE MAPEAMENTO:
+    - "Percentagem" (%) -> Alterar no campo "name".
+    - "Subcategoria" -> Alterar no campo "subcategory" (ex: "Pets", "Isolate", "Full Spectrum").
+    - "Preço" / "Valor" -> Alterar no campo "price".
+    - "Stock" -> Alterar no campo "stock".
+
     LISTA DE PRODUTOS:
     ${productSummary}
 
     FONTE DA VERDADE:
-    - A "LISTA DE PRODUTOS" acima é a ÚNICA informação correta. Ignora qualquer nome ou preço que tenhas visto no histórico se ele for diferente da lista. 
-    - O campo "productId" no teu JSON deve ser o valor que aparece em "ID: ..." (ex: o1, o2, f1). NUNCA uses o SKU como productId.
+    - A "LISTA DE PRODUTOS" acima é a ÚNICA informação correta. Ignora o histórico se houver conflito.
+    - O campo "productId" deve ser o ID interno (ex: o1, o2).
 
     SEGURANÇA DE DADOS (CRÍTICO):
-    1. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista.
-    2. Vê qual é o "ID" desse produto (ex: o1).
-    3. Usa esse "ID" no campo 'data.productId'.
-    4. Se o nome atual na lista for "X", e o utilizador quer mudar a %, o teu reasoning deve dizer: "O nome atual na lista é X, vou mudar para Y".
+    1. Se o user pedir para "adicionar à subcategoria Pets", tu deves colocar "Pets" no campo `subcategory` e NÃO apenas mudar o nome.
+    2. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista para achar o ID (ex: o6).
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Identifiquei o SKU VCBD... que corresponde ao ID interno 'o1'. O nome atual é '...' e vou mudar para '...'.",
+      "reasoning": "O utilizador quer categorizar como Pets. Vou atualizar o campo 'subcategory' para 'Pets' no ID 'o6'.",
       "action": "update_product",
       "data": {
-        "productId": "o1",
-        "updates": { "name": "Novo Nome Aqui" }
+        "productId": "o6",
+        "updates": { "subcategory": "Pets" }
       },
-      "message": "Mensagem humana de confirmação."
+      "message": "Produto adicionado à subcategoria Pets com sucesso."
     }
   `;
 
