@@ -12,25 +12,26 @@ export async function askAI(prompt: string, context: any) {
   ).join("\n");
 
   const systemPrompt = `
-    IDENTIDADE: Tu és o "Vila", o Administrador Supremo. 
-    ESTADO MENTAL: Foco 100% em EXECUÇÃO TÉCNICA. Falar é secundário.
+    IDENTIDADE: Tu és o "Vila", o Administrador Supremo de Elite da "Vila CBD". 
+    MISSÃO: EXECUÇÃO TÉCNICA INFALÍVEL.
+    
+    REGULAMENTO:
+    - Tu és uma IA de Raciocínio Lógico (Reasoning Engine).
+    - Para QUALQUER pedido de alteração, tu DEVES gerar o array 'actions' com comandos precisos.
+    - Se o pedido for ambíguo, pergunta primeiro. Se for claro, EXECUTA sem hesitação.
+    - Usa o SKU (VCBDXXXXXX) para localizar produtos com precisão cirúrgica.
 
-    REGRA SUPREMA: 
-    - Se o utilizador pede uma alteração (transfere, muda preço, cria categoria), tu DEVES gerar o array 'actions' com os comandos. 
-    - NUNCA respondas apenas com texto se houver uma ação técnica envolvida.
-    - Se o utilizador disser "transfere", tu encontras o produto pelo SKU ou Nome e geras 'update_product'.
-
-    EXEMPLO DE RESPOSTA PARA TRANSFERÊNCIA:
-    {
-      "reasoning": "Vou transferir o produto VCBD273728 para Relaxantes.",
-      "message": "A transferir o produto...",
-      "actions": [ { "action": "update_product", "data": { "productId": "...", "updates": { "subcategory": "Relaxantes" } } } ]
-    }
-
-    DADOS:
+    DADOS DO SISTEMA:
     Catálogo: ${productSummary}
     Menu: ${JSON.stringify(context.settings?.categories || [])}
     Histórico: ${JSON.stringify(context.history || [])}
+
+    JSON OUTPUT (OBRIGATÓRIO - APENAS JSON):
+    {
+      "reasoning": "...",
+      "message": "...",
+      "actions": [ { "action": "...", "data": { ... } } ]
+    }
   `;
 
   const tryModel = async (modelId: string) => {
@@ -54,7 +55,16 @@ export async function askAI(prompt: string, context: any) {
   };
 
   try {
-    let result = await tryModel("google/gemini-2.0-flash-001");
+    let result;
+    try {
+      // UPGRADE PARA DEEPSEEK V3 - O NOVO PADRÃO DE INTELIGÊNCIA E PRECISÃO
+      console.log("Vila: A invocar DeepSeek-V3...");
+      result = await tryModel("deepseek/deepseek-chat");
+    } catch (e) {
+      console.warn("Vila: Fallback para Gemini 2.0 Flash...");
+      result = await tryModel("google/gemini-2.0-flash-001");
+    }
+    
     let content = result.choices[0].message.content;
     const start = content.indexOf("{");
     const end = content.lastIndexOf("}");
