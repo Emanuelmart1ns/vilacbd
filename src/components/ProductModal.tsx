@@ -217,58 +217,53 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
           </div>
 
           <div className="modal-details">
-            <div style={{ 
-              display: "flex", 
-              justifyContent: "space-between", 
-              alignItems: "flex-start",
-              marginBottom: "20px",
-              width: "100%"
-            }}>
-              <span className="product-category" style={{ margin: 0, fontSize: "0.8rem", letterSpacing: "2px" }}>
+            <div style={{ marginBottom: "16px" }}>
+              <span className="product-category" style={{ display: "block" }}>
                 {product.category}
               </span>
-              <div style={{ textAlign: "right" }}>
-                {product.reference && (
-                  <span style={{ 
-                    fontSize: "0.65rem", 
-                    color: "#fff", 
-                    opacity: 0.4,
-                    letterSpacing: "1px",
-                    fontFamily: "monospace",
-                    display: "block",
-                    marginBottom: "4px"
-                  }}>
-                    SKU: {product.reference}
-                  </span>
-                )}
-                <div style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "flex-end",
-                  gap: "6px"
+              {product.reference && (
+                <span style={{ 
+                  fontSize: "0.65rem", 
+                  color: "var(--text-secondary)", 
+                  opacity: 0.5,
+                  letterSpacing: "1px",
+                  fontFamily: "monospace",
+                  display: "block",
+                  marginTop: "2px"
                 }}>
-                  <div style={{ 
-                    width: "6px", 
-                    height: "6px", 
-                    borderRadius: "50%", 
-                    backgroundColor: (Number(product.stock) || 0) > 5 ? "#4caf50" : "#ff4d4d",
-                    boxShadow: (Number(product.stock) || 0) > 5 ? "0 0 10px #4caf50" : "0 0 10px #ff4d4d"
-                  }} />
-                  <span style={{ 
-                    fontSize: "0.75rem", 
-                    color: (Number(product.stock) || 0) > 0 ? "var(--accent-gold)" : "#ff4d4d", 
-                    fontWeight: "700",
-                    letterSpacing: "0.5px",
-                    textTransform: "uppercase"
-                  }}>
-                    {(Number(product.stock) || 0) > 0 ? `${product.stock} DISPONÍVEIS` : "ESGOTADO"}
-                  </span>
-                </div>
-              </div>
+                  SKU: {product.reference}
+                </span>
+              )}
             </div>
+
             <h2 className="product-title">{product.name}</h2>
             <p className="product-description">{product.description}</p>
             
+            <div style={{ marginTop: "24px", marginBottom: "-12px" }}>
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "8px"
+              }}>
+                <div style={{ 
+                  width: "8px", 
+                  height: "8px", 
+                  borderRadius: "50%", 
+                  backgroundColor: (Number(product.stock) || 0) > 5 ? "#4caf50" : "#ff4d4d",
+                  boxShadow: (Number(product.stock) || 0) > 5 ? "0 0 10px #4caf50" : "0 0 10px #ff4d4d"
+                }} />
+                <span style={{ 
+                  fontSize: "0.8rem", 
+                  color: (Number(product.stock) || 0) > 0 ? "var(--accent-gold)" : "#ff4d4d", 
+                  fontWeight: "700",
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase"
+                }}>
+                  {(Number(product.stock) || 0) > 0 ? `${product.stock} Unidades em Stock` : "Esgotado"}
+                </span>
+              </div>
+            </div>
+
             <div className="product-meta" style={{ display: "flex", alignItems: "center", gap: "32px", marginTop: "24px", marginBottom: "24px" }}>
               <span className="price">€ {product.price.toFixed(2)}</span>
               <button 
