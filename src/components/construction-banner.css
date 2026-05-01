@@ -46,10 +46,11 @@
   gap: 20px;
 }
 
-.construction-icon {
-  font-size: 4rem;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 0 10px var(--accent-gold));
+.construction-logo {
+  height: 180px;
+  width: auto;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
 }
 
 .construction-modal h2 {

@@ -216,9 +216,34 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
             )}
           </div>
 
-          {/* Detalhes do Produto */}
           <div className="modal-details">
-            <span className="product-category">{product.category}</span>
+            <div style={{ marginBottom: "16px" }}>
+              <span className="product-category" style={{ display: "block", marginBottom: "4px" }}>{product.category}</span>
+              {product.reference && (
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ 
+                    fontSize: "0.7rem", 
+                    color: "var(--text-secondary)", 
+                    opacity: 0.5,
+                    letterSpacing: "0.05em",
+                    fontFamily: "monospace",
+                    display: "block"
+                  }}>
+                    SKU: {product.reference}
+                  </span>
+                  <span style={{ 
+                    fontSize: "0.7rem", 
+                    color: product.stock > 5 ? "var(--accent-gold)" : "#ff4d4d", 
+                    opacity: 0.8,
+                    fontWeight: "bold",
+                    display: "block",
+                    marginTop: "2px"
+                  }}>
+                    {product.stock > 0 ? `${product.stock} em stock` : "Esgotado"}
+                  </span>
+                </div>
+              )}
+            </div>
             <h2 className="product-title">{product.name}</h2>
             <p className="product-description">{product.description}</p>
             

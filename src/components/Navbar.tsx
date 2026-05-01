@@ -52,11 +52,7 @@ export default function Navbar() {
     <nav className={`global-navbar ${scrolled ? "scrolled" : ""}`}>
       <div className="nav-container">
         <Link href="/" className="nav-logo" onDoubleClick={handleLogoDoubleClick}>
-          {settings?.logo ? (
-            <img src={settings.logo} alt={settings.storeName} style={{ height: "32px", width: "auto" }} />
-          ) : (
-            settings?.storeName || "Vila CBD"
-          )}
+          {settings?.storeName || "Vila CBD"}
         </Link>
         <div className="nav-links">
           <Link href="/">Início</Link>

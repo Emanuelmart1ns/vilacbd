@@ -12,7 +12,9 @@ export default function ProdutosAdminPage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [settingsCategories, setSettingsCategories] = useState<{name: string, subcategories: string[]}[]>([]);
+  const [suppliers, setSuppliers] = useState<{id: string, name: string}[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FirestoreProduct | null>(null);
   const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
@@ -38,17 +40,22 @@ export default function ProdutosAdminPage() {
     (async () => {
       setLoading(true);
       try {
-        const data = await getProducts(true); // Force refresh
+        const data = await getProducts(true);
         if (!cancelled) {
           const merged = mergeProducts(staticProducts as unknown as FirestoreProduct[], data);
           setProducts(merged);
         }
+        
         const settingsRes = await fetch("/api/settings");
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json();
-          if (settingsData.categories && !cancelled) {
-            setSettingsCategories(settingsData.categories);
-          }
+          if (settingsData.categories && !cancelled) setSettingsCategories(settingsData.categories);
+        }
+
+        const suppliersRes = await fetch("/api/admin/suppliers");
+        if (suppliersRes.ok) {
+          const suppliersData = await suppliersRes.json();
+          if (!cancelled) setSuppliers(suppliersData);
         }
       } catch {
         if (!cancelled) setProducts(staticProducts as unknown as FirestoreProduct[]);
@@ -56,9 +63,7 @@ export default function ProdutosAdminPage() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const openModal = (product: FirestoreProduct | null = null) => {
@@ -69,8 +74,8 @@ export default function ProdutosAdminPage() {
     setIsPopular(product?.isPopular || false);
     setColorValue(product?.color || "linear-gradient(135deg, #1e3c27, #2a6344)");
     setSelectedCategory(product?.category || "");
+    setSelectedSupplier(product?.supplierId || "");
     setValidationErrors({});
-    setUploadProgress("");
     setIsModalOpen(true);
   };
 
@@ -78,13 +83,8 @@ export default function ProdutosAdminPage() {
     setIsModalOpen(false);
     setEditingProduct(null);
     setSecondaryImages([]);
-    setMainImageFile(null);
     setMainImagePreview("");
-    setIsPopular(false);
-    setColorValue("linear-gradient(135deg, #1e3c27, #2a6344)");
-    setSelectedCategory("");
-    setValidationErrors({});
-    setUploadProgress("");
+    setSelectedSupplier("");
   };
 
   const handleReplaceImage = (index: number) => {
@@ -139,13 +139,9 @@ export default function ProdutosAdminPage() {
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext("2d")!;
-        
-        // Fundo branco para garantir que transparências não ficam pretas no WebP/JPG
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, w, h);
-        
         ctx.drawImage(img, 0, 0, w, h);
-        // Usar WebP para máxima compressão
         resolve(canvas.toDataURL("image/webp", quality));
       };
       img.onerror = reject;
@@ -155,24 +151,19 @@ export default function ProdutosAdminPage() {
 
   const handleSecondaryFiles = async (files: FileList | File[]) => {
     if (!files || files.length === 0) return;
-
     setUploadingImages(true);
-    setUploadProgress(`A processar 0/${files.length} imagens...`);
     try {
       const urls: string[] = [];
       const fileArr = Array.from(files);
       for (let i = 0; i < fileArr.length; i++) {
-        setUploadProgress(`A processar ${i + 1}/${fileArr.length} imagens...`);
         const url = await compressImage(fileArr[i]);
         urls.push(url);
       }
       setSecondaryImages((prev) => [...prev, ...urls]);
     } catch (error) {
       console.error("Erro no upload:", error);
-      alert("Erro ao fazer upload das imagens: " + (error instanceof Error ? error.message : "Erro desconhecido"));
     } finally {
       setUploadingImages(false);
-      setUploadProgress("");
     }
   };
 
@@ -195,67 +186,23 @@ export default function ProdutosAdminPage() {
     });
   };
 
-  const handleMainDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  const handleMainDrag = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleMainDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setMainDragOver(true); };
+  const handleMainDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setMainDragOver(false); };
+  const handleMainDrop = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setMainDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith("image/")) handleMainImageFile(files[0]);
+  };
 
-  const handleMainDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setMainDragOver(true);
-  }, []);
-
-  const handleMainDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setMainDragOver(false);
-  }, []);
-
-  const handleMainDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setMainDragOver(false);
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith("image/")) {
-        handleMainImageFile(files[0]);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editingProduct]
-  );
-
-  const handleSecDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleSecDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSecDragOver(true);
-  }, []);
-
-  const handleSecDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSecDragOver(false);
-  }, []);
-
-  const handleSecDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setSecDragOver(false);
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        handleSecondaryFiles(files);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [editingProduct, uploadingImages]
-  );
+  const handleSecDrag = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleSecDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setSecDragOver(true); };
+  const handleSecDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setSecDragOver(false); };
+  const handleSecDrop = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setSecDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleSecondaryFiles(files);
+  };
 
   const validateForm = (formData: FormData): boolean => {
     const errors: Record<string, boolean> = {};
@@ -271,32 +218,12 @@ export default function ProdutosAdminPage() {
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
     if (!validateForm(formData)) return;
 
     try {
       setUploadingImages(true);
-      setUploadProgress("A preparar imagens...");
-
-      // 1. Lidar com a imagem principal
       let mainImageUrl = mainImagePreview;
-      if (mainImageFile) {
-        setUploadProgress("A otimizar imagem principal...");
-        mainImageUrl = await compressImage(mainImageFile);
-      }
-
-      // 2. Lidar com imagens secundárias
-      const finalSecondaryImages: string[] = [];
-      for (let i = 0; i < secondaryImages.length; i++) {
-        const img = secondaryImages[i];
-        if (img.startsWith("data:")) {
-          // Já está em base64 (possivelmente já otimizado pelo handleSecondaryFiles)
-          finalSecondaryImages.push(img);
-        } else {
-          // É um URL antigo ou ficheiro
-          finalSecondaryImages.push(img);
-        }
-      }
+      if (mainImageFile) mainImageUrl = await compressImage(mainImageFile);
 
       const productData = {
         name: formData.get("name") as string,
@@ -307,43 +234,32 @@ export default function ProdutosAdminPage() {
         subcategory: formData.get("subcategory") as string || "",
         description: formData.get("description") as string,
         image: mainImageUrl,
-        images: finalSecondaryImages,
+        images: secondaryImages,
         color: colorValue,
         isPopular: isPopular,
+        supplierId: selectedSupplier
       };
 
-      setUploadProgress("A guardar dados no servidor...");
+      setUploadProgress("A guardar dados...");
       if (editingProduct?.id) {
-        const res = await fetch("/api/products", {
+        await fetch("/api/products", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: editingProduct.id, ...productData }),
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.details || "Erro ao atualizar");
-        }
       } else {
-        const res = await fetch("/api/products", {
+        await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(productData),
         });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.details || "Erro ao criar");
-        }
       }
 
       closeModal();
-
-      // Recarregar lista
       const data = await getProducts(true);
-      const merged = mergeProducts(staticProducts as unknown as FirestoreProduct[], data);
-      setProducts(merged);
+      setProducts(mergeProducts(staticProducts as unknown as FirestoreProduct[], data));
     } catch (error) {
-      alert("Erro ao guardar produto: " + (error instanceof Error ? error.message : "Erro desconhecido"));
-      console.error(error);
+      alert("Erro ao guardar");
     } finally {
       setUploadingImages(false);
       setUploadProgress("");
@@ -355,33 +271,19 @@ export default function ProdutosAdminPage() {
     staticProds.forEach(p => mergedMap.set(p.id, p));
     fbProds.forEach(fb => {
       const existing = mergedMap.get(fb.id);
-      if (existing) {
-         mergedMap.set(fb.id, {
-           ...existing,
-           ...fb,
-           images: fb.images !== undefined ? fb.images : existing.images,
-         });
-      } else {
-         mergedMap.set(fb.id, fb);
-      }
+      if (existing) mergedMap.set(fb.id, { ...existing, ...fb, images: fb.images !== undefined ? fb.images : existing.images });
+      else mergedMap.set(fb.id, fb);
     });
     return Array.from(mergedMap.values());
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem a certeza que deseja eliminar este produto?")) return;
+    if (!confirm("Tem a certeza?")) return;
     try {
-      const res = await fetch("/api/products", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error("Erro ao eliminar");
-      const data = await getProducts();
-      setProducts(data.length === 0 ? (staticProducts as unknown as FirestoreProduct[]) : data);
-    } catch {
-      alert("Erro ao eliminar produto.");
-    }
+      await fetch("/api/products", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const data = await getProducts(true);
+      setProducts(data);
+    } catch { alert("Erro ao eliminar"); }
   };
 
   const imageCount = (product: FirestoreProduct) => {
@@ -393,12 +295,7 @@ export default function ProdutosAdminPage() {
 
   const extractColorsFromGradient = (gradient: string): string => {
     const hexMatch = gradient.match(/#[0-9a-fA-F]{6}/g);
-    if (hexMatch && hexMatch.length >= 2) {
-      return `linear-gradient(135deg, ${hexMatch[0]}, ${hexMatch[1]})`;
-    }
-    if (hexMatch && hexMatch.length === 1) {
-      return hexMatch[0];
-    }
+    if (hexMatch && hexMatch.length >= 2) return `linear-gradient(135deg, ${hexMatch[0]}, ${hexMatch[1]})`;
     return gradient;
   };
 
@@ -406,68 +303,42 @@ export default function ProdutosAdminPage() {
     <div className="produtos-admin-page">
       <header className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Gestão do Catálogo</h2>
-        <button className="btn-primary" onClick={() => openModal()}>
-          + Adicionar Novo Produto
-        </button>
+        <button className="btn-primary" onClick={() => openModal()}>+ Adicionar Novo Produto</button>
       </header>
 
       <div className="glass-panel" style={{ marginTop: "24px" }}>
         {loading ? (
-          <div style={{ padding: "40px", textAlign: "center" }}>A carregar produtos...</div>
+          <div style={{ padding: "40px", textAlign: "center" }}>A carregar...</div>
         ) : (
           <table className="admin-table admin-table-products">
             <thead>
               <tr>
                 <th>Imagem</th>
-                <th>Nome do Produto</th>
+                <th>Nome</th>
                 <th>Custo</th>
                 <th>PVP</th>
-                <th>Lucro</th>
                 <th>Stock</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => {
-                const lucro = product.price - (product.cost || 0);
                 const imgCount = imageCount(product);
                 return (
                   <tr key={product.id}>
                     <td>
                       <div className="product-thumb-wrapper">
-                        {product.image ? (
-                          <div
-                            className="product-thumb"
-                            style={{ backgroundImage: `url(${product.image})` }}
-                          />
-                        ) : (
-                          <div className="product-thumb-placeholder">
-                            <span>Sem imagem</span>
-                          </div>
-                        )}
-                        {imgCount > 0 && (
-                          <span className="product-thumb-badge">{imgCount} foto{imgCount > 1 ? "s" : ""}</span>
-                        )}
+                        {product.image ? <div className="product-thumb" style={{ backgroundImage: `url(${product.image})` }} /> : <div className="product-thumb-placeholder">Sem foto</div>}
+                        {imgCount > 0 && <span className="product-thumb-badge">{imgCount} foto{imgCount > 1 ? "s" : ""}</span>}
                       </div>
                     </td>
-                    <td>
-                      <div className="product-name-cell">
-                        {product.isPopular && <span className="popular-star">⭐</span>}
-                        <span>{product.name}</span>
-                      </div>
-                    </td>
+                    <td>{product.name}</td>
                     <td>€ {(product.cost || 0).toFixed(2)}</td>
                     <td>€ {product.price.toFixed(2)}</td>
-                    <td style={{ color: "var(--accent-green-light)" }}>€ {lucro.toFixed(2)}</td>
                     <td>{product.stock || 0} un.</td>
                     <td>
-                      <button className="btn-text" onClick={() => openModal(product)}>
-                        Editar
-                      </button>{" "}
-                      |{" "}
-                      <button className="btn-text text-danger" onClick={() => handleDelete(product.id)}>
-                        Remover
-                      </button>
+                      <button className="btn-text" onClick={() => openModal(product)}>Editar</button> |{" "}
+                      <button className="btn-text text-danger" onClick={() => handleDelete(product.id)}>Remover</button>
                     </td>
                   </tr>
                 );
@@ -487,89 +358,21 @@ export default function ProdutosAdminPage() {
                 <h4 className="form-section-title">Informações Gerais</h4>
                 <div className="form-group">
                   <label>Nome *</label>
-                  <input
-                    name="name"
-                    className={`input-field${validationErrors.name ? " input-error" : ""}`}
-                    defaultValue={editingProduct?.name}
-                    required
-                  />
+                  <input name="name" className={`input-field${validationErrors.name ? " input-error" : ""}`} defaultValue={editingProduct?.name} required />
                 </div>
                 <div className="form-row">
-                  <div className="form-group">
-                    <label>Preço de Venda (PVP) *</label>
-                    <input
-                      name="price"
-                      type="number"
-                      step="0.01"
-                      className={`input-field${validationErrors.price ? " input-error" : ""}`}
-                      defaultValue={editingProduct?.price}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Custo de Compra *</label>
-                    <input
-                      name="cost"
-                      type="number"
-                      step="0.01"
-                      className={`input-field${validationErrors.cost ? " input-error" : ""}`}
-                      defaultValue={editingProduct?.cost}
-                      required
-                    />
-                  </div>
+                  <div className="form-group"><label>PVP *</label><input name="price" type="number" step="0.01" className="input-field" defaultValue={editingProduct?.price} required /></div>
+                  <div className="form-group"><label>Custo *</label><input name="cost" type="number" step="0.01" className="input-field" defaultValue={editingProduct?.cost} required /></div>
                 </div>
                 <div className="form-row">
-                  <div className="form-group">
-                    <label>Stock *</label>
-                    <input
-                      name="stock"
-                      type="number"
-                      className={`input-field${validationErrors.stock ? " input-error" : ""}`}
-                      defaultValue={editingProduct?.stock}
-                      required
-                    />
-                  </div>
+                  <div className="form-group"><label>Stock *</label><input name="stock" type="number" className="input-field" defaultValue={editingProduct?.stock} required /></div>
                   <div className="form-group">
                     <label>Categoria *</label>
-                    <select
-                      name="category"
-                      className={`input-field${validationErrors.category ? " input-error" : ""}`}
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      required
-                    >
-                      <option value="" disabled>
-                        Selecionar categoria...
-                      </option>
-                      {settingsCategories.map((cat) => (
-                        <option key={cat.name} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))}
+                    <select name="category" className="input-field" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} required>
+                      <option value="" disabled>Selecionar...</option>
+                      {settingsCategories.map((cat) => <option key={cat.name} value={cat.name}>{cat.name}</option>)}
                     </select>
                   </div>
-                  <div className="form-group">
-                    <label>Subcategoria</label>
-                    <select
-                      name="subcategory"
-                      className="input-field"
-                      defaultValue={editingProduct?.subcategory || ""}
-                    >
-                      <option value="">Nenhuma</option>
-                      {settingsCategories.find(c => c.name === selectedCategory)?.subcategories?.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Descrição</label>
-                  <textarea
-                    name="description"
-                    className="input-field"
-                    style={{ minHeight: "100px" }}
-                    defaultValue={editingProduct?.description}
-                  />
                 </div>
               </div>
 
@@ -577,162 +380,40 @@ export default function ProdutosAdminPage() {
                 <h4 className="form-section-title">Imagem Principal</h4>
                 {mainImagePreview && (
                   <div className="main-image-preview">
-                    <img src={mainImagePreview} alt="Preview" onClick={() => mainFileInputRef.current?.click()} style={{ cursor: "pointer" }} title="Clique para substituir" />
-                    <button type="button" className="btn-remove-image" onClick={removeMainImage}>
-                      Remover imagem
-                    </button>
+                    <img src={mainImagePreview} alt="Preview" />
+                    <button type="button" className="btn-remove-image" onClick={removeMainImage}>Remover</button>
                   </div>
                 )}
-                <div
-                  ref={mainDropRef}
-                  className={`drop-zone${mainDragOver ? " drop-zone-active" : ""}`}
-                  onDragOver={handleMainDrag}
-                  onDragEnter={handleMainDragEnter}
-                  onDragLeave={handleMainDragLeave}
-                  onDrop={handleMainDrop}
-                  onClick={() => mainFileInputRef.current?.click()}
-                >
-                  <div className="drop-zone-content">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    <p>Arraste uma imagem ou clique para selecionar</p>
-                    <small>JPG, PNG ou WEBP</small>
-                  </div>
-                  <input
-                    ref={mainFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMainImageChange}
-                    style={{ display: "none" }}
-                  />
+                <div className={`drop-zone${mainDragOver ? " drop-zone-active" : ""}`} onDragOver={handleMainDrag} onDragEnter={handleMainDragEnter} onDragLeave={handleMainDragLeave} onDrop={handleMainDrop} onClick={() => mainFileInputRef.current?.click()}>
+                  <p>Clique ou arraste a imagem principal</p>
+                  <input ref={mainFileInputRef} type="file" accept="image/*" onChange={handleMainImageChange} style={{ display: "none" }} />
                 </div>
               </div>
 
               <div className="form-section">
-                <h4 className="form-section-title">Imagens Secundárias ({secondaryImages.length})</h4>
-                <div
-                  ref={secDropRef}
-                  className={`drop-zone drop-zone-small${secDragOver ? " drop-zone-active" : ""}`}
-                  onDragOver={handleSecDrag}
-                  onDragEnter={handleSecDragEnter}
-                  onDragLeave={handleSecDragLeave}
-                  onDrop={handleSecDrop}
-                  onClick={() => !uploadingImages && secFileInputRef.current?.click()}
-                  style={uploadingImages ? { opacity: 0.5, pointerEvents: "none" } : undefined}
-                >
-                  <div className="drop-zone-content">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <p>Arraste imagens ou clique para selecionar</p>
-                    <small>Pode selecionar várias imagens</small>
+                <h4 className="form-section-title">Configurações e Origem</h4>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Fornecedor</label>
+                    <select className="input-field" value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}>
+                      <option value="">Sem fornecedor (Geral)</option>
+                      {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
                   </div>
-                  <input
-                    ref={secFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleSecondaryImageChange}
-                    style={{ display: "none" }}
-                  />
-                </div>
-                {uploadingImages && uploadProgress && (
-                  <div className="upload-progress">{uploadProgress}</div>
-                )}
-                {secondaryImages.length > 0 && (
-                  <div className="secondary-images-grid">
-                    {secondaryImages.map((img, index) => (
-                      <div key={index} className="secondary-image-item">
-                        <img src={img} alt={`Imagem ${index + 1}`} onClick={() => handleReplaceImage(index)} style={{ cursor: "pointer" }} title="Clique para substituir" />
-                        <div className="secondary-image-controls">
-                          <button
-                            type="button"
-                            className="btn-reorder"
-                            disabled={index === 0}
-                            onClick={() => moveSecondaryImage(index, "up")}
-                            title="Mover para cima"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-reorder btn-reorder-down"
-                            disabled={index === secondaryImages.length - 1}
-                            onClick={() => moveSecondaryImage(index, "down")}
-                            title="Mover para baixo"
-                          >
-                            ▼
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          className="btn-delete-image"
-                          onClick={() => removeSecondaryImage(index)}
-                          title="Remover imagem"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                  <div className="form-group">
+                    <label className="toggle-label" style={{marginTop: "28px"}}>
+                      <input type="checkbox" checked={isPopular} onChange={(e) => setIsPopular(e.target.checked)} className="toggle-checkbox" />
+                      <span className="toggle-switch" />
+                      <span className="toggle-text">Destaque</span>
+                    </label>
                   </div>
-                )}
-              </div>
-
-              <div className="form-section">
-                <h4 className="form-section-title">Configurações</h4>
-                <div className="form-group">
-                  <label className="toggle-label">
-                    <input
-                      type="checkbox"
-                      checked={isPopular}
-                      onChange={(e) => setIsPopular(e.target.checked)}
-                      className="toggle-checkbox"
-                    />
-                    <span className="toggle-switch" />
-                    <span className="toggle-text">Produto Popular (aparece nos Mais Vendidos)</span>
-                  </label>
-                </div>
-                <div className="form-group">
-                  <label>Cor / Gradiente</label>
-                  <div className="color-input-row">
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={colorValue}
-                      onChange={(e) => setColorValue(e.target.value)}
-                      placeholder="linear-gradient(135deg, #1e3c27, #2a6344)"
-                    />
-                    <div
-                      className="color-preview-swatch"
-                      style={{ background: extractColorsFromGradient(colorValue) }}
-                    />
-                  </div>
-                  <small style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "4px", display: "block" }}>
-                    Ex: linear-gradient(135deg, #1e3c27, #2a6344) ou #2a6344
-                  </small>
                 </div>
               </div>
 
               <div className="form-actions">
-                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={closeModal} disabled={uploadingImages}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary" style={{ flex: 1 }} disabled={uploadingImages}>
-                  {uploadingImages ? "A guardar..." : "Guardar Produto"}
-                </button>
+                <button type="button" className="btn-secondary" onClick={closeModal}>Cancelar</button>
+                <button type="submit" className="btn-primary" disabled={uploadingImages}>{uploadingImages ? "A guardar..." : "Guardar"}</button>
               </div>
-              <input
-                ref={replaceFileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleReplaceFile}
-                style={{ display: "none" }}
-              />
             </form>
           </div>
         </div>

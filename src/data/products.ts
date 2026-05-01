@@ -11,6 +11,8 @@ export interface Product {
   images?: string[];
   color: string;
   isPopular?: boolean;
+  reference?: string;
+  supplierId?: string;
 }
 
 export const products: Product[] = [

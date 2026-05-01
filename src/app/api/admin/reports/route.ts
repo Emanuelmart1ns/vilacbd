@@ -8,13 +8,16 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("start");
     const endDate = searchParams.get("end");
     const filterCategory = searchParams.get("category");
+    const filterSupplier = searchParams.get("supplier");
 
     // Fetch data
     const ordersSnapshot = await db.collection("orders").get();
     const productsSnapshot = await db.collection("products").get();
+    const suppliersSnapshot = await db.collection("suppliers").get();
     
     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const suppliersList = suppliersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // Processing variables
     let totalRevenue = 0;
@@ -35,7 +38,16 @@ export async function GET(request: NextRequest) {
       if (startDate && dateStr < startDate) return false;
       if (endDate && dateStr > endDate) return false;
 
-      // Category Filter (check if any item in order belongs to category)
+      // Supplier Filter
+      if (filterSupplier && filterSupplier !== "all") {
+        const hasSupplierProduct = order.items?.some((item: any) => {
+          const prod = productsList.find(p => p.id === item.id);
+          return (prod as any)?.supplierId === filterSupplier;
+        });
+        if (!hasSupplierProduct) return false;
+      }
+
+      // Category Filter
       if (filterCategory && filterCategory !== "all") {
         const hasCategory = order.items?.some((item: any) => {
           const prod = productsList.find(p => p.id === item.id);
@@ -44,36 +56,48 @@ export async function GET(request: NextRequest) {
         if (!hasCategory) return false;
       }
 
-      // Aggregate Stats
+      // Aggregate Stats (only items matching filters)
       if (order.paymentStatus === "pago") {
-        totalRevenue += order.total || 0;
-        totalOrdersPaid++;
-        
-        salesByDate[dateStr] = salesByDate[dateStr] || { total: 0, orders: 0 };
-        salesByDate[dateStr].total += order.total || 0;
-        salesByDate[dateStr].orders++;
-
-        const email = order.email || "Anon";
-        if (!salesByCustomer[email]) salesByCustomer[email] = { email, total: 0, orders: 0 };
-        salesByCustomer[email].total += order.total || 0;
-        salesByCustomer[email].orders++;
+        let orderContribution = 0;
+        let hasContribution = false;
 
         if (order.items) {
           order.items.forEach((item: any) => {
             const prodId = item.id;
             const originalProd = productsList.find(p => p.id === prodId) as any;
             const cat = originalProd?.category || "Outros";
+            const sId = originalProd?.supplierId || "";
 
-            // If filtering by category, we only aggregate sales of that category
-            if (!filterCategory || filterCategory === "all" || cat === filterCategory) {
+            const matchesCategory = !filterCategory || filterCategory === "all" || cat === filterCategory;
+            const matchesSupplier = !filterSupplier || filterSupplier === "all" || sId === filterSupplier;
+
+            if (matchesCategory && matchesSupplier) {
+              hasContribution = true;
+              const itemTotal = (item.price * item.quantity);
+              orderContribution += itemTotal;
+              
               if (!salesByProduct[prodId]) {
                 salesByProduct[prodId] = { name: item.name, total: 0, quantity: 0, category: cat };
               }
-              salesByProduct[prodId].total += (item.price * item.quantity);
+              salesByProduct[prodId].total += itemTotal;
               salesByProduct[prodId].quantity += item.quantity;
-              salesByCategory[cat] = (salesByCategory[cat] || 0) + (item.price * item.quantity);
+              salesByCategory[cat] = (salesByCategory[cat] || 0) + itemTotal;
             }
           });
+        }
+
+        if (hasContribution) {
+          totalRevenue += orderContribution;
+          totalOrdersPaid++;
+          
+          salesByDate[dateStr] = salesByDate[dateStr] || { total: 0, orders: 0 };
+          salesByDate[dateStr].total += orderContribution;
+          salesByDate[dateStr].orders++;
+
+          const email = order.email || "Anon";
+          if (!salesByCustomer[email]) salesByCustomer[email] = { email, total: 0, orders: 0 };
+          salesByCustomer[email].total += orderContribution;
+          salesByCustomer[email].orders++;
         }
       } else {
         pendingRevenue += order.total || 0;
@@ -111,6 +135,7 @@ export async function GET(request: NextRequest) {
       },
       topCustomers,
       categories,
+      suppliers: suppliersList.map((s: any) => ({ id: s.id, name: s.name })),
       orders: filteredOrders.sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt))
     });
   } catch (error: any) {

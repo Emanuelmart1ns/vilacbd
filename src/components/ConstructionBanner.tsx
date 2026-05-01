@@ -15,8 +15,7 @@ export default function ConstructionBanner() {
       <div className="construction-overlay">
         <div className="construction-modal glass-panel">
           <div className="construction-content">
-            <span className="construction-icon">✨</span>
-            <h2>Vila CBD</h2>
+            <h2 className="construction-title">Vila CBD</h2>
             <p>Estamos a preparar a melhor seleção de produtos premium para si.</p>
             <p style={{ 
               fontSize: '1rem', 

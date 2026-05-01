@@ -31,6 +31,7 @@ export interface FirestoreProduct {
   images?: string[];
   color: string;
   isPopular?: boolean;
+  supplierId?: string;
 }
 
 export interface FirestoreReview {

@@ -116,11 +116,24 @@ export default function ReportsPage() {
             </div>
 
             <div className="filter-box">
-              <label><Settings2 size={14} /> Segmentação</label>
+              <label><Settings2 size={14} /> Categoria</label>
               <select value={filters.category} onChange={e => setFilters({...filters, category: e.target.value})}>
                 <option value="all">Todas as Categorias</option>
                 {data?.categories?.map((cat: string) => (
                   <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-box">
+              <label><Briefcase size={14} /> Fornecedor</label>
+              <select 
+                value={(filters as any).supplier || "all"} 
+                onChange={e => setFilters({...filters, supplier: e.target.value} as any)}
+              >
+                <option value="all">Todos os Fornecedores</option>
+                {data?.suppliers?.map((sup: any) => (
+                  <option key={sup.id} value={sup.id}>{sup.name}</option>
                 ))}
               </select>
             </div>

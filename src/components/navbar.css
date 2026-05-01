@@ -32,6 +32,11 @@
   letter-spacing: -0.5px;
 }
 
+.nav-logo img {
+  /* Filtro removido para manter a cor original */
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
+}
+
 .nav-links {
   display: flex;
   gap: 32px;

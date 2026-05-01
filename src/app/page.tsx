@@ -1,9 +1,7 @@
-import { headers } from "next/headers";
 import React from "react";
 import { getProducts } from "@/lib/firebase";
 import { products as staticProducts, Product } from "@/data/products";
 import HomeClient from "@/components/HomeClient";
-import ConstructionBanner from "@/components/ConstructionBanner";
 
 function mergeProducts(staticProds: Product[], fbProds: Product[]): Product[] {
   const mergedMap = new Map<string, Product>();
@@ -26,14 +24,6 @@ function mergeProducts(staticProds: Product[], fbProds: Product[]): Product[] {
 export const revalidate = 60;
 
 export default async function Home() {
-  const headersList = await headers();
-  const host = headersList.get("host") || "";
-  const isDomain = host.includes("vilacbd.com") && !host.includes("vercel.app");
-
-  if (isDomain) {
-    return <ConstructionBanner />;
-  }
-
   let products: Product[] = [];
 
   try {
