@@ -5,11 +5,12 @@ export async function askAI(prompt: string, context: any) {
   const settingsDoc = await db.collection("settings").doc("global").get();
   const settings = settingsDoc.data();
   
-  // Tentar ler das definições (Firestore) ou fallback para env
-  const apiKey = settings?.socials?.openRouterKey || process.env.OPENROUTER_API_KEY;
+  // Variável de ambiente tem SEMPRE prioridade sobre o Firestore
+  // (evita usar chaves revogadas guardadas na BD)
+  const apiKey = process.env.OPENROUTER_API_KEY || settings?.socials?.openRouterKey;
 
   if (!apiKey) {
-    console.error("ERRO: OPENROUTER_API_KEY não encontrada no Firestore nem no processo.");
+    console.error("ERRO: OPENROUTER_API_KEY não encontrada nem no ambiente nem no Firestore.");
     throw new Error("Configuração de API (OpenRouter Key) ausente.");
   }
 
