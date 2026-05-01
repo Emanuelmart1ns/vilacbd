@@ -60,16 +60,21 @@ export async function POST(request: NextRequest) {
       }
 
       // 2. Obter Histórico Expandido (Memória de Longo Prazo)
+      // Nota: Removemos o orderBy no servidor para evitar a necessidade de índices compostos
       const historySnap = await db.collection("bot_history")
         .where("chatId", "==", chatId)
-        .orderBy("timestamp", "desc")
-        .limit(10) // Aumentado para 10 mensagens
+        .limit(20) // Buscamos um pouco mais para garantir contexto
         .get();
       
-      const history = historySnap.docs.map(doc => ({
-        role: doc.data().role,
-        content: doc.data().content
-      })).reverse();
+      const history = historySnap.docs
+        .map(doc => ({
+          role: doc.data().role,
+          content: doc.data().content,
+          timestamp: doc.data().timestamp?.toDate() || new Date(0)
+        }))
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()) // Ordenar por data decrescente
+        .slice(0, 10) // Ficar com os últimos 10
+        .reverse(); // Colocar em ordem cronológica para a IA
 
       // Obter lista de produtos para dar contexto à IA
       const productsSnap = await db.collection("products").get();
