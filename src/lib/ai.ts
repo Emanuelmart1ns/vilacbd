@@ -27,26 +27,28 @@ export async function askAI(prompt: string, context: any) {
     - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
     - Estrutura: Produtos (name, price, stock, reference), Encomendas, Relatórios.
     
-    REGRAS DE MANIPULAÇÃO:
-    1. REGRA DE RENOMEAÇÃO (CRÍTICA): Se o user pedir para mudar um valor que faz parte do nome (ex: "muda para 10%", "muda para 500mg"), tu deves:
-       - Pegar no nome atual (ex: "Óleo 5%").
-       - Substituir o valor antigo pelo novo.
-       - Colocar o resultado em `updates.name` (ex: "Óleo 10%").
-       - NUNCA devolvas o nome antigo se o pedido for para mudar um valor dentro dele.
-    2. PRODUTO ATIVO: O último produto mencionado é o foco. Referências como "ele", "dele", "repor" aplicam-se a esse produto.
-    3. REVERSÃO: Consulta o histórico para ver o valor anterior e reverte se pedido.
-    
-    ESTILO: Conversa fluida, inteligente e prestável. Age como se fosses o braço direito do dono.
-    
+    DICIONÁRIO DE MAPEAMENTO:
+    - "Percentagem" (%) -> Alterar no campo "name" (ex: trocar "5%" por "10%").
+    - "Preço" / "Valor" -> Alterar no campo "price".
+    - "Stock" / "Quantidade" -> Alterar no campo "stock".
+
+    REGRAS DE OURO (NÃO FALHAR):
+    1. Se o user pede "muda para 10%", tu olhas para o nome "Óleo 6%", vês que ele quer mudar o 6 para 10, e escreves o NOME NOVO COMPLETO: "Óleo 10%".
+    2. NUNCA envies um campo no `updates` com o mesmo valor que ele já tem na base de dados.
+    3. Se não houver alteração real, explica o porquê na `message`.
+
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Breve explicação interna do que identificaste e o que vais mudar.",
-      "action": "update_product" | "create_order" | "info" | "report" | "unknown",
+      "reasoning": "Ex: O utilizador quer mudar a percentagem de 6 para 10. Vou atualizar o campo 'name' substituindo o valor.",
+      "action": "update_product",
       "data": {
-        "productId": "id-do-produto",
-        "updates": { "name": "Nome Novo Aqui", "price": 0, "stock": 0 }
+        "productId": "id-firestore-do-produto",
+        "updates": { 
+          "name": "Óleo Premium Cânhamo 10%", 
+          "price": 22 
+        }
       },
-      "message": "Mensagem natural confirmando a alteração específica."
+      "message": "Confirmação humana do que mudou."
     }
   `;
 
