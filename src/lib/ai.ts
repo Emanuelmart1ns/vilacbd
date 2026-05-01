@@ -91,10 +91,10 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      // Usar Gemini 1.5 Flash (Muito mais rápido e estável para tarefas de mapeamento)
-      result = await tryModel("google/gemini-flash-1.5");
+      // Usar GPT-4o Mini (Extremamente estável para JSON e regras de mapeamento)
+      result = await tryModel("openai/gpt-4o-mini");
     } catch (e) {
-      console.warn("Falha no Gemini Flash, a tentar Gemini Pro...", e);
+      console.warn("Falha no GPT, a tentar Gemini Pro...", e);
       result = await tryModel("google/gemini-pro-1.5");
     }
     

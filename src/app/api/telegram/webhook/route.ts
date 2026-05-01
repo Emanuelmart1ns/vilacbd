@@ -66,15 +66,18 @@ export async function POST(request: NextRequest) {
         .limit(20) // Buscamos um pouco mais para garantir contexto
         .get();
       
-      const history = historySnap.docs
-        .map(doc => ({
-          role: doc.data().role,
-          content: doc.data().content,
-          timestamp: doc.data().timestamp?.toDate() || new Date(0)
-        }))
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()) // Ordenar por data decrescente
-        .slice(0, 10) // Ficar com os últimos 10
-        .reverse(); // Colocar em ordem cronológica para a IA
+      const history = (historySnap.docs || [])
+        .map(doc => {
+          const d = doc.data();
+          return {
+            role: d.role || "user",
+            content: d.content || "",
+            timestamp: d.timestamp ? (d.timestamp.toDate ? d.timestamp.toDate() : new Date(d.timestamp)) : new Date()
+          };
+        })
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .slice(0, 10)
+        .reverse();
 
       // Obter lista de produtos para dar contexto à IA
       const productsSnap = await db.collection("products").get();
