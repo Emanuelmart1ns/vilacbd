@@ -31,25 +31,27 @@ async function uploadTelegramPhotoToFirebase(fileId: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  let aiResponse: any;
+  const db = getAdminDb();
+  let chatId = "unknown";
+  let text = "";
+
   try {
     const secretToken = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
     const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
 
     if (expectedSecret && secretToken !== expectedSecret) {
-      console.warn("🚫 Tentativa de webhook não autorizada detectada.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const update = await request.json();
-    const db = getAdminDb();
-    
     const message = update.message;
     if (!message) return NextResponse.json({ ok: true });
 
-    const text = (message.text || message.caption || "").trim();
+    text = (message.text || message.caption || "").trim();
     const photos = message.photo || [];
     const photoIds = photos.length > 0 ? [photos[photos.length - 1].file_id] : [];
-    const chatId = message.chat.id.toString();
+    chatId = message.chat.id.toString();
 
     if (text.toLowerCase().includes("vila")) {
       const settingsDoc = await db.collection("settings").doc("global").get();
@@ -99,13 +101,13 @@ export async function POST(request: NextRequest) {
           const url = await uploadTelegramPhotoToFirebase(fId);
           publicPhotoUrls.push(url);
         } catch (uploadError) {
-          console.error("Erro no upload para Firebase:", uploadError);
+          console.error("Erro upload Firebase:", uploadError);
         }
       }
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls, settings, suppliers, users });
+        aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls, settings, suppliers, users });
 
         await db.collection("bot_history").add({ chatId, role: "user", content: text, timestamp: new Date() });
         await db.collection("bot_history").add({ chatId, role: "assistant", content: aiResponse.message || "", timestamp: new Date() });
@@ -114,162 +116,78 @@ export async function POST(request: NextRequest) {
 
         if (aiResponse.action === "update_product") {
           const { productId, updates } = aiResponse.data;
-          const cleanUpdates = updates ? Object.fromEntries(Object.entries(updates).filter(([_, v]) => v != null && v !== "")) : {};
-          if (Object.keys(cleanUpdates).length === 0 || !productId) {
-            await sendReply(`${aiResponse.message || "🤔 Não percebi o que alterar."}${reasoning}`);
-            return NextResponse.json({ ok: true });
-          }
-
-          const productDoc = await db.collection("products").doc(productId).get();
-          if (!productDoc.exists) {
-            await sendReply(`⚠️ Produto não encontrado.${reasoning}`);
-            return NextResponse.json({ ok: true });
-          }
-
-          const productBefore = productDoc.data() as any;
-          await db.collection("products").doc(productId).update(cleanUpdates);
-          const productAfterSnap = await db.collection("products").doc(productId).get();
-          const productAfter = productAfterSnap.data() as any;
-          
+          if (!productId || !updates) throw new Error("Dados de update_product incompletos.");
+          await db.collection("products").doc(productId).update(updates);
           revalidatePath("/loja", "layout");
-          revalidatePath("/", "layout");
-
-          const changeLines = Object.entries(cleanUpdates).map(([key, val]) => {
-            const fieldNames: Record<string, string> = { name: "Nome", price: "Preço", stock: "Stock", subcategory: "Subcategoria" };
-            const verified = productAfter[key];
-            return `• *${fieldNames[key] || key}*: _${productBefore[key]}_ → *${verified}* (Confirmado no DB ✅)`;
-          }).join("\n");
-
-          const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
-          await sendReply(`✅ *Alteração Gravada com Sucesso!*\n\n📦 *${productAfter.name}*\n${changeLines}${humanMessage}${reasoning}\n\n_O site foi atualizado e a cache limpa._`);
+          await sendReply(`✅ *Produto Atualizado!* \n${aiResponse.message}${reasoning}`);
         }
         else if (aiResponse.action === "update_settings") {
           const { updates } = aiResponse.data;
           await db.collection("settings").doc("global").update(updates);
           revalidatePath("/", "layout");
           revalidatePath("/loja", "layout");
-          await sendReply(`⚙️ *Definições Atualizadas!* \nAs configurações globais do site (ex: categorias) foram alteradas.${reasoning}`);
-        }
-        else if (aiResponse.action === "create_supplier") {
-          const { newSupplier } = aiResponse.data;
-          const docRef = await db.collection("suppliers").add({ ...newSupplier, createdAt: new Date() });
-          await sendReply(`🏢 *Fornecedor Criado!* \nNome: ${newSupplier.name}\nID: ${docRef.id}${reasoning}`);
-        }
-        else if (aiResponse.action === "update_supplier") {
-          const { supplierId, updates } = aiResponse.data;
-          await db.collection("suppliers").doc(supplierId).update({ ...updates, updatedAt: new Date() });
-          await sendReply(`🏢 *Fornecedor Atualizado!* \nAs informações do fornecedor foram alteradas.${reasoning}`);
-        }
-        else if (aiResponse.action === "delete_supplier") {
-          const { supplierId } = aiResponse.data;
-          await db.collection("suppliers").doc(supplierId).delete();
-          await sendReply(`🗑️ *Fornecedor Removido!*${reasoning}`);
-        }
-        else if (aiResponse.action === "update_user") {
-          const { userId, updates } = aiResponse.data;
-          await db.collection("users").doc(userId).update(updates);
-          await sendReply(`👤 *Utilizador Atualizado!* \nAs permissões ou dados do utilizador foram alterados.${reasoning}`);
+          await sendReply(`⚙️ *Definições Atualizadas!*${reasoning}`);
         }
         else if (aiResponse.action === "bulk_update") {
           const { bulkUpdates } = aiResponse.data;
-          if (!bulkUpdates || !Array.isArray(bulkUpdates)) throw new Error("Dados de bulk_update inválidos.");
+          if (!bulkUpdates || !Array.isArray(bulkUpdates)) {
+             // Fallback: se a IA mandou o objeto no sítio errado, tentar corrigir
+             const possibleBulk = aiResponse.data.updates?.bulkUpdates || aiResponse.bulkUpdates;
+             if (possibleBulk && Array.isArray(possibleBulk)) {
+                aiResponse.data.bulkUpdates = possibleBulk;
+             } else {
+                throw new Error("Dados de bulk_update inválidos (Array não encontrado).");
+             }
+          }
 
           let count = 0;
-          for (const updateItem of bulkUpdates) {
-            const { productId, updates } = updateItem;
-            if (productId && updates) {
-              await db.collection("products").doc(productId).update(updates);
+          for (const item of aiResponse.data.bulkUpdates) {
+            if (item.productId && item.updates) {
+              await db.collection("products").doc(item.productId).update(item.updates);
               count++;
             }
           }
-
           revalidatePath("/loja", "layout");
-          revalidatePath("/", "layout");
-          await sendReply(`✅ *${count} Produtos Atualizados com Sucesso!*\n\n${aiResponse.message}${reasoning}`);
-        }
-        else if (aiResponse.action === "delete_product") {
-          const { productId } = aiResponse.data;
-          if (!productId) throw new Error("ID do produto ausente.");
-          await db.collection("products").doc(productId).delete();
-          revalidatePath("/loja", "layout");
-          await sendReply(`🗑️ *Produto Removido!* \nO produto foi eliminado permanentemente do catálogo.${reasoning}`);
+          await sendReply(`✅ *${count} Produtos Atualizados!*${reasoning}`);
         }
         else if (aiResponse.action === "create_product") {
           const { newProduct } = aiResponse.data;
-          const finalProduct = {
-            ...newProduct,
-            reference: `VCBD${Math.floor(100000 + Math.random() * 900000)}`,
-            createdAt: new Date(),
-            stock: newProduct.stock || 0
-          };
-          const docRef = await db.collection("products").add(finalProduct);
+          const ref = `VCBD${Math.floor(100000 + Math.random() * 900000)}`;
+          await db.collection("products").add({ ...newProduct, reference: ref, createdAt: new Date() });
           revalidatePath("/loja", "layout");
-          await sendReply(`✨ *Novo Produto Criado!* \nID: ${docRef.id} \nNome: ${finalProduct.name}\nSKU: ${finalProduct.reference}${reasoning}`);
-        }
-        else if (aiResponse.action === "update_order") {
-          const { orderId, updates } = aiResponse.data;
-          if (!orderId) throw new Error("ID da encomenda ausente.");
-          await db.collection("orders").doc(orderId).update(updates);
-          await sendReply(`📋 *Encomenda Atualizada!* \nEstado: ${updates.status || "Alterado"}${reasoning}`);
-        }
-        else if (aiResponse.action === "create_order") {
-          const { productId, quantity, customer } = aiResponse.data;
-          const product = products.find(p => p.id === productId);
-          if (!product) throw new Error("Produto não encontrado");
-          const newOrder = {
-            customerName: customer || "Cliente Manual",
-            items: [{ id: productId, name: product.name, price: product.price, quantity: quantity || 1 }],
-            total: product.price * (quantity || 1),
-            status: "pendente", paymentStatus: "pendente", createdAt: new Date(), source: "telegram_bot"
-          };
-          await db.collection("orders").add(newOrder);
-          await sendReply(`📦 *Encomenda Criada!* \n${aiResponse.message}`);
+          await sendReply(`✨ *Novo Produto Criado!* \nSKU: ${ref}${reasoning}`);
         }
         else if (aiResponse.action === "report") {
           const ordersSnap = await db.collection("orders").limit(50).get();
-          const paidOrders = ordersSnap.docs.filter(d => d.data().paymentStatus === "pago");
-          const totalRevenue = paidOrders.reduce((acc, d) => acc + (d.data().total || 0), 0);
-          await sendReply(`📊 *Relatório Rápido Vila CBD* \n\n*Vendas Totais:* € ${totalRevenue.toFixed(2)}\n*Encomendas Pagas:* ${paidOrders.length}\n\n${aiResponse.message}`);
+          const paid = ordersSnap.docs.filter(d => d.data().paymentStatus === "pago");
+          const total = paid.reduce((acc, d) => acc + (d.data().total || 0), 0);
+          await sendReply(`📊 *Relatório Vila CBD* \nTotal Pago: € ${total.toFixed(2)}${reasoning}`);
         }
         else {
-          await sendReply(aiResponse.message || "🤔 Não tenho a certeza de como processar esse pedido.");
+          await sendReply(aiResponse.message || "Pedido processado.");
         }
       } catch (err: any) {
-        console.error("Erro no Agente de IA:", err);
+        console.error("Erro IA:", err);
         await db.collection("webhook_logs").add({
           timestamp: new Date(),
           type: "error",
           chatId,
           error: err.message,
-          stack: err.stack,
           userText: text,
-          // Guardar a resposta da IA se ela chegou a ser gerada
-          aiRawResponse: typeof aiResponse !== "undefined" ? aiResponse : "IA não respondeu"
+          aiRawResponse: aiResponse || "Sem resposta da IA"
         });
-        await sendReply("🔥 Ocorreu um erro ao processar o seu pedido com a IA.");
+        await sendReply(`🔥 *Erro Vila:* ${err.message}`);
       }
       return NextResponse.json({ ok: true });
     }
 
-    const replyTo = message.reply_to_message;
-    if (replyTo) {
-      const telegramMessageId = replyTo.message_id.toString();
-      const sessionDoc = await db.collection("telegram_sessions").doc(telegramMessageId).get();
-      if (sessionDoc.exists) {
-        const { sessionId } = sessionDoc.data()!;
-        await db.collection("support_chats").add({
-          sessionId, from: "admin", name: "Suporte Vila CBD", text: message.text, timestamp: new Date(), type: "telegram_reply"
-        });
-      }
-    }
-
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    console.error("Erro no Webhook do Telegram:", error);
+    console.error("Erro Webhook:", error);
     return NextResponse.json({ ok: true });
   }
 }
 
 export async function GET() {
-  return new NextResponse("Telegram Webhook is active.");
+  return new NextResponse("Vila Webhook Active.");
 }
