@@ -74,7 +74,7 @@ export default function AdminLayout({
       <aside className={`admin-sidebar no-print ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="admin-sidebar-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2>Vila CBD <span>Admin</span></h2>
-          <button className="mobile-menu-toggle" onClick={closeMobileMenu} style={{ background: "none", border: "none", fontSize: "2rem", color: "var(--accent-gold)", display: "none" }}>×</button>
+          <button className="mobile-menu-toggle" onClick={closeMobileMenu} style={{ background: "none", border: "none", fontSize: "2rem", color: "var(--accent-gold)" }}>×</button>
         </div>
         <nav className="admin-nav">
           <Link href="/admin" className="admin-nav-link" onClick={closeMobileMenu}>Visão Geral</Link>
@@ -95,7 +95,7 @@ export default function AdminLayout({
       <main className="admin-main">
         <header className="admin-header no-print">
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button className="mobile-menu-toggle" onClick={toggleMobileMenu} style={{ display: "none" }}>
+            <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
