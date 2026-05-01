@@ -53,17 +53,16 @@ export async function POST(request: NextRequest) {
     };
 
     // 2. Verificar se a mensagem começa por "Bot" e se o utilizador é autorizado
-    if (text.toLowerCase().startsWith("bot")) {
+    if (text.toLowerCase().includes("vila")) {
       if (chatId !== authorizedId) {
-        await sendReply("⚠️ Desculpe, não tenho autorização para receber ordens deste ID.");
+        await sendReply("⚠️ Olá. Apenas o administrador autorizado pode interagir com o sistema Vila.");
         return NextResponse.json({ ok: true });
       }
 
       // 2. Obter Histórico Expandido (Memória de Longo Prazo)
-      // Nota: Removemos o orderBy no servidor para evitar a necessidade de índices compostos
       const historySnap = await db.collection("bot_history")
         .where("chatId", "==", chatId)
-        .limit(20) // Buscamos um pouco mais para garantir contexto
+        .limit(20)
         .get();
       
       const history = (historySnap.docs || [])
@@ -76,16 +75,21 @@ export async function POST(request: NextRequest) {
           };
         })
         .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-        .slice(0, 10)
+        .slice(0, 15) // Aumentada memória para 15 mensagens
         .reverse();
 
-      // Obter lista de produtos para dar contexto à IA
-      const productsSnap = await db.collection("products").get();
+      // Obter dados globais (Produtos e Encomendas)
+      const [productsSnap, ordersSnap] = await Promise.all([
+        db.collection("products").get(),
+        db.collection("orders").orderBy("createdAt", "desc").limit(10).get()
+      ]);
+      
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+      const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history });
+        const aiResponse = await askAI(text, { products, history, orders });
 
         // Guardar a interação no histórico
         await db.collection("bot_history").add({
@@ -141,6 +145,31 @@ export async function POST(request: NextRequest) {
 
           const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
           await sendReply(`✅ *Alteração Gravada com Sucesso!*\n\n📦 *${productAfter.name}*\n${changeLines}${humanMessage}${reasoning}\n\n_O site foi atualizado e a cache limpa._`);
+        }
+        else if (aiResponse.action === "delete_product") {
+          const { productId } = aiResponse.data;
+          if (!productId) throw new Error("ID do produto ausente.");
+          await db.collection("products").doc(productId).delete();
+          revalidatePath("/loja", "layout");
+          await sendReply(`🗑️ *Produto Removido!* \nO produto foi eliminado permanentemente do catálogo.${reasoning}`);
+        }
+        else if (aiResponse.action === "create_product") {
+          const { newProduct } = aiResponse.data;
+          const finalProduct = {
+            ...newProduct,
+            reference: `VCBD${Math.floor(100000 + Math.random() * 900000)}`,
+            createdAt: new Date(),
+            stock: newProduct.stock || 0
+          };
+          const docRef = await db.collection("products").add(finalProduct);
+          revalidatePath("/loja", "layout");
+          await sendReply(`✨ *Novo Produto Criado!* \nID: ${docRef.id} \nNome: ${finalProduct.name}\nSKU: ${finalProduct.reference}${reasoning}`);
+        }
+        else if (aiResponse.action === "update_order") {
+          const { orderId, updates } = aiResponse.data;
+          if (!orderId) throw new Error("ID da encomenda ausente.");
+          await db.collection("orders").doc(orderId).update(updates);
+          await sendReply(`📋 *Encomenda Atualizada!* \nEstado: ${updates.status || "Alterado"}${reasoning}`);
         }
         else if (aiResponse.action === "create_order") {
           const { productId, quantity, customer } = aiResponse.data;

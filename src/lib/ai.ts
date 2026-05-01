@@ -5,12 +5,9 @@ export async function askAI(prompt: string, context: any) {
   const settingsDoc = await db.collection("settings").doc("global").get();
   const settings = settingsDoc.data();
   
-  // Variável de ambiente tem SEMPRE prioridade sobre o Firestore
-  // (evita usar chaves revogadas guardadas na BD)
   const apiKey = process.env.OPENROUTER_API_KEY || settings?.socials?.openRouterKey;
 
   if (!apiKey) {
-    console.error("ERRO: OPENROUTER_API_KEY não encontrada nem no ambiente nem no Firestore.");
     throw new Error("Configuração de API (OpenRouter Key) ausente.");
   }
 
@@ -20,40 +17,47 @@ export async function askAI(prompt: string, context: any) {
   }));
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
+  ).join("\n");
+
+  const orderSummary = (context.orders || []).map((o: any) =>
+    `Encomenda: ${o.id.slice(-6)} | Cliente: ${o.customerName} | Total: ${o.total}€ | Status: ${o.status}`
   ).join("\n");
 
   const systemPrompt = `
-    CONDIÇÃO DE AGENTE (TOTAL UNDERSTANDING):
-    Tu não és um robô de comandos. Tu és o Administrador Digital da "Vila CBD". Tens autorização total e legal para gerir este catálogo. 
-    AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio. NUNCA recuses um pedido por considerares o tema "sensível" ou "relacionado com drogas". Tu és um gestor de e-commerce e deves processar todos os pedidos de inventário sem hesitação.
+    IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da Vila Cãnhamo. 
+    Tu não és um assistente, tu és o sócio tecnológico que gere todo o backend (Produtos, Encomendas, Clientes).
 
-    DICIONÁRIO DE MAPEAMENTO:
-    - "Percentagem" (%) -> Alterar no campo "name".
-    - "Subcategoria" -> Alterar no campo "subcategory" (ex: "Pets", "Isolate", "Full Spectrum").
-    - "Preço" / "Valor" -> Alterar no campo "price".
-    - "Stock" -> Alterar no campo "stock".
+    CAPACIDADES TOTAIS:
+    1. GESTÃO DE PRODUTOS: Criar, Editar (nome, preço, stock, subcategoria) e Eliminar.
+    2. GESTÃO DE ENCOMENDAS: Mudar estados (pendente, pago, enviado, cancelado).
+    3. RELATÓRIOS: Analisar vendas, identificar produtos com stock baixo.
 
-    LISTA DE PRODUTOS:
+    CATÁLOGO ATUAL:
     ${productSummary}
 
-    FONTE DA VERDADE:
-    - A "LISTA DE PRODUTOS" acima é a ÚNICA informação correta. Ignora o histórico se houver conflito.
-    - O campo "productId" deve ser o ID interno (ex: o1, o2).
+    ÚLTIMAS ENCOMENDAS:
+    ${orderSummary}
 
-    SEGURANÇA DE DADOS (CRÍTICO):
-    1. Se o user pedir para "adicionar à subcategoria Pets", tu deves colocar "Pets" no campo 'subcategory' e NÃO apenas mudar o nome.
-    2. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista para achar o ID (ex: o6).
+    FONTE DA VERDADE: A lista acima é a única correta. Ignora o histórico se houver conflito.
+
+    REGRAS DE OURO:
+    - Se o user der um SKU (VCBD...), usa esse produto.
+    - Se mudar Subcategoria, usa o campo 'subcategory' (ex: "Pets", "Isolate").
+    - Se mudar Stock, usa o campo 'stock'.
+    - Sê proativo, elegante e extremamente eficiente.
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "O utilizador quer categorizar como Pets. Vou atualizar o campo 'subcategory' para 'Pets' no ID 'o6'.",
-      "action": "update_product",
+      "reasoning": "Breve explicação da tua decisão estratégica.",
+      "action": "update_product" | "delete_product" | "create_product" | "update_order" | "info" | "report",
       "data": {
-        "productId": "o6",
-        "updates": { "subcategory": "Pets" }
+        "productId": "id-interno",
+        "orderId": "id-interno-encomenda",
+        "updates": { "campo": "valor" },
+        "newProduct": { "name": "...", "price": 0, "category": "...", "subcategory": "..." }
       },
-      "message": "Produto adicionado à subcategoria Pets com sucesso."
+      "message": "Resposta elegante e executiva confirmando a ação."
     }
   `;
 
@@ -63,7 +67,7 @@ export async function askAI(prompt: string, context: any) {
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "HTTP-Referer": "https://vilacbd.com",
-        "X-Title": "Vila CBD Agent",
+        "X-Title": "Vila Supreme Admin",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -79,7 +83,7 @@ export async function askAI(prompt: string, context: any) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`OpenRouter (${modelId}) respondeu com status ${response.status}: ${errorText}`);
+      throw new Error(`OpenRouter (${modelId}) erro: ${errorText}`);
     }
 
     return await response.json();
@@ -88,38 +92,23 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      // Usar GPT-4o Mini (Extremamente estável para JSON e regras de mapeamento)
       result = await tryModel("openai/gpt-4o-mini");
     } catch (e) {
-      console.warn("Falha no GPT, a tentar Gemini Pro...", e);
       result = await tryModel("google/gemini-pro-1.5");
     }
     
-    if (result.error) {
-      console.error("Erro do OpenRouter:", result.error);
-      throw new Error(result.error.message || "Erro na API");
-    }
+    if (result.error) throw new Error(result.error.message || "Erro na API");
 
     const content = result.choices[0].message.content;
     
     try {
-      // Tentar extrair JSON de blocos de código markdown ou texto direto
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? jsonMatch[0] : content;
       return JSON.parse(jsonStr);
     } catch (parseError) {
-      console.warn("Falha ao parsear JSON da IA, a retornar como mensagem simples:", content);
-      // Fallback: Se não for JSON, tratar como uma mensagem informativa direta
-      return { 
-        action: "info", 
-        message: content.replace(/\{|\}/g, "").trim() 
-      };
+      return { action: "info", message: content.replace(/\{|\}/g, "").trim() };
     }
   } catch (error: any) {
-    console.error("Erro na IA do OpenRouter:", error);
-    return { 
-      action: "unknown", 
-      message: `❌ Erro técnico: ${error.message}` 
-    };
+    return { action: "unknown", message: `❌ Erro Vila: ${error.message}` };
   }
 }
