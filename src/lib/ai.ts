@@ -38,7 +38,7 @@ export async function askAI(prompt: string, context: any) {
     REGRA DE PRIORIDADE (IDENTIFICAÇÃO):
     1. SKU/ID EXPLÍCITO: Se o user escrever um SKU (ex: VCBD914593) na mensagem, tu deves ignorar o histórico e usar EXCLUSIVAMENTE o produto que corresponde a esse SKU. 
     2. PRODUTO ATIVO: Só usas o histórico para referências vagas como "ele", "esse", "dele" se NÃO houver um SKU na mensagem atual.
-    3. VALIDAÇÃO: Antes de gerar o JSON, confirma se o `productId` que escolheste corresponde ao nome ou SKU que o utilizador pediu.
+    3. VALIDAÇÃO: Antes de gerar o JSON, confirma se o 'productId' que escolheste corresponde ao nome ou SKU que o utilizador pediu.
 
     REGRAS DE MANIPULAÇÃO:
     - Mudar % ou mg -> Reconstruir o campo "name" completo com o novo valor.
