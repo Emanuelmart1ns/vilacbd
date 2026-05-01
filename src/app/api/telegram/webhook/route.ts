@@ -100,24 +100,23 @@ export async function POST(request: NextRequest) {
 
         console.log("IA Response:", aiResponse);
 
+        const reasoning = aiResponse.reasoning ? `\n\n*Raciocínio:* _${aiResponse.reasoning}_` : "";
+
         if (aiResponse.action === "update_product") {
           const { productId, updates } = aiResponse.data;
           
-          // Se a IA não identificou updates mas enviou uma mensagem (ex: explicar algo ou pedir info)
-          // enviamos a mensagem dela em vez do erro.
           const cleanUpdates = updates ? Object.fromEntries(
             Object.entries(updates).filter(([_, v]) => v != null && v !== "")
           ) : {};
 
           if (Object.keys(cleanUpdates).length === 0 || !productId) {
-            await sendReply(aiResponse.message || "🤔 Não percebi exatamente o que pretende alterar. Pode ser mais específico?");
+            await sendReply(`${aiResponse.message || "🤔 Não percebi o que alterar."}${reasoning}`);
             return NextResponse.json({ ok: true });
           }
 
-          // Verificar que o produto existe antes de atualizar
           const productDoc = await db.collection("products").doc(productId).get();
           if (!productDoc.exists) {
-            await sendReply(`⚠️ Produto com ID \`${productId}\` não encontrado na base de dados. Use o SKU (ex: VCBD123456) para mais precisão.`);
+            await sendReply(`⚠️ Produto não encontrado.${reasoning}`);
             return NextResponse.json({ ok: true });
           }
 
@@ -125,19 +124,13 @@ export async function POST(request: NextRequest) {
           await db.collection("products").doc(productId).update(cleanUpdates);
           revalidatePath("/loja", "layout");
 
-          // Construir mensagem detalhada do que foi alterado
           const changeLines = Object.entries(cleanUpdates).map(([key, val]) => {
-            const fieldNames: Record<string, string> = {
-              name: "Nome", price: "Preço", stock: "Stock",
-              description: "Descrição", supplierId: "Fornecedor"
-            };
-            const fieldLabel = fieldNames[key] || key;
-            const before = productBefore[key] !== undefined ? `_${productBefore[key]}_` : "_(vazio)_";
-            return `• *${fieldLabel}*: ${before} → *${val}*`;
+            const fieldNames: Record<string, string> = { name: "Nome", price: "Preço", stock: "Stock" };
+            return `• *${fieldNames[key] || key}*: _${productBefore[key]}_ → *${val}*`;
           }).join("\n");
 
-          await sendReply(`✅ *Produto Atualizado!*\n\n📦 *${productBefore.name || productId}*\n\n${changeLines}`);
-        } 
+          await sendReply(`✅ *Atualizado!*\n\n📦 *${productBefore.name}*\n${changeLines}${reasoning}`);
+        }
         else if (aiResponse.action === "create_order") {
           const { productId, quantity, customer } = aiResponse.data;
           
