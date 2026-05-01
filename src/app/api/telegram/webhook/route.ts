@@ -242,7 +242,9 @@ export async function POST(request: NextRequest) {
           chatId,
           error: err.message,
           stack: err.stack,
-          userText: text
+          userText: text,
+          // Guardar a resposta da IA se ela chegou a ser gerada
+          aiRawResponse: typeof aiResponse !== "undefined" ? aiResponse : "IA não respondeu"
         });
         await sendReply("🔥 Ocorreu um erro ao processar o seu pedido com a IA.");
       }

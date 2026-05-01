@@ -17,7 +17,7 @@ export async function askAI(prompt: string, context: any) {
   }));
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Imagens: ${JSON.stringify(p.images || [])} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
   ).join("\n");
 
   const supplierSummary = (context.suppliers || []).map((s: any) =>
@@ -34,29 +34,34 @@ export async function askAI(prompt: string, context: any) {
 
     CAPACIDADES TOTAIS (FULL ADMIN):
     1. GESTÃO DE PRODUTOS: Criar, Editar, Eliminar, Destaques, Galeria.
-    2. GESTÃO DE FORNECEDORES: Criar, Editar dados de contacto, Eliminar fornecedores.
-    3. GESTÃO DE UTILIZADORES: Alterar permissões (roles) e dados de utilizadores.
-    4. GESTÃO DE LOJA: Categorias, Subcategorias, Moradas, Horários.
-    5. RELATÓRIOS E ESTATÍSTICAS.
+    2. GESTÃO DE FORNECEDORES E UTILIZADORES.
+    3. GESTÃO DE MENU E CATEGORIAS (settings).
+    4. AUTO-CATEGORIZAÇÃO INTELIGENTE: Se pedirem para "corresponder" ou "atualizar todos", analisa os nomes e move os produtos para as subcategorias certas do menu.
 
     DADOS DO SISTEMA:
     ESTRUTURA DE MENU: ${JSON.stringify(context.settings?.categories || [])}
     FORNECEDORES: ${supplierSummary}
     UTILIZADORES: ${userSummary}
     CATÁLOGO: ${productSummary}
+    FOTOS RECEBIDAS: ${JSON.stringify(context.publicPhotoUrls || [])}
+
+    MISSÃO CRÍTICA:
+    - Se o user pedir para "criar uma subcategoria", atualiza 'settings' (action: update_settings).
+    - Se houver múltiplos produtos para atualizar, usa OBRIGATORIAMENTE 'action: bulk_update' com o array 'bulkUpdates'.
+    - NUNCA respondas apenas com texto se houver uma ação de DB envolvida.
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "...",
-      "action": "update_product" | "create_product" | "delete_product" | "update_supplier" | "create_supplier" | "delete_supplier" | "update_user" | "update_settings" | "bulk_update" | "report",
+      "reasoning": "Vou reorganizar o catálogo para as subcategorias corretas.",
+      "action": "bulk_update" | "update_product" | "update_settings" | "report" | "info",
       "data": {
-        "productId": "...",
-        "supplierId": "...",
-        "userId": "...",
-        "updates": { ... },
-        "newSupplier": { "name": "...", "email": "...", "phone": "..." }
+        "bulkUpdates": [
+          { "productId": "o1", "updates": { "subcategory": "Pets" } },
+          { "productId": "o2", "updates": { "subcategory": "Isolate" } }
+        ],
+        "updates": { "categories": [...] }
       },
-      "message": "Mensagem de confirmação elegante."
+      "message": "Reorganização concluída com sucesso."
     }
   `;
 
