@@ -744,51 +744,64 @@ select.input-field option {
   color: #fff;
 }
 
-/* === Responsive Admin Console === */
+/* Ocultar Chat Widget na Consola Admin */
+.chat-widget-wrapper {
+  display: none !important;
+}
+
+/* --- RESPONSIVIDADE AVANÇADA --- */
+
 @media (max-width: 992px) {
   .admin-container {
     flex-direction: column;
+    min-height: 100vh;
   }
 
   .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Escondido por padrão */
+    width: 280px;
+    height: 100vh;
+    z-index: 10005;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  }
+
+  .admin-sidebar.mobile-open {
+    left: 0;
+  }
+
+  .admin-main {
+    padding-left: 0;
     width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .admin-header {
+    padding: 12px 20px;
     position: sticky;
     top: 0;
-    z-index: 1001;
-  }
-
-  .admin-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .admin-nav-link {
-    padding: 8px 16px;
-    border-left: none;
-    border-bottom: 3px solid transparent;
-    white-space: nowrap;
-    font-size: 0.85rem;
-  }
-
-  .admin-nav-link:hover, .admin-nav-link.active {
-    border-left-color: transparent;
-    border-bottom-color: var(--accent-gold);
-  }
-
-  .admin-sidebar-header {
-    padding: 16px 24px;
+    z-index: 10004;
+    background: rgba(18, 24, 18, 0.95);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-  .admin-sidebar-footer {
-    display: none; /* Esconder logout no topo no mobile */
+  .admin-nav {
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
   }
+
+  .admin-nav-link {
+    padding: 14px 20px;
+    margin-bottom: 4px;
+    border-radius: 12px;
+  }
+
+  .admin-sidebar-header {
 
   .admin-main {
     width: 100%;
