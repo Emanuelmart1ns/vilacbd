@@ -59,11 +59,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      // 2. Obter Histórico da Conversa (Memória do Agente)
+      // 2. Obter Histórico Expandido (Memória de Longo Prazo)
       const historySnap = await db.collection("bot_history")
         .where("chatId", "==", chatId)
         .orderBy("timestamp", "desc")
-        .limit(5)
+        .limit(10) // Aumentado para 10 mensagens
         .get();
       
       const history = historySnap.docs.map(doc => ({
