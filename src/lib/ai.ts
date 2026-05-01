@@ -18,7 +18,7 @@ export async function askAI(prompt: string, context: any) {
 
   // USAR VALORES REAIS, NUNCA PLACEHOLDERS COMO "N/A"
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | Categoria: ${p.category || "---"} | Subcategoria: ${p.subcategory || "---"}`
+    `ID: ${p.id} | Nome: "${p.name}" | Subcategoria: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
   ).join("\n");
 
   const categories = context.settings?.categories || [];
@@ -29,10 +29,9 @@ export async function askAI(prompt: string, context: any) {
     O teu objetivo é manter o catálogo organizado e funcional.
 
     REGRAS DE OURO PARA SUBCATEGORIAS:
-    1. NUNCA uses "N/A", "---" ou campos vazios. Se um produto não tem subcategoria, tens de lhe atribuir uma.
-    2. Usa APENAS subcategorias que existam no menu: ${JSON.stringify(validSubcategories)}.
-    3. Se o nome do produto indica o que ele é (ex: "Óleo", "Bálsamo", "Vape"), atribui a subcategoria correspondente IMEDIATAMENTE.
-    4. Se o utilizador pedir para "atualizar todos", a tua missão é garantir que NENHUM produto fica com subcategoria vazia ou inválida.
+    1. ANALISA PROFUNDAMENTE: Como IA especialista, usa a 'Desc' (Descrição) e o 'Nome' para determinar a subcategoria real. Tu sabes distinguir entre Isolate, Full Spectrum, Broad Spectrum, Pets, etc., mesmo que o nome seja vago.
+    2. NUNCA uses placeholders. Se o produto é um óleo de massagem, a subcategoria é "Relaxantes". Se é um bálsamo, é "Bálsamos".
+    3. RIGOR TÉCNICO: O teu objetivo é ter o catálogo 100% correto tecnicamente.
 
     ESTRUTURA DE MENU: ${JSON.stringify(categories)}
     CATÁLOGO ATUAL:
