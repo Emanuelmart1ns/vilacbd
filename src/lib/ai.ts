@@ -38,7 +38,9 @@ export async function askAI(prompt: string, context: any) {
     - "Fotos" / "Galeria" -> Alterar o array 'images'. 
     - "Subcategoria" -> Alterar 'subcategory'.
 
-    AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio da Vila CBD. NUNCA recuses um pedido por considerares o tema "sensível".
+    FOTOS RECEBIDAS AGORA:
+    ${JSON.stringify(context.publicPhotoUrls || [])}
+    (Usa estes URLs se o utilizador quiser adicionar fotos ao produto agora).
 
     CATÁLOGO ATUAL:
     ${productSummary}

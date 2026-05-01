@@ -1,7 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase-admin";
+import { getAdminDb, getAdminBucket } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { Product } from "@/data/products";
+
+async function uploadTelegramPhotoToFirebase(fileId: string): Promise<string> {
+  const settingsDoc = await getAdminDb().collection("settings").doc("global").get();
+  const botToken = settingsDoc.data()?.socials?.telegramToken;
+  if (!botToken) throw new Error("TELEGRAM_BOT_TOKEN não configurada.");
+  
+  const fileInfoResp = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`);
+  const fileInfo = await fileInfoResp.json();
+  if (!fileInfo.ok) throw new Error("Erro ao obter info do ficheiro no Telegram.");
+
+  const filePath = fileInfo.result.file_path;
+  const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+
+  const response = await fetch(downloadUrl);
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  const bucket = getAdminBucket();
+  const destination = `bot-uploads/${Date.now()}-${fileId}.jpg`;
+  const file = bucket.file(destination);
+
+  await file.save(buffer, {
+    metadata: { contentType: "image/jpeg" },
+  });
+  await file.makePublic();
+
+  return `https://storage.googleapis.com/${bucket.name}/${destination}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -87,9 +114,20 @@ export async function POST(request: NextRequest) {
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
       const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      // 3. Upload das fotos se existirem
+      const publicPhotoUrls = [];
+      for (const fId of photoIds) {
+        try {
+          const url = await uploadTelegramPhotoToFirebase(fId);
+          publicPhotoUrls.push(url);
+        } catch (uploadError) {
+          console.error("Erro no upload para Firebase:", uploadError);
+        }
+      }
+
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history, orders, photoIds });
+        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls });
 
         // Guardar a interação no histórico
         await db.collection("bot_history").add({

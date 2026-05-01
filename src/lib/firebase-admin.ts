@@ -61,6 +61,6 @@ export function getAdminDb() {
 }
 
 export function getAdminBucket() {
-  const bucketName = process.env.FIREBASE_STORAGE_BUCKET || "vilacbd.appspot.com";
+  const bucketName = process.env.FIREBASE_STORAGE_BUCKET || "vilacbd.firebasestorage.app";
   return getStorage(getAdminApp()).bucket(bucketName);
 }
