@@ -139,6 +139,23 @@ export async function POST(request: NextRequest) {
           const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
           await sendReply(`✅ *Alteração Gravada com Sucesso!*\n\n📦 *${productAfter.name}*\n${changeLines}${humanMessage}${reasoning}\n\n_O site foi atualizado e a cache limpa._`);
         }
+        else if (aiResponse.action === "bulk_update") {
+          const { bulkUpdates } = aiResponse.data;
+          if (!bulkUpdates || !Array.isArray(bulkUpdates)) throw new Error("Dados de bulk_update inválidos.");
+
+          let count = 0;
+          for (const updateItem of bulkUpdates) {
+            const { productId, updates } = updateItem;
+            if (productId && updates) {
+              await db.collection("products").doc(productId).update(updates);
+              count++;
+            }
+          }
+
+          revalidatePath("/loja", "layout");
+          revalidatePath("/", "layout");
+          await sendReply(`✅ *${count} Produtos Atualizados com Sucesso!*\n\n${aiResponse.message}${reasoning}`);
+        }
         else if (aiResponse.action === "delete_product") {
           const { productId } = aiResponse.data;
           if (!productId) throw new Error("ID do produto ausente.");
