@@ -81,13 +81,17 @@ export async function POST(request: NextRequest) {
         };
       }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 15).reverse();
 
-      const [productsSnap, ordersSnap] = await Promise.all([
+      const [productsSnap, ordersSnap, suppliersSnap, usersSnap] = await Promise.all([
         db.collection("products").get(),
-        db.collection("orders").limit(10).get()
+        db.collection("orders").limit(10).get(),
+        db.collection("suppliers").get(),
+        db.collection("users").get()
       ]);
       
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
       const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const suppliers = suppliersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       const publicPhotoUrls = [];
       for (const fId of photoIds) {
@@ -101,7 +105,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls, settings });
+        const aiResponse = await askAI(text, { products, history, orders, publicPhotoUrls, settings, suppliers, users });
 
         await db.collection("bot_history").add({ chatId, role: "user", content: text, timestamp: new Date() });
         await db.collection("bot_history").add({ chatId, role: "assistant", content: aiResponse.message || "", timestamp: new Date() });
@@ -145,6 +149,26 @@ export async function POST(request: NextRequest) {
           revalidatePath("/", "layout");
           revalidatePath("/loja", "layout");
           await sendReply(`⚙️ *Definições Atualizadas!* \nAs configurações globais do site (ex: categorias) foram alteradas.${reasoning}`);
+        }
+        else if (aiResponse.action === "create_supplier") {
+          const { newSupplier } = aiResponse.data;
+          const docRef = await db.collection("suppliers").add({ ...newSupplier, createdAt: new Date() });
+          await sendReply(`🏢 *Fornecedor Criado!* \nNome: ${newSupplier.name}\nID: ${docRef.id}${reasoning}`);
+        }
+        else if (aiResponse.action === "update_supplier") {
+          const { supplierId, updates } = aiResponse.data;
+          await db.collection("suppliers").doc(supplierId).update({ ...updates, updatedAt: new Date() });
+          await sendReply(`🏢 *Fornecedor Atualizado!* \nAs informações do fornecedor foram alteradas.${reasoning}`);
+        }
+        else if (aiResponse.action === "delete_supplier") {
+          const { supplierId } = aiResponse.data;
+          await db.collection("suppliers").doc(supplierId).delete();
+          await sendReply(`🗑️ *Fornecedor Removido!*${reasoning}`);
+        }
+        else if (aiResponse.action === "update_user") {
+          const { userId, updates } = aiResponse.data;
+          await db.collection("users").doc(userId).update(updates);
+          await sendReply(`👤 *Utilizador Atualizado!* \nAs permissões ou dados do utilizador foram alterados.${reasoning}`);
         }
         else if (aiResponse.action === "bulk_update") {
           const { bulkUpdates } = aiResponse.data;

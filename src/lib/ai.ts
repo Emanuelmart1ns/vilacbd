@@ -17,53 +17,46 @@ export async function askAI(prompt: string, context: any) {
   }));
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Imagens: ${JSON.stringify(p.images || [])} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
   ).join("\n");
 
-  const orderSummary = (context.orders || []).map((o: any) =>
-    `Encomenda: ${o.id.slice(-6)} | Cliente: ${o.customerName} | Total: ${o.total}€ | Status: ${o.status}`
+  const supplierSummary = (context.suppliers || []).map((s: any) =>
+    `ID: ${s.id} | Fornecedor: "${s.name}" | Contacto: ${s.email || s.phone || "N/A"}`
+  ).join("\n");
+
+  const userSummary = (context.users || []).map((u: any) =>
+    `ID: ${u.id} | User: ${u.email || u.displayName} | Role: ${u.role}`
   ).join("\n");
 
   const systemPrompt = `
     IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da "Vila CBD". 
-    Tu não és um assistente, tu és o sócio tecnológico que gere todo o backend (Produtos, Encomendas, Clientes, Definições).
+    Tu tens acesso total ao backend, tal como a consola administrativa web.
 
-    CAPACIDADES TOTAIS:
-    1. GESTÃO DE PRODUTOS: Criar, Editar e Eliminar. (Bulk updates suportados).
-    2. GESTÃO DE MENU E CATEGORIAS: Criar ou renomear subcategorias no menu global.
-    3. GESTÃO DE ENCOMENDAS E RELATÓRIOS.
-    4. GESTÃO DE GALERIA E DESTAQUES.
+    CAPACIDADES TOTAIS (FULL ADMIN):
+    1. GESTÃO DE PRODUTOS: Criar, Editar, Eliminar, Destaques, Galeria.
+    2. GESTÃO DE FORNECEDORES: Criar, Editar dados de contacto, Eliminar fornecedores.
+    3. GESTÃO DE UTILIZADORES: Alterar permissões (roles) e dados de utilizadores.
+    4. GESTÃO DE LOJA: Categorias, Subcategorias, Moradas, Horários.
+    5. RELATÓRIOS E ESTATÍSTICAS.
 
-    ESTRUTURA DE MENU ATUAL (Categorias):
-    ${JSON.stringify(context.settings?.categories || [])}
-
-    LISTA DE PRODUTOS:
-    ${productSummary}
-
-    FOTOS RECEBIDAS AGORA:
-    ${JSON.stringify(context.publicPhotoUrls || [])}
-
-    MISSÃO CRÍTICA:
-    - Se o user pedir para "criar uma subcategoria", tu DEVES atualizar a estrutura de categorias no campo 'categories' do settings (action: update_settings).
-    - Para adicionares uma subcategoria, tens de enviar o array INTEIRO de categorias atualizado em 'updates.categories'.
-    - Depois de criares a subcategoria no menu, move o produto (action: bulk_update ou update_product).
-    - NUNCA respondas apenas com texto se houver uma ação de DB envolvida.
-
-    AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio da Vila CBD.
+    DADOS DO SISTEMA:
+    ESTRUTURA DE MENU: ${JSON.stringify(context.settings?.categories || [])}
+    FORNECEDORES: ${supplierSummary}
+    UTILIZADORES: ${userSummary}
+    CATÁLOGO: ${productSummary}
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Vou adicionar 'Relaxantes' às subcategorias de 'Óleos e Tinturas' e depois mover o produto.",
-      "action": "update_settings" | "bulk_update" | "update_product" | "create_product" | "delete_product" | "info" | "report",
+      "reasoning": "...",
+      "action": "update_product" | "create_product" | "delete_product" | "update_supplier" | "create_supplier" | "delete_supplier" | "update_user" | "update_settings" | "bulk_update" | "report",
       "data": {
-        "updates": { "categories": [...] },
-        "bulkUpdates": [
-          { "productId": "...", "updates": { "subcategory": "Relaxantes" } }
-        ],
         "productId": "...",
-        "orderId": "..."
+        "supplierId": "...",
+        "userId": "...",
+        "updates": { ... },
+        "newSupplier": { "name": "...", "email": "...", "phone": "..." }
       },
-      "message": "Subcategoria 'Relaxantes' criada e produto transferido com sucesso."
+      "message": "Mensagem de confirmação elegante."
     }
   `;
 
@@ -106,20 +99,12 @@ export async function askAI(prompt: string, context: any) {
       result = await tryModel("google/gemini-pro-1.5");
     }
     
-    if (!result || result.error) {
-      const errMsg = result?.error?.message || "Erro desconhecido na API do OpenRouter";
-      throw new Error(errMsg);
-    }
+    if (!result || result.error) throw new Error(result?.error?.message || "Erro API");
 
     const content = result.choices[0].message.content;
-    
-    try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : content;
-      return JSON.parse(jsonStr);
-    } catch (parseError) {
-      return { action: "info", message: content.replace(/\{|\}/g, "").trim() };
-    }
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? jsonMatch[0] : content;
+    return JSON.parse(jsonStr);
   } catch (error: any) {
     return { action: "unknown", message: `❌ Erro Vila: ${error.message}` };
   }
