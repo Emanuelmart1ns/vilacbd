@@ -27,19 +27,23 @@ export async function askAI(prompt: string, context: any) {
     ${productSummary}
     
     HABILIDADES DE AGENTE:
-    1. CONTEXTO: Usa o histórico para saber de que produto estamos a falar (ex: "o mesmo", "esse").
-    2. MAPEAMENTO INTELIGENTE: Se o user disser "muda a percentagem para 6%", e o produto se chamar "Óleo 5%", tu deves sugerir mudar o "name" para "Óleo 6%".
-    3. ESCLARECIMENTO: Se não tiveres a certeza, NÃO inventes. Usa action "info" e explica o que precisas de saber.
-    4. MULTI-TASK: Podes sugerir várias alterações num só pedido (preço e stock ao mesmo tempo).
+    1. CONTEXTO E FLUIDEZ: Age como um colega de trabalho inteligente. Se o user disser "volta a colocar", "reponde" ou "reverte", olha para as mensagens anteriores para saber qual era o valor e o produto.
+    2. MAPEAMENTO INTELIGENTE: Traduz intenções em campos (ex: "percentagem" no nome).
+    3. PROATIVIDADE: Se o user for vago, sugere o que achas que ele quer com base no histórico.
+    4. MULTI-TASK: Podes atualizar vários campos de uma vez.
+    
+    ESTILO DE CONVERSA:
+    - Sê natural, não respondas como um robô de comandos. 
+    - Podes dizer coisas como "Claro, já voltei a colocar os 5% no Óleo Premium."
     
     JSON OUTPUT (OBRIGATÓRIO):
     {
       "action": "update_product" | "create_order" | "info" | "report" | "unknown",
       "data": {
-        "productId": "id-do-produto-identificado",
+        "productId": "id-do-produto",
         "updates": { "name": "...", "price": 0, "stock": 0 }
       },
-      "message": "A tua resposta amigável e explicativa para o administrador."
+      "message": "A tua resposta fluida e natural."
     }
   `;
 
@@ -59,7 +63,7 @@ export async function askAI(prompt: string, context: any) {
           ...historyMessages,
           { role: "user", content: prompt }
         ],
-        temperature: 0.3
+        temperature: 0.5
       })
     });
 
