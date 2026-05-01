@@ -16,52 +16,38 @@ export async function askAI(prompt: string, context: any) {
     content: h.content
   }));
 
+  // USAR VALORES REAIS, NUNCA PLACEHOLDERS COMO "N/A"
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Imagens: ${JSON.stringify(p.images || [])} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
+    `ID: ${p.id} | Nome: "${p.name}" | Categoria: ${p.category || "---"} | Subcategoria: ${p.subcategory || "---"}`
   ).join("\n");
 
-  const supplierSummary = (context.suppliers || []).map((s: any) =>
-    `ID: ${s.id} | Fornecedor: "${s.name}" | Contacto: ${s.email || s.phone || "N/A"}`
-  ).join("\n");
-
-  const userSummary = (context.users || []).map((u: any) =>
-    `ID: ${u.id} | User: ${u.email || u.displayName} | Role: ${u.role}`
-  ).join("\n");
+  const categories = context.settings?.categories || [];
+  const validSubcategories = categories.flatMap((c: any) => c.subcategories || []);
 
   const systemPrompt = `
-    IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da "Vila CBD". 
-    Tu tens acesso total ao backend, tal como a consola administrativa web.
+    IDENTIDADE: Tu és o "Vila", o Administrador Supremo da "Vila CBD". 
+    O teu objetivo é manter o catálogo organizado e funcional.
 
-    CAPACIDADES TOTAIS (FULL ADMIN):
-    1. GESTÃO DE PRODUTOS: Criar, Editar, Eliminar, Destaques, Galeria.
-    2. GESTÃO DE FORNECEDORES E UTILIZADORES.
-    3. GESTÃO DE MENU E CATEGORIAS (settings).
-    4. AUTO-CATEGORIZAÇÃO INTELIGENTE: Se pedirem para "corresponder" ou "atualizar todos", analisa os nomes e move os produtos para as subcategorias certas do menu.
+    REGRAS DE OURO PARA SUBCATEGORIAS:
+    1. NUNCA uses "N/A", "---" ou campos vazios. Se um produto não tem subcategoria, tens de lhe atribuir uma.
+    2. Usa APENAS subcategorias que existam no menu: ${JSON.stringify(validSubcategories)}.
+    3. Se o nome do produto indica o que ele é (ex: "Óleo", "Bálsamo", "Vape"), atribui a subcategoria correspondente IMEDIATAMENTE.
+    4. Se o utilizador pedir para "atualizar todos", a tua missão é garantir que NENHUM produto fica com subcategoria vazia ou inválida.
 
-    DADOS DO SISTEMA:
-    ESTRUTURA DE MENU: ${JSON.stringify(context.settings?.categories || [])}
-    FORNECEDORES: ${supplierSummary}
-    UTILIZADORES: ${userSummary}
-    CATÁLOGO: ${productSummary}
-    FOTOS RECEBIDAS: ${JSON.stringify(context.publicPhotoUrls || [])}
-
-    MISSÃO CRÍTICA:
-    - Se o user pedir para "criar uma subcategoria", atualiza 'settings' (action: update_settings).
-    - Se houver múltiplos produtos para atualizar, usa OBRIGATORIAMENTE 'action: bulk_update' com o array 'bulkUpdates'.
-    - NUNCA respondas apenas com texto se houver uma ação de DB envolvida.
+    ESTRUTURA DE MENU: ${JSON.stringify(categories)}
+    CATÁLOGO ATUAL:
+    ${productSummary}
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Vou reorganizar o catálogo para as subcategorias corretas.",
-      "action": "bulk_update" | "update_product" | "update_settings" | "report" | "info",
+      "reasoning": "Vou corrigir os 32 produtos que ficaram sem subcategoria, mapeando-os para os valores corretos do menu.",
+      "action": "bulk_update",
       "data": {
         "bulkUpdates": [
-          { "productId": "o1", "updates": { "subcategory": "Pets" } },
-          { "productId": "o2", "updates": { "subcategory": "Isolate" } }
-        ],
-        "updates": { "categories": [...] }
+          { "productId": "id", "updates": { "subcategory": "NomeVálido" } }
+        ]
       },
-      "message": "Reorganização concluída com sucesso."
+      "message": "Catálogo restaurado e organizado com sucesso."
     }
   `;
 
@@ -81,31 +67,23 @@ export async function askAI(prompt: string, context: any) {
           ...historyMessages,
           { role: "user", content: prompt }
         ],
-        temperature: 0.2
+        temperature: 0.1 // Baixa temperatura para máxima precisão
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenRouter (${modelId}) erro: ${errorText}`);
-    }
-
+    if (!response.ok) throw new Error(await response.text());
     return await response.json();
   };
 
   try {
     let result;
     try {
-      console.log("Vila: A tentar modelo primário (GPT-4o-Mini)...");
       result = await tryModel("openai/gpt-4o-mini");
     } catch (e: any) {
-      console.warn("Vila: Falha no GPT, a tentar Fallback (Gemini Pro)... Erro:", e.message);
       await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
     }
     
-    if (!result || result.error) throw new Error(result?.error?.message || "Erro API");
-
     const content = result.choices[0].message.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? jsonMatch[0] : content;
