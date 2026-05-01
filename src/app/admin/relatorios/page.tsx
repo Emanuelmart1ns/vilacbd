@@ -420,6 +420,38 @@ export default function ReportsPage() {
         @keyframes slideDown { from { opacity: 0; transform: translateY(-40px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 1s ease-out; }
 
+        @media (max-width: 768px) {
+          .config-panel { padding: 20px; border-radius: 15px; }
+          .panel-info h1 { font-size: 1.5rem; }
+          .radio-grid { grid-template-columns: 1fr; }
+          .radio-item { padding: 10px 15px; }
+          
+          .secondary-filters { flex-direction: column; gap: 20px; align-items: stretch; }
+          .input-row { flex-direction: column; align-items: stretch; }
+          .input-row span { text-align: center; display: block; margin: -5px 0; }
+          .btn-generate { margin-left: 0; width: 100%; justify-content: center; }
+
+          .dossier-document { padding: 30px 20px; border-radius: 20px; }
+          .dossier-header-corporate { flex-direction: column; gap: 24px; text-align: center; }
+          .branding-section { flex-direction: column; text-align: center; gap: 15px; }
+          .report-meta-info { text-align: center; align-items: center; }
+          .meta-item { justify-content: center; }
+
+          .dossier-title-hero h1 { font-size: 1.5rem; }
+          .dossier-kpi-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+          .kpi-card { padding: 15px 10px; }
+          .k-val { font-size: 1.1rem; }
+
+          .report-chart-box { padding: 15px 10px; border-radius: 15px; }
+          .category-report-grid { grid-template-columns: 1fr; gap: 30px; }
+          
+          .dossier-full-table { display: block; overflow-x: auto; font-size: 0.75rem; }
+          .dossier-full-table th, .dossier-full-table td { padding: 10px; }
+          
+          .signature-section { flex-direction: column; gap: 40px; align-items: center; }
+          .sig-placeholder { width: 100%; max-width: 200px; }
+        }
+
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; margin: 0 !important; padding: 0 !important; }
