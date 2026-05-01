@@ -211,9 +211,31 @@ export async function POST(request: NextRequest) {
 
 
     return NextResponse.json({ ok: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro no Webhook do Telegram:", error);
-    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+    try {
+      // Tentar avisar o admin do erro via Telegram
+      const db = getAdminDb();
+      const settingsSnap = await db.collection("settings").doc("global").get();
+      const settings = settingsSnap.data();
+      const botToken = settings?.socials?.telegramToken;
+      const adminChatId = settings?.socials?.telegramChatId;
+
+      if (botToken && adminChatId) {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: adminChatId,
+            text: `🔥 *Erro no Webhook:* ${error.message}\n\nO bot crashou ao processar a última mensagem.`,
+            parse_mode: "Markdown"
+          })
+        });
+      }
+    } catch (e) {
+      console.error("Falha ao enviar aviso de erro:", e);
+    }
+    return NextResponse.json({ ok: true });
   }
 }
 

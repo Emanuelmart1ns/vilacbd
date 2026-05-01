@@ -91,11 +91,11 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      // Primeira tentativa com Gemini 1.5 PRO (Cérebro de Agente)
-      result = await tryModel("google/gemini-pro-1.5");
+      // Usar Gemini 1.5 Flash (Muito mais rápido e estável para tarefas de mapeamento)
+      result = await tryModel("google/gemini-flash-1.5");
     } catch (e) {
-      console.warn("Falha no Gemini Pro, a tentar Llama 3.1 70B (Resistente a filtros)...", e);
-      result = await tryModel("meta-llama/llama-3.1-70b-instruct");
+      console.warn("Falha no Gemini Flash, a tentar Gemini Pro...", e);
+      result = await tryModel("google/gemini-pro-1.5");
     }
     
     if (result.error) {
