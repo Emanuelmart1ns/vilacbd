@@ -104,9 +104,20 @@ export async function askAI(prompt: string, context: any) {
     }
 
     const content = result.choices[0].message.content;
-    // Tentar limpar o conteúdo caso a IA adicione markdown blocks
-    const jsonStr = content.replace(/```json|```/g, "").trim();
-    return JSON.parse(jsonStr);
+    
+    try {
+      // Tentar extrair JSON de blocos de código markdown ou texto direto
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? jsonMatch[0] : content;
+      return JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.warn("Falha ao parsear JSON da IA, a retornar como mensagem simples:", content);
+      // Fallback: Se não for JSON, tratar como uma mensagem informativa direta
+      return { 
+        action: "info", 
+        message: content.replace(/\{|\}/g, "").trim() 
+      };
+    }
   } catch (error: any) {
     console.error("Erro na IA do OpenRouter:", error);
     return { 
