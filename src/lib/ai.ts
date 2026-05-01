@@ -42,7 +42,7 @@ export async function askAI(prompt: string, context: any) {
     - O campo "productId" deve ser o ID interno (ex: o1, o2).
 
     SEGURANÇA DE DADOS (CRÍTICO):
-    1. Se o user pedir para "adicionar à subcategoria Pets", tu deves colocar "Pets" no campo `subcategory` e NÃO apenas mudar o nome.
+    1. Se o user pedir para "adicionar à subcategoria Pets", tu deves colocar "Pets" no campo 'subcategory' e NÃO apenas mudar o nome.
     2. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista para achar o ID (ex: o6).
 
     JSON OUTPUT (OBRIGATÓRIO):
