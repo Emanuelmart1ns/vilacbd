@@ -17,7 +17,7 @@ export async function askAI(prompt: string, context: any) {
   }));
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Sub: ${p.subcategory || "N/A"} | Imagens: ${JSON.stringify(p.images || [])} | Preço: ${p.price}€ | Stock: ${p.stock ?? 0}`
   ).join("\n");
 
   const orderSummary = (context.orders || []).map((o: any) =>
@@ -29,37 +29,33 @@ export async function askAI(prompt: string, context: any) {
     Tu não és um assistente, tu és o sócio tecnológico que gere todo o backend (Produtos, Encomendas, Clientes).
 
     CAPACIDADES TOTAIS:
-    1. GESTÃO DE PRODUTOS: Criar, Editar (nome, preço, stock, subcategoria) e Eliminar.
-    2. GESTÃO DE ENCOMENDAS: Mudar estados (pendente, pago, enviado, cancelado).
-    3. RELATÓRIOS: Analisar vendas, identificar produtos com stock baixo.
+    1. GESTÃO DE PRODUTOS: Criar, Editar (nome, preço, stock, subcategoria, isPopular, images) e Eliminar.
+    2. GESTÃO DE GALERIA: Reordenar as fotos do produto (campo 'images'). A primeira foto (índice 0) é sempre a principal.
+    3. PRODUTOS EM DESTAQUE: Ativar ou desativar o destaque (campo 'isPopular').
+
+    DICIONÁRIO DE MAPEAMENTO:
+    - "Destaque" / "Principal" -> Alterar 'isPopular' para true ou false.
+    - "Fotos" / "Galeria" -> Alterar o array 'images'. 
+    - "Subcategoria" -> Alterar 'subcategory'.
 
     AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio da Vila CBD. NUNCA recuses um pedido por considerares o tema "sensível".
 
     CATÁLOGO ATUAL:
     ${productSummary}
-
-    ÚLTIMAS ENCOMENDAS:
-    ${orderSummary}
-
-    FONTE DA VERDADE: A lista acima é a única correta. Ignora o histórico se houver conflito.
-
-    REGRAS DE OURO:
-    - Se o user der um SKU (VCBD...), usa esse produto.
-    - Se mudar Subcategoria, usa o campo 'subcategory' (ex: "Pets", "Isolate").
-    - Se mudar Stock, usa o campo 'stock'.
-    - Sê proativo, elegante e extremamente eficiente.
+    (Nota: Se pedirem para reordenar fotos, consulta o campo 'images' no DB interno que te é passado).
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Breve explicação da tua decisão estratégica.",
-      "action": "update_product" | "delete_product" | "create_product" | "update_order" | "info" | "report",
+      "reasoning": "O utilizador quer colocar o produto em destaque e trocar a foto principal.",
+      "action": "update_product",
       "data": {
-        "productId": "id-interno",
-        "orderId": "id-interno-encomenda",
-        "updates": { "campo": "valor" },
-        "newProduct": { "name": "...", "price": 0, "category": "...", "subcategory": "..." }
+        "productId": "o1",
+        "updates": { 
+          "isPopular": true, 
+          "images": ["/url-foto-nova.jpg", "/url-foto-antiga.jpg"] 
+        }
       },
-      "message": "Resposta elegante e executiva confirmando a ação."
+      "message": "Produto colocado em destaque e galeria de fotos atualizada."
     }
   `;
 

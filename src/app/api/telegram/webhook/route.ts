@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const { askAI } = await import("@/lib/ai");
-        const aiResponse = await askAI(text, { products, history, orders });
+        const aiResponse = await askAI(text, { products, history, orders, photoIds });
 
         // Guardar a interação no histórico
         await db.collection("bot_history").add({
