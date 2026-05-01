@@ -9,7 +9,7 @@ export async function askAI(prompt: string, context: any) {
   if (!apiKey) throw new Error("API Key ausente.");
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | Nome: "${p.name}" | Sub: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
+    `ID: ${p.id} | SKU: ${p.reference || "---"} | Nome: "${p.name}" | Preço: ${p.price}€ | Sub: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
   ).join("\n");
 
   const categories = context.settings?.categories || [];
