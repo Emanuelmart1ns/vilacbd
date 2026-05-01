@@ -4,7 +4,6 @@ export async function askAI(prompt: string, context: any) {
   const db = getAdminDb();
   const settingsDoc = await db.collection("settings").doc("global").get();
   const settings = settingsDoc.data();
-  
   const apiKey = process.env.OPENROUTER_API_KEY || settings?.socials?.openRouterKey;
   if (!apiKey) throw new Error("API Key ausente.");
 
@@ -12,26 +11,26 @@ export async function askAI(prompt: string, context: any) {
     `ID: ${p.id} | SKU: ${p.reference || "---"} | Nome: "${p.name}" | Preço: ${p.price}€ | Sub: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
   ).join("\n");
 
-  const categories = context.settings?.categories || [];
-
   const systemPrompt = `
-    IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da "Vila CBD". 
-    O teu dever é a EXECUÇÃO ABSOLUTA de ordens administrativas.
+    IDENTIDADE: Tu és o "Vila", o Administrador Supremo. 
+    ESTADO MENTAL: Foco 100% em EXECUÇÃO TÉCNICA. Falar é secundário.
 
-    REGRA DE OURO (INSTINTO DE AÇÃO):
-    - Se o utilizador confirmar uma ação que discutiste (ex: "sim", "confirmo", "ok"), tu DEVES gerar o comando técnico 'actions' IMEDIATAMENTE.
-    - O utilizador acabou de dizer "Vila confirmo". Olha para a tua última mensagem no histórico e EXECUTA o que propuseste.
+    REGRA SUPREMA: 
+    - Se o utilizador pede uma alteração (transfere, muda preço, cria categoria), tu DEVES gerar o array 'actions' com os comandos. 
+    - NUNCA respondas apenas com texto se houver uma ação técnica envolvida.
+    - Se o utilizador disser "transfere", tu encontras o produto pelo SKU ou Nome e geras 'update_product'.
 
-    HISTÓRICO: ${JSON.stringify(context.history || [])}
-    MENU: ${JSON.stringify(categories)}
-    PRODUTOS: ${productSummary}
-
-    JSON OUTPUT (OBRIGATÓRIO - RESPONDE APENAS O JSON, SEM TEXTO ANTES OU DEPOIS):
+    EXEMPLO DE RESPOSTA PARA TRANSFERÊNCIA:
     {
-      "reasoning": "...",
-      "message": "...",
-      "actions": [ ... ]
+      "reasoning": "Vou transferir o produto VCBD273728 para Relaxantes.",
+      "message": "A transferir o produto...",
+      "actions": [ { "action": "update_product", "data": { "productId": "...", "updates": { "subcategory": "Relaxantes" } } } ]
     }
+
+    DADOS:
+    Catálogo: ${productSummary}
+    Menu: ${JSON.stringify(context.settings?.categories || [])}
+    Histórico: ${JSON.stringify(context.history || [])}
   `;
 
   const tryModel = async (modelId: string) => {
@@ -46,8 +45,8 @@ export async function askAI(prompt: string, context: any) {
       body: JSON.stringify({
         model: modelId,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
-        temperature: 0, // Temperatura zero para máxima previsibilidade JSON
-        response_format: { type: "json_object" } // Tentar forçar modo JSON se a API suportar
+        temperature: 0,
+        response_format: { type: "json_object" }
       })
     });
     if (!response.ok) throw new Error(await response.text());
@@ -55,26 +54,13 @@ export async function askAI(prompt: string, context: any) {
   };
 
   try {
-    let result;
-    try {
-      result = await tryModel("google/gemini-2.0-flash-001");
-    } catch {
-      await new Promise(res => setTimeout(res, 1000));
-      result = await tryModel("google/gemini-pro-1.5");
-    }
-    
+    let result = await tryModel("google/gemini-2.0-flash-001");
     let content = result.choices[0].message.content;
-    
-    // Extração Robusta de JSON
     const start = content.indexOf("{");
     const end = content.lastIndexOf("}");
-    if (start !== -1 && end !== -1) {
-      content = content.substring(start, end + 1);
-    }
-    
+    if (start !== -1 && end !== -1) content = content.substring(start, end + 1);
     return JSON.parse(content);
   } catch (error: any) {
-    console.error("Erro Parse IA:", error);
-    return { action: "info", message: `❌ Erro de Formato: ${error.message}` };
+    return { action: "info", message: `❌ Erro Técnico: ${error.message}` };
   }
 }

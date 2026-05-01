@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       const settingsDoc = await db.collection("settings").doc("global").get();
       const settings = settingsDoc.data();
       if (chatId !== settings?.socials?.telegramChatId) return NextResponse.json({ ok: true });
-      
       const botToken = settings?.socials?.telegramToken;
       const sendReply = async (msg: string) => {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -49,13 +48,12 @@ export async function POST(request: NextRequest) {
         });
       };
 
-      // Carregar Contexto e Histórico Limpo
       const [productsSnap, ordersSnap, suppliersSnap, usersSnap, historySnap] = await Promise.all([
         db.collection("products").get(),
         db.collection("orders").limit(10).get(),
         db.collection("suppliers").get(),
         db.collection("users").get(),
-        db.collection("bot_history").where("chatId", "==", chatId).limit(15).get()
+        db.collection("bot_history").where("chatId", "==", chatId).limit(10).get()
       ]);
 
       const history = (historySnap.docs || []).map(doc => {
@@ -64,22 +62,15 @@ export async function POST(request: NextRequest) {
         if (content.startsWith("{") && content.endsWith("}")) {
           try { content = JSON.parse(content).message || content; } catch(e) {}
         }
-        return { 
-          role: d.role || "user", 
-          content, 
-          timestamp: d.timestamp?.toDate ? d.timestamp.toDate() : new Date() 
-        };
+        return { role: d.role, content, timestamp: d.timestamp?.toDate ? d.timestamp.toDate() : new Date() };
       }).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const suppliers = suppliersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
       const publicPhotoUrls = [];
-      for (const fId of photoIds) {
-        try { publicPhotoUrls.push(await uploadTelegramPhotoToFirebase(fId)); } catch(e) {}
-      }
+      for (const fId of photoIds) { try { publicPhotoUrls.push(await uploadTelegramPhotoToFirebase(fId)); } catch(e) {} }
 
       const { askAI } = await import("@/lib/ai");
       aiResponse = await askAI(text, { products, orders, settings, suppliers, users, publicPhotoUrls, history });
@@ -110,9 +101,7 @@ export async function POST(request: NextRequest) {
 
       const actions = aiResponse.actions || (aiResponse.action && aiResponse.action !== "info" ? [aiResponse] : []);
       const results = [];
-      for (const act of actions) {
-        results.push(await processAction(act.action, act.data));
-      }
+      for (const act of actions) { results.push(await processAction(act.action, act.data)); }
 
       revalidatePath("/", "layout");
       revalidatePath("/loja", "layout");
@@ -124,8 +113,13 @@ export async function POST(request: NextRequest) {
           const d = fresh.data();
           verificationText += `\n✅ *Verificado:* ${d?.name} (Sub: ${d?.subcategory})`;
         } else if (res?.type === "settings") {
-          verificationText += `\n✅ *Verificado:* Definições de menu gravadas.`;
+          verificationText += `\n✅ *Verificado:* Menu atualizado com sucesso.`;
         }
+      }
+
+      // SE NÃO HOUVE VERIFICAÇÃO MAS A IA DISSE QUE IA FAZER, AVISAR
+      if (actions.length === 0 && text.toLowerCase().includes("transfere")) {
+         verificationText = "\n⚠️ *Aviso:* A IA não gerou comandos técnicos. A tentar corrigir...";
       }
 
       const reasoning = aiResponse.reasoning ? `\n\n💭 *Raciocínio:* _${aiResponse.reasoning}_` : "";
@@ -138,6 +132,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("Webhook Error:", err);
+    await db.collection("webhook_logs").add({ timestamp: new Date(), type: "error", chatId, error: err.message, aiRawResponse: aiResponse || "None" });
     return NextResponse.json({ ok: true });
   }
 }
