@@ -217,32 +217,54 @@ export default function ProductModal({ product, isOpen, onClose }: ProductModalP
           </div>
 
           <div className="modal-details">
-            <div style={{ marginBottom: "16px" }}>
-              <span className="product-category" style={{ display: "block", marginBottom: "4px" }}>{product.category}</span>
-              {product.reference && (
-                <div style={{ textAlign: "right" }}>
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "flex-start",
+              marginBottom: "20px",
+              width: "100%"
+            }}>
+              <span className="product-category" style={{ margin: 0, fontSize: "0.8rem", letterSpacing: "2px" }}>
+                {product.category}
+              </span>
+              <div style={{ textAlign: "right" }}>
+                {product.reference && (
                   <span style={{ 
-                    fontSize: "0.7rem", 
-                    color: "var(--text-secondary)", 
-                    opacity: 0.5,
-                    letterSpacing: "0.05em",
+                    fontSize: "0.65rem", 
+                    color: "#fff", 
+                    opacity: 0.4,
+                    letterSpacing: "1px",
                     fontFamily: "monospace",
-                    display: "block"
+                    display: "block",
+                    marginBottom: "4px"
                   }}>
                     SKU: {product.reference}
                   </span>
+                )}
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "flex-end",
+                  gap: "6px"
+                }}>
+                  <div style={{ 
+                    width: "6px", 
+                    height: "6px", 
+                    borderRadius: "50%", 
+                    backgroundColor: (Number(product.stock) || 0) > 5 ? "#4caf50" : "#ff4d4d",
+                    boxShadow: (Number(product.stock) || 0) > 5 ? "0 0 10px #4caf50" : "0 0 10px #ff4d4d"
+                  }} />
                   <span style={{ 
-                    fontSize: "0.7rem", 
-                    color: product.stock > 5 ? "var(--accent-gold)" : "#ff4d4d", 
-                    opacity: 0.8,
-                    fontWeight: "bold",
-                    display: "block",
-                    marginTop: "2px"
+                    fontSize: "0.75rem", 
+                    color: (Number(product.stock) || 0) > 0 ? "var(--accent-gold)" : "#ff4d4d", 
+                    fontWeight: "700",
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase"
                   }}>
-                    {product.stock > 0 ? `${product.stock} em stock` : "Esgotado"}
+                    {(Number(product.stock) || 0) > 0 ? `${product.stock} DISPONÍVEIS` : "ESGOTADO"}
                   </span>
                 </div>
-              )}
+              </div>
             </div>
             <h2 className="product-title">{product.name}</h2>
             <p className="product-description">{product.description}</p>
