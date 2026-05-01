@@ -23,17 +23,24 @@ export async function askAI(prompt: string, context: any) {
     INSTRUÇÕES CRÍTICAS:
     1. PRIORIDADE À REFERÊNCIA (SKU): Se o utilizador fornecer um código como "VCBD914593", identifica IMEDIATAMENTE o produto correspondente através do campo "reference".
     2. Linguagem Natural: O administrador pode falar de forma livre. Interpreta a intenção.
-    3. Ações: "update_price", "update_stock", "create_order", "info".
+    3. Ações: "update_product", "create_order", "info", "report".
     
     Responde SEMPRE em formato JSON válido:
     {
-      "action": "update_price" | "update_stock" | "create_order" | "info" | "unknown",
+      "action": "update_product" | "create_order" | "info" | "report" | "unknown",
       "data": {
         "productId": "id-do-produto",
         "productName": "nome-do-produto",
-        "value": 123,
+        "updates": {
+          "name": "novo nome (se aplicável)",
+          "price": 12.50,
+          "stock": 100,
+          "description": "nova descrição (se aplicável)",
+          "supplierId": "id-do-fornecedor"
+        },
         "customer": "nome-do-cliente",
-        "quantity": 1
+        "quantity": 1,
+        "filter": "semana/mês/fornecedor-id"
       },
       "message": "Uma mensagem curta, amigável e profissional a confirmar a ação ou a pedir esclarecimentos."
     }

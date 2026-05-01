@@ -61,13 +61,18 @@ export async function POST(request: NextRequest) {
 
         console.log("IA Response:", aiResponse);
 
-        if (aiResponse.action === "update_price" || aiResponse.action === "update_stock") {
-          const { productId, value } = aiResponse.data;
-          const field = aiResponse.action === "update_price" ? "price" : "stock";
-          const label = aiResponse.action === "update_price" ? "Preço" : "Stock";
-          const unit = aiResponse.action === "update_price" ? "€" : "unid.";
+        if (aiResponse.action === "update_product") {
+          const { productId, updates } = aiResponse.data;
+          if (!productId || !updates || Object.keys(updates).length === 0) {
+             throw new Error("Dados de atualização insuficientes.");
+          }
 
-          await db.collection("products").doc(productId).update({ [field]: value });
+          // Remover campos nulos ou indefinidos
+          const cleanUpdates = Object.fromEntries(
+            Object.entries(updates).filter(([_, v]) => v != null)
+          );
+
+          await db.collection("products").doc(productId).update(cleanUpdates);
           revalidatePath("/loja", "layout");
           
           await sendReply(`✅ *Sucesso!* \n${aiResponse.message}`);
@@ -95,6 +100,14 @@ export async function POST(request: NextRequest) {
 
           await db.collection("orders").add(newOrder);
           await sendReply(`📦 *Encomenda Criada!* \n${aiResponse.message}`);
+        }
+        else if (aiResponse.action === "report") {
+          // Relatório rápido via Bot
+          const ordersSnap = await db.collection("orders").get();
+          const paidOrders = ordersSnap.docs.filter(d => d.data().paymentStatus === "pago");
+          const totalRevenue = paidOrders.reduce((acc, d) => acc + (d.data().total || 0), 0);
+          
+          await sendReply(`📊 *Relatório Rápido Vila Cãnhamo* \n\n*Vendas Totais:* € ${totalRevenue.toFixed(2)}\n*Encomendas Pagas:* ${paidOrders.length}\n\n${aiResponse.message}`);
         }
         else {
           await sendReply(aiResponse.message || "🤔 Não tenho a certeza de como processar esse pedido.");
