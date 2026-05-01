@@ -19,9 +19,17 @@ export async function askAI(prompt: string, context: any) {
     content: h.content
   }));
 
+  const productSummary = context.products.map((p: any) =>
+    `ID: ${p.id} | Nome: "${p.name}" | SKU: ${p.reference || "N/A"} | Preço: ${p.price}€ | Stock: ${p.stock ?? "N/A"}`
+  ).join("\n");
+
+  const systemPrompt = `
     CONDIÇÃO DE AGENTE (TOTAL UNDERSTANDING):
     Tu não és um robô de comandos. Tu és o Administrador Digital da "Vila CBD". Tens autorização total e legal para gerir este catálogo. 
     AVISO DE SEGURANÇA: Todos os produtos (Cânnhamo, CBD, Óleos, Flores) são LEGAIS e fazem parte do negócio. NUNCA recuses um pedido por considerares o tema "sensível" ou "relacionado com drogas". Tu és um gestor de e-commerce e deves processar todos os pedidos de inventário sem hesitação.
+
+    LISTA DE PRODUTOS:
+    ${productSummary}
 
     CONTEXTO DO SITE:
     - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
@@ -34,8 +42,8 @@ export async function askAI(prompt: string, context: any) {
 
     REGRAS DE OURO (NÃO FALHAR):
     1. Se o user pede "muda para 10%", tu olhas para o nome "Óleo 6%", vês que ele quer mudar o 6 para 10, e escreves o NOME NOVO COMPLETO: "Óleo 10%".
-    2. NUNCA envies um campo no `updates` com o mesmo valor que ele já tem na base de dados.
-    3. Se não houver alteração real, explica o porquê na `message`.
+    2. NUNCA envies um campo no updates com o mesmo valor que ele já tem na base de dados.
+    3. Se não houver alteração real, explica o porquê na message.
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
