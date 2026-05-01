@@ -5,15 +5,23 @@ import { Product } from "@/data/products";
 
 export async function POST(request: NextRequest) {
   try {
-    const update = await request.json();
-    console.log("Telegram Webhook Update:", JSON.stringify(update));
+    const secretToken = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+    const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
 
+    // Se houver um segredo configurado, validar.
+    if (expectedSecret && secretToken !== expectedSecret) {
+      console.warn("🚫 Tentativa de webhook não autorizada detectada.");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const update = await request.json();
     const db = getAdminDb();
     
-    // Log para depuração
+    // Log sanitizado para depuração (evitar guardar dados sensíveis em excesso)
     await db.collection("webhook_logs").add({
       timestamp: new Date(),
-      update: update
+      type: update.message ? "message" : "other",
+      chatId: update.message?.chat?.id?.toString() || "unknown"
     });
 
     const message = update.message;

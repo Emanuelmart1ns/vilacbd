@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getAdminAuthHeaders } from "@/lib/admin-fetch";
 
 interface Order {
   id: string;
@@ -26,7 +27,8 @@ export default function LogisticaPage() {
 
   const fetchOrders = React.useCallback(async () => {
     try {
-      const res = await fetch("/api/orders");
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch("/api/orders", { headers });
       if (res.ok) {
         const data = await res.json();
         // Mapear dados do Firestore para a interface Order se necessário
@@ -58,9 +60,10 @@ export default function LogisticaPage() {
 
   const updateShippingStatus = async (id: string, status: Order["shippingStatus"]) => {
     try {
+      const headers = await getAdminAuthHeaders();
       const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ shippingStatus: status })
       });
       
@@ -78,9 +81,10 @@ export default function LogisticaPage() {
 
   const saveTrackingCode = async (id: string) => {
     try {
+      const headers = await getAdminAuthHeaders();
       const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ trackingCode: trackingValue, shippingStatus: "enviado" })
       });
 

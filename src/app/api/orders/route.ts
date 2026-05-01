@@ -100,9 +100,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
+import { verifyAdminToken } from "@/lib/auth-guard";
+
 export async function GET(request: NextRequest) {
+  const auth = await verifyAdminToken(request);
+  if ("error" in auth) return auth.error;
+
   try {
-    // Apenas admins devem aceder a isto (simplificado para este exemplo)
     const db = getAdminDb();
     const snapshot = await db.collection("orders").orderBy("createdAt", "desc").get();
     const orders = snapshot.docs.map(doc => doc.data());
