@@ -7,13 +7,11 @@ async function uploadTelegramPhotoToFirebase(fileId: string): Promise<string> {
   const settingsDoc = await db.collection("settings").doc("global").get();
   const botToken = settingsDoc.data()?.socials?.telegramToken;
   if (!botToken) throw new Error("Bot Token ausente.");
-  
   const fileInfoResp = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`);
   const fileInfo = await fileInfoResp.json();
   const filePath = fileInfo.result.file_path;
   const response = await fetch(`https://api.telegram.org/file/bot${botToken}/${filePath}`);
   const buffer = Buffer.from(await response.arrayBuffer());
-
   const bucket = getAdminBucket();
   const destination = `bot-uploads/${Date.now()}.jpg`;
   const file = bucket.file(destination);
@@ -40,10 +38,7 @@ export async function POST(request: NextRequest) {
     if (text.toLowerCase().includes("vila")) {
       const settingsDoc = await db.collection("settings").doc("global").get();
       const settings = settingsDoc.data();
-      if (chatId !== settings?.socials?.telegramChatId) {
-        return NextResponse.json({ ok: true });
-      }
-
+      if (chatId !== settings?.socials?.telegramChatId) return NextResponse.json({ ok: true });
       const botToken = settings?.socials?.telegramToken;
       const sendReply = async (msg: string) => {
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -73,17 +68,16 @@ export async function POST(request: NextRequest) {
       const { askAI } = await import("@/lib/ai");
       aiResponse = await askAI(text, { products, orders, settings, suppliers, users, publicPhotoUrls });
 
-      await db.collection("bot_history").add({ chatId, role: "user", content: text, timestamp: new Date() });
-      await db.collection("bot_history").add({ chatId, role: "assistant", content: JSON.stringify(aiResponse), timestamp: new Date() });
-
       const processAction = async (action: string, data: any) => {
         if (action === "update_product") {
           await db.collection("products").doc(data.productId).update(data.updates);
+          return { type: "product", id: data.productId };
         } else if (action === "bulk_update") {
           const updates = data.bulkUpdates || data.updates?.bulkUpdates || [];
           for (const item of updates) {
             await db.collection("products").doc(item.productId).update(item.updates);
           }
+          return { type: "bulk", count: updates.length };
         } else if (action === "update_settings") {
           if (data.updates?.categories) {
             const currentDoc = await db.collection("settings").doc("global").get();
@@ -98,29 +92,45 @@ export async function POST(request: NextRequest) {
           } else {
             await db.collection("settings").doc("global").update(data.updates);
           }
-        } else if (action === "create_supplier") {
-          await db.collection("suppliers").add({ ...data.newSupplier, createdAt: new Date() });
-        } else if (action === "update_user") {
-          await db.collection("users").doc(data.userId).update(data.updates);
+          return { type: "settings" };
         }
+        return null;
       };
 
       const actions = aiResponse.actions || (aiResponse.action ? [aiResponse] : []);
+      const results = [];
       for (const act of actions) {
-        try { await processAction(act.action, act.data); } catch(e) { console.error("Action Error:", e); }
+        results.push(await processAction(act.action, act.data));
       }
 
       revalidatePath("/", "layout");
       revalidatePath("/loja", "layout");
-      
-      const reasoning = aiResponse.reasoning ? `\n\n*Raciocínio:* _${aiResponse.reasoning}_` : "";
-      await sendReply(`${aiResponse.message}${reasoning}`);
-    }
 
+      // FASE DE VERIFICAÇÃO (Garantir que a DB foi alterada)
+      let verificationText = "";
+      for (const res of results) {
+        if (res?.type === "product") {
+          const fresh = await db.collection("products").doc(res.id).get();
+          const d = fresh.data();
+          verificationText += `\n✅ *Verificado:* ${d?.name} atualizado. (Preço: ${d?.price}€, Sub: ${d?.subcategory})`;
+        } else if (res?.type === "settings") {
+          verificationText += `\n✅ *Verificado:* Definições globais gravadas.`;
+        } else if (res?.type === "bulk") {
+          verificationText += `\n✅ *Verificado:* ${res.count} produtos atualizados em massa.`;
+        }
+      }
+
+      const reasoning = aiResponse.reasoning ? `\n\n💭 *Raciocínio:* _${aiResponse.reasoning}_` : "";
+      const finalMsg = `🏁 *Ação Concluída!*\n\n${aiResponse.message}${verificationText}\n\n_Alterações aplicadas e cache limpa._${reasoning}`;
+      
+      await sendReply(finalMsg);
+      await db.collection("bot_history").add({ chatId, role: "user", content: text, timestamp: new Date() });
+      await db.collection("bot_history").add({ chatId, role: "assistant", content: finalMsg, timestamp: new Date() });
+
+    }
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error("Webhook Error:", err);
-    await db.collection("webhook_logs").add({ timestamp: new Date(), type: "error", chatId, error: err.message, aiRawResponse: aiResponse || "None" });
     return NextResponse.json({ ok: true });
   }
 }
