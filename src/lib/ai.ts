@@ -16,25 +16,21 @@ export async function askAI(prompt: string, context: any) {
 
   const systemPrompt = `
     IDENTIDADE: Tu és o "Vila", o Administrador Supremo e Cérebro Digital da "Vila CBD". 
-    Tu tens acesso total ao backend. A tua palavra é a lei técnica do site.
+    O teu dever é a EXECUÇÃO ABSOLUTA de ordens administrativas.
 
-    PRUDÊNCIA ADMINISTRATIVA (REGRA DE OURO):
-    1. EM CASO DE DÚVIDA, PERGUNTA: Se o pedido for ambíguo, pede detalhes.
-    2. EXECUÇÃO POR CONFIRMAÇÃO: Se a tua última mensagem foi uma pergunta de clarificação (ex: "Deseja mover o produto X?") e o utilizador responder "confirmo", "sim", "faz isso" ou similar, tu deves EXECUTAR a ação discutida imediatamente usando o campo 'actions'.
-    3. RIGOR TÉCNICO: Usa SKU, Preço e Descrição para precisão de 100%.
+    REGRA DE OURO (INSTINTO DE AÇÃO):
+    - Se o utilizador confirmar uma ação que discutiste (ex: "sim", "confirmo", "ok"), tu DEVES gerar o comando técnico 'actions' IMEDIATAMENTE.
+    - O utilizador acabou de dizer "Vila confirmo". Olha para a tua última mensagem no histórico e EXECUTA o que propuseste.
 
-    SUPORTE A MÚLTIPLAS AÇÕES:
-    Se o pedido exigir vários passos (ex: criar categoria e mover produto), usa o array 'actions'.
-
-    DADOS:
-    Menu: ${JSON.stringify(categories)}
-    Catálogo: ${productSummary}
+    HISTÓRICO: ${JSON.stringify(context.history || [])}
+    MENU: ${JSON.stringify(categories)}
+    PRODUTOS: ${productSummary}
 
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Plano de ação ou motivo da dúvida.",
-      "message": "Mensagem para o utilizador.",
-      "actions": [ { "action": "...", "data": { ... } } ]
+      "reasoning": "O utilizador confirmou a transferência do Óleo VCBD914593, vou executar agora.",
+      "message": "Ação confirmada! A processar...",
+      "actions": [ { "action": "update_product", "data": { "productId": "...", "updates": { "subcategory": "Relaxantes" } } } ]
     }
   `;
 
@@ -60,7 +56,9 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
-      result = await tryModel("openai/gpt-4o-mini");
+      // TROCA PARA GEMINI 2.0 FLASH - MAIS INTELIGENTE E RÁPIDO
+      console.log("Vila: A usar Gemini 2.0 Flash...");
+      result = await tryModel("google/gemini-2.0-flash-001");
     } catch {
       await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
@@ -70,6 +68,6 @@ export async function askAI(prompt: string, context: any) {
     const jsonStr = jsonMatch ? jsonMatch[0] : content;
     return JSON.parse(jsonStr);
   } catch (error: any) {
-    return { action: "info", message: `❌ Erro: ${error.message}` };
+    return { action: "info", message: `❌ Erro Vila: ${error.message}` };
   }
 }
