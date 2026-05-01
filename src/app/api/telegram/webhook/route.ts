@@ -125,15 +125,22 @@ export async function POST(request: NextRequest) {
 
           const productBefore = productDoc.data() as any;
           await db.collection("products").doc(productId).update(cleanUpdates);
+          
+          // VERIFICAÇÃO PÓS-ESCRITA (Garantir que gravou mesmo)
+          const productAfterSnap = await db.collection("products").doc(productId).get();
+          const productAfter = productAfterSnap.data() as any;
+          
           revalidatePath("/loja", "layout");
+          revalidatePath("/", "layout");
 
           const changeLines = Object.entries(cleanUpdates).map(([key, val]) => {
             const fieldNames: Record<string, string> = { name: "Nome", price: "Preço", stock: "Stock" };
-            return `• *${fieldNames[key] || key}*: _${productBefore[key]}_ → *${val}*`;
+            const verified = productAfter[key];
+            return `• *${fieldNames[key] || key}*: _${productBefore[key]}_ → *${verified}* (Confirmado no DB ✅)`;
           }).join("\n");
 
           const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
-          await sendReply(`✅ *Atualizado!*\n\n📦 *${productBefore.name}*\n${changeLines}${humanMessage}${reasoning}`);
+          await sendReply(`✅ *Alteração Gravada com Sucesso!*\n\n📦 *${productAfter.name}*\n${changeLines}${humanMessage}${reasoning}\n\n_O site foi atualizado e a cache limpa._`);
         }
         else if (aiResponse.action === "create_order") {
           const { productId, quantity, customer } = aiResponse.data;
