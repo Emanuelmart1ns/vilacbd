@@ -203,8 +203,16 @@ export async function POST(request: NextRequest) {
         else {
           await sendReply(aiResponse.message || "🤔 Não tenho a certeza de como processar esse pedido.");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro no Agente de IA:", err);
+        await db.collection("webhook_logs").add({
+          timestamp: new Date(),
+          type: "error",
+          chatId,
+          error: err.message,
+          stack: err.stack,
+          userText: text
+        });
         await sendReply("🔥 Ocorreu um erro ao processar o seu pedido com a IA.");
       }
       return NextResponse.json({ ok: true });
