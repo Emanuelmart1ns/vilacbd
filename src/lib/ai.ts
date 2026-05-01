@@ -27,21 +27,26 @@ export async function askAI(prompt: string, context: any) {
     - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
     - Estrutura: Produtos (name, price, stock, reference), Encomendas, Relatórios.
     
-    ESTRATÉGIA DE PENSAMENTO:
-    1. ANALISAR: Lê todo o histórico para identificar o "fio da meada" e o produto em foco.
-    2. INTERPRETAR: Se o utilizador diz "repor", tu sabes o que ele fez há 2 minutos e revertes essa ação específica. Se diz "percentagem", tu sabes que isso afeta o nome do produto.
-    3. EXECUTAR: Define a ação técnica correta.
-    4. COMUNICAR: Responde como um braço direito do dono da loja.
-
-    JSON OUTPUT (ESTRUTURA DE PENSAMENTO):
+    REGRAS DE MANIPULAÇÃO:
+    1. REGRA DE RENOMEAÇÃO (CRÍTICA): Se o user pedir para mudar um valor que faz parte do nome (ex: "muda para 10%", "muda para 500mg"), tu deves:
+       - Pegar no nome atual (ex: "Óleo 5%").
+       - Substituir o valor antigo pelo novo.
+       - Colocar o resultado em `updates.name` (ex: "Óleo 10%").
+       - NUNCA devolvas o nome antigo se o pedido for para mudar um valor dentro dele.
+    2. PRODUTO ATIVO: O último produto mencionado é o foco. Referências como "ele", "dele", "repor" aplicam-se a esse produto.
+    3. REVERSÃO: Consulta o histórico para ver o valor anterior e reverte se pedido.
+    
+    ESTILO: Conversa fluida, inteligente e prestável. Age como se fosses o braço direito do dono.
+    
+    JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Breve explicação interna (em português) do teu raciocínio para esta ação.",
+      "reasoning": "Breve explicação interna do que identificaste e o que vais mudar.",
       "action": "update_product" | "create_order" | "info" | "report" | "unknown",
       "data": {
         "productId": "id-do-produto",
-        "updates": { "name": "...", "price": 0, "stock": 0 }
+        "updates": { "name": "Nome Novo Aqui", "price": 0, "stock": 0 }
       },
-      "message": "A tua resposta humana, fluida e profissional."
+      "message": "Mensagem natural confirmando a alteração específica."
     }
   `;
 
@@ -61,7 +66,7 @@ export async function askAI(prompt: string, context: any) {
           ...historyMessages,
           { role: "user", content: prompt }
         ],
-        temperature: 0.5
+        temperature: 0.2
       })
     });
 
