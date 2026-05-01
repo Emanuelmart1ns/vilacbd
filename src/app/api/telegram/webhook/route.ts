@@ -132,7 +132,8 @@ export async function POST(request: NextRequest) {
             return `• *${fieldNames[key] || key}*: _${productBefore[key]}_ → *${val}*`;
           }).join("\n");
 
-          await sendReply(`✅ *Atualizado!*\n\n📦 *${productBefore.name}*\n${changeLines}${reasoning}`);
+          const humanMessage = aiResponse.message ? `\n\n${aiResponse.message}` : "";
+          await sendReply(`✅ *Atualizado!*\n\n📦 *${productBefore.name}*\n${changeLines}${humanMessage}${reasoning}`);
         }
         else if (aiResponse.action === "create_order") {
           const { productId, quantity, customer } = aiResponse.data;
