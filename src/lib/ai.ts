@@ -8,69 +8,61 @@ export async function askAI(prompt: string, context: any) {
   if (!apiKey) throw new Error("API Key ausente.");
 
   const productSummary = context.products.map((p: any) =>
-    `ID: ${p.id} | SKU: ${p.reference || "---"} | Nome: "${p.name}" | Preço: ${p.price}€ | Sub: ${p.subcategory || "---"} | Desc: ${p.description || "N/A"}`
+    `SKU: ${p.reference || "---"} | Nome: "${p.name}" | Preço: ${p.price}€ | Sub: ${p.subcategory || "---"} | ID: ${p.id}`
   ).join("\n");
 
   const systemPrompt = `
-    IDENTIDADE: Tu és o "Vila", o Administrador Supremo de Elite da "Vila CBD". 
-    MISSÃO: EXECUÇÃO TÉCNICA INFALÍVEL.
+    Tu és o Administrador do site Vila CBD.
+    A tua única missão é gerar comandos JSON para atualizar o site.
     
-    REGULAMENTO:
-    - Tu és uma IA de Raciocínio Lógico (Reasoning Engine).
-    - Para QUALQUER pedido de alteração, tu DEVES gerar o array 'actions' com comandos precisos.
-    - Se o pedido for ambíguo, pergunta primeiro. Se for claro, EXECUTA sem hesitação.
-    - Usa o SKU (VCBDXXXXXX) para localizar produtos com precisão cirúrgica.
+    CATÁLOGO:
+    ${productSummary}
 
-    DADOS DO SISTEMA:
-    Catálogo: ${productSummary}
-    Menu: ${JSON.stringify(context.settings?.categories || [])}
-    Histórico: ${JSON.stringify(context.history || [])}
+    MENU:
+    ${JSON.stringify(context.settings?.categories || [])}
 
-    JSON OUTPUT (OBRIGATÓRIO - APENAS JSON):
+    HISTÓRICO:
+    ${JSON.stringify(context.history || [])}
+
+    INSTRUÇÕES:
+    1. Se o utilizador pedir para mudar algo, usa o SKU ou Nome para achar o produto e gera a 'action'.
+    2. Se tiveres dúvidas, pede clarificação.
+    3. RESPONDE APENAS EM JSON.
+
+    EXEMPLO DE RESPOSTA:
     {
-      "reasoning": "...",
-      "message": "...",
-      "actions": [ { "action": "...", "data": { ... } } ]
+      "message": "Produto transferido com sucesso!",
+      "actions": [
+        { "action": "update_product", "data": { "productId": "ID_DO_PRODUTO", "updates": { "subcategory": "NOVA_SUB" } } }
+      ]
     }
   `;
 
-  const tryModel = async (modelId: string) => {
+  try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://vilacbd.com",
-        "X-Title": "Vila Supreme Admin",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: modelId,
+        model: "google/gemini-2.0-flash-001",
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
         temperature: 0,
         response_format: { type: "json_object" }
       })
     });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-  };
 
-  try {
-    let result;
-    try {
-      // UPGRADE PARA DEEPSEEK V3 - O NOVO PADRÃO DE INTELIGÊNCIA E PRECISÃO
-      console.log("Vila: A invocar DeepSeek-V3...");
-      result = await tryModel("deepseek/deepseek-chat");
-    } catch (e) {
-      console.warn("Vila: Fallback para Gemini 2.0 Flash...");
-      result = await tryModel("google/gemini-2.0-flash-001");
-    }
-    
+    if (!response.ok) throw new Error("Erro na API");
+    const result = await response.json();
     let content = result.choices[0].message.content;
+    
     const start = content.indexOf("{");
     const end = content.lastIndexOf("}");
     if (start !== -1 && end !== -1) content = content.substring(start, end + 1);
+    
     return JSON.parse(content);
   } catch (error: any) {
-    return { action: "info", message: `❌ Erro Técnico: ${error.message}` };
+    return { message: `❌ Erro: ${error.message}`, actions: [] };
   }
 }
