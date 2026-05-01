@@ -89,13 +89,20 @@ export async function askAI(prompt: string, context: any) {
   try {
     let result;
     try {
+      console.log("Vila: A tentar modelo primário (GPT-4o-Mini)...");
       result = await tryModel("openai/gpt-4o-mini");
-    } catch (e) {
+    } catch (e: any) {
+      console.warn("Vila: Falha no GPT, a tentar Fallback (Gemini Pro)... Erro:", e.message);
+      // Pequena pausa para evitar rate limit ou sobrecarga temporária
+      await new Promise(res => setTimeout(res, 1000));
       result = await tryModel("google/gemini-pro-1.5");
     }
     
-    if (result.error) throw new Error(result.error.message || "Erro na API");
-
+    if (!result || result.error) {
+      const errMsg = result?.error?.message || "Erro desconhecido na API do OpenRouter";
+      throw new Error(errMsg);
+    }
+    
     const content = result.choices[0].message.content;
     
     try {

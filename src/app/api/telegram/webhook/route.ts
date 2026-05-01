@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
       const [productsSnap, ordersSnap] = await Promise.all([
         db.collection("products").get(),
-        db.collection("orders").orderBy("createdAt", "desc").limit(10).get()
+        db.collection("orders").limit(10).get()
       ]);
       
       const products = productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
           await sendReply(`📦 *Encomenda Criada!* \n${aiResponse.message}`);
         }
         else if (aiResponse.action === "report") {
-          const ordersSnap = await db.collection("orders").get();
+          const ordersSnap = await db.collection("orders").limit(50).get();
           const paidOrders = ordersSnap.docs.filter(d => d.data().paymentStatus === "pago");
           const totalRevenue = paidOrders.reduce((acc, d) => acc + (d.data().total || 0), 0);
           await sendReply(`📊 *Relatório Rápido Vila CBD* \n\n*Vendas Totais:* € ${totalRevenue.toFixed(2)}\n*Encomendas Pagas:* ${paidOrders.length}\n\n${aiResponse.message}`);
