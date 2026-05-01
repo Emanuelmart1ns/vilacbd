@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { getAdminAuthHeaders } from "@/lib/admin-fetch";
 
 interface Supplier {
   id: string;
@@ -32,7 +33,8 @@ export default function SuppliersPage() {
 
   async function fetchSuppliers() {
     try {
-      const res = await fetch("/api/admin/suppliers");
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch("/api/admin/suppliers", { headers });
       if (res.ok) {
         const data = await res.json();
         setSuppliers(data);
@@ -68,9 +70,10 @@ export default function SuppliersPage() {
     const body = editingSupplier ? { id: editingSupplier.id, ...formData } : formData;
 
     try {
+      const headers = await getAdminAuthHeaders();
       const res = await fetch("/api/admin/suppliers", {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body)
       });
 
@@ -86,7 +89,8 @@ export default function SuppliersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza que deseja eliminar este fornecedor?")) return;
     try {
-      const res = await fetch(`/api/admin/suppliers?id=${id}`, { method: "DELETE" });
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch(`/api/admin/suppliers?id=${id}`, { method: "DELETE", headers });
       if (res.ok) fetchSuppliers();
     } catch (error) {
       alert("Erro ao eliminar");

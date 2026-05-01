@@ -11,6 +11,7 @@ import {
   Filter, ArrowUpRight, ArrowDownRight, CreditCard, ShoppingBag,
   Award, Briefcase, Eye, BarChart3, PieChart as PieIcon, Settings2, ShieldCheck
 } from "lucide-react";
+import { getAdminAuthHeaders } from "@/lib/admin-fetch";
 
 type ReportType = 'finance' | 'logistics' | 'category' | 'customers' | 'overview';
 
@@ -33,7 +34,8 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const query = new URLSearchParams(filters).toString();
-      const res = await fetch(`/api/admin/reports?${query}`);
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch(`/api/admin/reports?${query}`, { headers });
       const json = await res.json();
       setData(json);
     } catch (error) {

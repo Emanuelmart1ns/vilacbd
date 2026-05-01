@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { verifyAdminToken } from "@/lib/auth-guard";
 
 export async function GET(request: NextRequest) {
+  const auth = await verifyAdminToken(request);
+  if ("error" in auth) return auth.error;
+
   try {
     const db = getAdminDb();
     const searchParams = request.nextUrl.searchParams;

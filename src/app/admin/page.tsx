@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { getAdminAuthHeaders } from "@/lib/admin-fetch";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -16,7 +17,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/admin/stats");
+        const headers = await getAdminAuthHeaders();
+        const res = await fetch("/api/admin/stats", { headers });
         if (res.ok) {
           const data = await res.json();
           setStats(data);

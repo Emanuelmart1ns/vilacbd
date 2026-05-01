@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
+import { verifyAdminToken } from "@/lib/auth-guard";
 
 export async function PUT(request: NextRequest) {
+  const auth = await verifyAdminToken(request);
+  if ("error" in auth) return auth.error;
+
   try {
     const { id, ...data } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -18,6 +22,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await verifyAdminToken(request);
+  if ("error" in auth) return auth.error;
+
   try {
     const data = await request.json();
     const db = getAdminDb();
@@ -31,6 +38,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await verifyAdminToken(request);
+  if ("error" in auth) return auth.error;
+
   try {
     const { id } = await request.json();
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });

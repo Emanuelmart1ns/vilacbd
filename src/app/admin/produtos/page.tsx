@@ -7,6 +7,7 @@ import {
   uploadProductImage,
 } from "@/lib/firebase";
 import { products as staticProducts } from "@/data/products";
+import { getAdminAuthHeaders } from "@/lib/admin-fetch";
 
 export default function ProdutosAdminPage() {
   const [products, setProducts] = useState<FirestoreProduct[]>([]);
@@ -52,7 +53,8 @@ export default function ProdutosAdminPage() {
           if (settingsData.categories && !cancelled) setSettingsCategories(settingsData.categories);
         }
 
-        const suppliersRes = await fetch("/api/admin/suppliers");
+        const suppliersHeaders = await getAdminAuthHeaders();
+        const suppliersRes = await fetch("/api/admin/suppliers", { headers: suppliersHeaders });
         if (suppliersRes.ok) {
           const suppliersData = await suppliersRes.json();
           if (!cancelled) setSuppliers(suppliersData);
@@ -240,17 +242,18 @@ export default function ProdutosAdminPage() {
         supplierId: selectedSupplier
       };
 
+      const authHeaders = await getAdminAuthHeaders();
       setUploadProgress("A guardar dados...");
       if (editingProduct?.id) {
         await fetch("/api/products", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders,
           body: JSON.stringify({ id: editingProduct.id, ...productData }),
         });
       } else {
         await fetch("/api/products", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders,
           body: JSON.stringify(productData),
         });
       }
@@ -280,7 +283,8 @@ export default function ProdutosAdminPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Tem a certeza?")) return;
     try {
-      await fetch("/api/products", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
+      const headers = await getAdminAuthHeaders();
+      await fetch("/api/products", { method: "DELETE", headers, body: JSON.stringify({ id }) });
       const data = await getProducts(true);
       setProducts(data);
     } catch { alert("Erro ao eliminar"); }
