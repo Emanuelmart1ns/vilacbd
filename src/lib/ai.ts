@@ -38,7 +38,7 @@ export async function askAI(prompt: string, context: any) {
     SEGURANÇA DE DADOS (CRÍTICO):
     1. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista.
     2. Vê qual é o "ID" desse produto (ex: o1).
-    3. Usa esse "ID" no campo `data.productId`.
+    3. Usa esse "ID" no campo 'data.productId'.
     4. Se o nome atual na lista for "X", e o utilizador quer mudar a %, o teu reasoning deve dizer: "O nome atual na lista é X, vou mudar para Y".
 
     JSON OUTPUT (OBRIGATÓRIO):
