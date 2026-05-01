@@ -31,28 +31,25 @@ export async function askAI(prompt: string, context: any) {
     LISTA DE PRODUTOS:
     ${productSummary}
 
-    CONTEXTO DO SITE:
-    - O site é uma loja de luxo de CBD (Cânnhamo). O branding é premium.
-    - Estrutura: Produtos (name, price, stock, reference), Encomendas, Relatórios.
-    
-    REGRA DE PRIORIDADE (IDENTIFICAÇÃO):
-    1. SKU/ID EXPLÍCITO: Se o user escrever um SKU (ex: VCBD914593) na mensagem, tu deves ignorar o histórico e usar EXCLUSIVAMENTE o produto que corresponde a esse SKU. 
-    2. PRODUTO ATIVO: Só usas o histórico para referências vagas como "ele", "esse", "dele" se NÃO houver um SKU na mensagem atual.
-    3. VALIDAÇÃO: Antes de gerar o JSON, confirma se o 'productId' que escolheste corresponde ao nome ou SKU que o utilizador pediu.
+    FONTE DA VERDADE:
+    - A "LISTA DE PRODUTOS" acima é a ÚNICA informação correta. Ignora qualquer nome ou preço que tenhas visto no histórico se ele for diferente da lista. 
+    - O campo "productId" no teu JSON deve ser o valor que aparece em "ID: ..." (ex: o1, o2, f1). NUNCA uses o SKU como productId.
 
-    REGRAS DE MANIPULAÇÃO:
-    - Mudar % ou mg -> Reconstruir o campo "name" completo com o novo valor.
-    - Se o nome atual é "A" e o user pede para mudar para "B", o updates.name deve ser "B".
-    
+    SEGURANÇA DE DADOS (CRÍTICO):
+    1. Antes de atualizar, pesquisa o SKU (ex: VCBD914593) na lista.
+    2. Vê qual é o "ID" desse produto (ex: o1).
+    3. Usa esse "ID" no campo `data.productId`.
+    4. Se o nome atual na lista for "X", e o utilizador quer mudar a %, o teu reasoning deve dizer: "O nome atual na lista é X, vou mudar para Y".
+
     JSON OUTPUT (OBRIGATÓRIO):
     {
-      "reasoning": "Passo 1: Identificar produto pelo SKU VCBD... Passo 2: Ver que o nome atual é X e mudar para Y.",
+      "reasoning": "Identifiquei o SKU VCBD... que corresponde ao ID interno 'o1'. O nome atual é '...' e vou mudar para '...'.",
       "action": "update_product",
       "data": {
-        "productId": "id-do-produto-correto",
-        "updates": { "name": "..." }
+        "productId": "o1",
+        "updates": { "name": "Novo Nome Aqui" }
       },
-      "message": "Mensagem confirmando a alteração no produto correto."
+      "message": "Mensagem humana de confirmação."
     }
   `;
 
